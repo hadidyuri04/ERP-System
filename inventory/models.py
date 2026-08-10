@@ -1,8 +1,8 @@
+from django.conf import settings
 from django.db import models
 
 
 class Category(models.Model):
-    """Represents item categories with support for hierarchical sub-categories[cite: 1]."""
     code = models.CharField(max_length=50, unique=True)
     name = models.CharField(max_length=255)
     parent = models.ForeignKey(
@@ -20,9 +20,8 @@ class Category(models.Model):
 
 
 class Unit(models.Model):
-    """Defines units of measure such as Piece, Kg, Liter, Box[cite: 1]."""
-    name = models.CharField(max_length=100)  # e.g., Piece, Kilogram
-    symbol = models.CharField(max_length=20)   # e.g., pcs, kg, L
+    name = models.CharField(max_length=100)
+    symbol = models.CharField(max_length=20)
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -30,7 +29,6 @@ class Unit(models.Model):
 
 
 class Product(models.Model):
-    """Stores master data for items, prices, and inventory thresholds[cite: 1]."""
     code = models.CharField(max_length=50, unique=True)
     barcode = models.CharField(max_length=100, unique=True, blank=True, null=True)
     name = models.CharField(max_length=255)
@@ -59,7 +57,6 @@ class Product(models.Model):
 
 
 class Warehouse(models.Model):
-    """Maintains physical or virtual storage facilities[cite: 1]."""
     code = models.CharField(max_length=50, unique=True)
     name = models.CharField(max_length=255)
     location = models.CharField(max_length=500, blank=True, null=True)
@@ -68,3 +65,83 @@ class Warehouse(models.Model):
 
     def __str__(self):
         return f"[{self.code}] {self.name}"
+
+
+class StockBatch(models.Model):
+    """Tracks physical inventory batches for expiration control and FEFO."""
+    class BatchStatus(models.TextChoices):
+        ACTIVE = 'ACTIVE', 'Active'
+        EXPIRED = 'EXPIRED', 'Expired'
+        DEPLETED = 'DEPLETED', 'Depleted'
+        BLOCKED = 'BLOCKED', 'Blocked'
+
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='batches')
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.PROTECT, related_name='batches')
+    batch_number = models.CharField(max_length=100)
+    
+    expiration_date = models.DateField(blank=True, null=True)
+    received_date = models.DateField()
+    
+    unit_cost = models.DecimalField(max_digits=12, decimal_places=2)
+    quantity_received = models.DecimalField(max_digits=12, decimal_places=2)
+    quantity_remaining = models.DecimalField(max_digits=12, decimal_places=2)
+    
+    # Linked to Supplier & PurchaseInvoiceItem (using strings to avoid circular import loops if apps reference each other)
+    supplier = models.ForeignKey('suppliers.Supplier', on_delete=models.SET_NULL, blank=True, null=True, related_name='batches')
+    purchase_item = models.ForeignKey('purchasing.PurchaseInvoiceItem', on_delete=models.SET_NULL, blank=True, null=True, related_name='batches')
+    
+    status = models.CharField(max_length=20, choices=BatchStatus.choices, default=BatchStatus.ACTIVE)
+
+    def __str__(self):
+        return f"Batch {self.batch_number} - {self.product.name} ({self.quantity_remaining} left)"
+
+
+class StockMovement(models.Model):
+    """The master inventory audit trail tracking every single stock increase or decrease."""
+    class MovementType(models.TextChoices):
+        OPENING_BALANCE = 'OPENING_BALANCE', 'Opening Balance'
+        PURCHASE = 'PURCHASE', 'Purchase'
+        PURCHASE_RETURN = 'PURCHASE_RETURN', 'Purchase Return'
+        SALE = 'SALE', 'Sale'
+        SALE_RETURN = 'SALE_RETURN', 'Sale Return'
+        TRANSFER_IN = 'TRANSFER_IN', 'Transfer In'
+        TRANSFER_OUT = 'TRANSFER_OUT', 'Transfer Out'
+        WASTE = 'WASTE', 'Waste'
+        DAMAGE = 'DAMAGE', 'Damage'
+        ADJUSTMENT_IN = 'ADJUSTMENT_IN', 'Adjustment In'
+        ADJUSTMENT_OUT = 'ADJUSTMENT_OUT', 'Adjustment Out'
+
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='movements')
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.PROTECT, related_name='movements')
+    batch = models.ForeignKey(StockBatch, on_delete=models.SET_NULL, blank=True, null=True, related_name='movements')
+    
+    movement_type = models.CharField(max_length=30, choices=MovementType.choices)
+    quantity = models.DecimalField(max_digits=12, decimal_places=2)  # Positive for additions, negative or managed by type
+    unit_cost = models.DecimalField(max_digits=12, decimal_places=2)
+    
+    reference_type = models.CharField(max_length=100)  # e.g., 'PurchaseInvoice', 'POS', 'WasteLoss'
+    reference_id = models.BigIntegerField()
+    
+    notes = models.TextField(blank=True, null=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.movement_type}: {self.quantity} of {self.product.name} in {self.warehouse.name}"
+
+
+class StockBalance(models.Model):
+    """Provides fast lookups for current stock levels per product and warehouse."""
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='balances')
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.PROTECT, related_name='balances')
+    
+    quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    reserved_quantity = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        # Enforces that a product can only have one stock balance row per warehouse location
+        unique_together = ('product', 'warehouse')
+
+    def __str__(self):
+        return f"{self.product.name} @ {self.warehouse.name}: {self.quantity}"
