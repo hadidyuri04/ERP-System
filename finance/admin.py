@@ -1,7 +1,70 @@
 from django.contrib import admin
 
-from .models import Account, JournalEntry, JournalEntryLine
+from .models import (
+    Account,
+    JournalEntry,
+    JournalEntryLine,
+    ReceiptVoucher,
+    PaymentVoucher,
+)
 
+from .services import (
+    post_receipt_voucher,
+    post_payment_voucher,
+)
+
+
+# =========================
+# ADMIN ACTIONS
+# =========================
+
+@admin.action(description="Post selected receipt vouchers")
+def post_selected_receipts(modeladmin, request, queryset):
+    for voucher in queryset:
+        try:
+            post_receipt_voucher(
+                voucher.id,
+                request.user,
+            )
+
+            modeladmin.message_user(
+                request,
+                f"{voucher.voucher_number} posted successfully.",
+            )
+
+        except Exception as exc:
+            modeladmin.message_user(
+                request,
+                f"{voucher.voucher_number}: {exc}",
+                level="ERROR",
+            )
+
+
+@admin.action(description="Post selected payment vouchers")
+def post_selected_payments(modeladmin, request, queryset):
+    for voucher in queryset:
+        try:
+            post_payment_voucher(
+                voucher.id,
+                request.user,
+            )
+
+            modeladmin.message_user(
+                request,
+                f"{voucher.voucher_number} posted successfully.",
+            )
+
+        except Exception as exc:
+            modeladmin.message_user(
+                request,
+                f"{voucher.voucher_number}: {exc}",
+                level="ERROR",
+            )
+
+
+# =========================
+# ACCOUNT ADMIN
+# =========================
 
 @admin.register(Account)
 class AccountAdmin(admin.ModelAdmin):
@@ -25,6 +88,10 @@ class AccountAdmin(admin.ModelAdmin):
         "name",
     )
 
+
+# =========================
+# JOURNAL ENTRY ADMIN
+# =========================
 
 class JournalEntryLineInline(admin.TabularInline):
     model = JournalEntryLine
@@ -55,3 +122,83 @@ class JournalEntryAdmin(admin.ModelAdmin):
     inlines = [
         JournalEntryLineInline,
     ]
+
+
+# =========================
+# RECEIPT VOUCHER ADMIN
+# =========================
+
+@admin.register(ReceiptVoucher)
+class ReceiptVoucherAdmin(admin.ModelAdmin):
+    list_display = (
+        "voucher_number",
+        "date",
+        "received_from",
+        "customer",
+        "account",
+        "amount",
+        "payment_method",
+        "status",
+    )
+
+    list_filter = (
+        "status",
+        "payment_method",
+        "date",
+    )
+
+    search_fields = (
+        "voucher_number",
+        "received_from",
+        "customer__name",
+        "reference",
+    )
+
+    actions = [
+        post_selected_receipts,
+    ]
+    readonly_fields = (
+        "status",
+        "created_at",
+        "updated_at",
+    )
+
+
+# =========================
+# PAYMENT VOUCHER ADMIN
+# =========================
+
+@admin.register(PaymentVoucher)
+class PaymentVoucherAdmin(admin.ModelAdmin):
+    list_display = (
+        "voucher_number",
+        "date",
+        "paid_to",
+        "supplier",
+        "account",
+        "amount",
+        "payment_method",
+        "status",
+    )
+
+    list_filter = (
+        "status",
+        "payment_method",
+        "date",
+    )
+
+    search_fields = (
+        "voucher_number",
+        "paid_to",
+        "supplier__name",
+        "reference",
+    )
+
+    actions = [
+        post_selected_payments,
+    ]
+    readonly_fields = (
+        "status",
+        "created_at",
+        "updated_at",
+    )

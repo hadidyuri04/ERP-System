@@ -180,3 +180,160 @@ class JournalEntryLine(models.Model):
 
     def __str__(self):
         return f"{self.journal_entry.entry_number} - {self.account}"
+
+class ReceiptVoucher(models.Model):
+    class Status(models.TextChoices):
+        DRAFT = "draft", "Draft"
+        CONFIRMED = "confirmed", "Confirmed"
+        CANCELLED = "cancelled", "Cancelled"
+
+    class PaymentMethod(models.TextChoices):
+        CASH = "cash", "Cash"
+        CARD = "card", "Card"
+        BANK = "bank", "Bank"
+
+    voucher_number = models.CharField(
+        max_length=30,
+        unique=True,
+    )
+
+    date = models.DateField()
+
+    customer = models.ForeignKey(
+        "customers.Customer",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="receipt_vouchers",
+    )
+
+    received_from = models.CharField(
+        max_length=200,
+    )
+
+    account = models.ForeignKey(
+        Account,
+        on_delete=models.PROTECT,
+        related_name="receipt_vouchers",
+    )
+
+    amount = models.DecimalField(
+        max_digits=14,
+        decimal_places=3,
+    )
+
+    payment_method = models.CharField(
+        max_length=20,
+        choices=PaymentMethod.choices,
+    )
+
+    reference = models.CharField(
+        max_length=100,
+        blank=True,
+    )
+
+    description = models.TextField(
+        blank=True,
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.DRAFT,
+    )
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="created_receipt_vouchers",
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
+
+    def __str__(self):
+        return self.voucher_number
+
+
+class PaymentVoucher(models.Model):
+    class Status(models.TextChoices):
+        DRAFT = "draft", "Draft"
+        CONFIRMED = "confirmed", "Confirmed"
+        CANCELLED = "cancelled", "Cancelled"
+
+    class PaymentMethod(models.TextChoices):
+        CASH = "cash", "Cash"
+        CARD = "card", "Card"
+        BANK = "bank", "Bank"
+
+    voucher_number = models.CharField(
+        max_length=30,
+        unique=True,
+    )
+
+    date = models.DateField()
+
+    supplier = models.ForeignKey(
+        "suppliers.Supplier",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="payment_vouchers",
+    )
+
+    paid_to = models.CharField(
+        max_length=200,
+    )
+
+    account = models.ForeignKey(
+        Account,
+        on_delete=models.PROTECT,
+        related_name="payment_vouchers",
+    )
+
+    amount = models.DecimalField(
+        max_digits=14,
+        decimal_places=3,
+    )
+
+    payment_method = models.CharField(
+        max_length=20,
+        choices=PaymentMethod.choices,
+    )
+
+    reference = models.CharField(
+        max_length=100,
+        blank=True,
+    )
+
+    description = models.TextField(
+        blank=True,
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.DRAFT,
+    )
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="created_payment_vouchers",
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+    )
+
+    def __str__(self):
+        return self.voucher_number
