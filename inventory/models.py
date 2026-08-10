@@ -145,3 +145,126 @@ class StockBalance(models.Model):
 
     def __str__(self):
         return f"{self.product.name} @ {self.warehouse.name}: {self.quantity}"
+
+class WarehouseTransfer(models.Model):
+    """Tracks movement of stock quantities between two warehouses while total company stock remains unchanged[cite: 1]."""
+    class TransferStatus(models.TextChoices):
+        DRAFT = 'DRAFT', 'Draft'
+        COMPLETED = 'COMPLETED', 'Completed'
+        CANCELLED = 'CANCELLED', 'Cancelled'
+
+    transfer_number = models.CharField(max_length=100, unique=True)
+    source_warehouse = models.ForeignKey(
+        Warehouse, 
+        on_delete=models.PROTECT, 
+        related_name='transfers_out'
+    )
+    destination_warehouse = models.ForeignKey(
+        Warehouse, 
+        on_delete=models.PROTECT, 
+        related_name='transfers_in'
+    )
+    
+    date = models.DateField()
+    status = models.CharField(
+        max_length=20, 
+        choices=TransferStatus.choices, 
+        default=TransferStatus.DRAFT
+    )
+    notes = models.TextField(blank=True, null=True)
+    
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.PROTECT, 
+        related_name='warehouse_transfers'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Transfer #{self.transfer_number}: {self.source_warehouse.name} -> {self.destination_warehouse.name}"
+
+
+class WarehouseTransferItem(models.Model):
+    """Line items for specific products and quantities moved during a warehouse transfer."""
+    transfer = models.ForeignKey(
+        WarehouseTransfer, 
+        on_delete=models.CASCADE, 
+        related_name='items'
+    )
+    product = models.ForeignKey(
+        Product, 
+        on_delete=models.PROTECT, 
+        related_name='transfer_items'
+    )
+    batch = models.ForeignKey(
+        StockBatch, 
+        on_delete=models.SET_NULL, 
+        blank=True, 
+        null=True, 
+        related_name='transfer_items'
+    )
+    quantity = models.DecimalField(max_digits=12, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.quantity}x {self.product.name} on Transfer #{self.transfer.transfer_number}"
+
+
+class WasteLoss(models.Model):
+    """Records expired, damaged, spoiled, broken, or missing stock (reduces inventory and records a financial loss)[cite: 1]."""
+    class WasteReason(models.TextChoices):
+        EXPIRED = 'EXPIRED', 'Expired'
+        DAMAGED = 'DAMAGED', 'Damaged'
+        SPOILED = 'SPOILED', 'Spoiled'
+        BROKEN = 'BROKEN', 'Broken'
+        MISSING = 'MISSING', 'Missing'
+        OTHER = 'OTHER', 'Other'
+
+    document_number = models.CharField(max_length=100, unique=True)
+    warehouse = models.ForeignKey(
+        Warehouse, 
+        on_delete=models.PROTECT, 
+        related_name='waste_losses'
+    )
+    date = models.DateField()
+    reason = models.CharField(
+        max_length=30, 
+        choices=WasteReason.choices
+    )
+    notes = models.TextField(blank=True, null=True)
+    
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.PROTECT, 
+        related_name='waste_loss_records'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Waste/Loss #{self.document_number} ({self.reason})"
+
+
+class WasteLossItem(models.Model):
+    """Individual product lines written off as waste or loss."""
+    waste_loss = models.ForeignKey(
+        WasteLoss, 
+        on_delete=models.CASCADE, 
+        related_name='items'
+    )
+    product = models.ForeignKey(
+        Product, 
+        on_delete=models.PROTECT, 
+        related_name='waste_loss_items'
+    )
+    batch = models.ForeignKey(
+        StockBatch, 
+        on_delete=models.SET_NULL, 
+        blank=True, 
+        null=True, 
+        related_name='waste_loss_items'
+    )
+    quantity = models.DecimalField(max_digits=12, decimal_places=2)
+    unit_cost = models.DecimalField(max_digits=12, decimal_places=2) # Captured for financial loss calculation
+    total_cost = models.DecimalField(max_digits=12, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.quantity}x {self.product.name} written off for {self.waste_loss.reason}"
