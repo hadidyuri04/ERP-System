@@ -19,3 +19,8 @@ db.sqlite3
 # OS
 .DS_Store
 Thumbs.db
+# Ignore standard Python virtual environments
+venv/
+.venv/
+env/
+ENV/
