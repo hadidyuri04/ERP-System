@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 from customers.models import Customer
 from suppliers.models import Supplier
@@ -8,33 +9,39 @@ from suppliers.models import Supplier
 
 class Account(models.Model):
     class AccountType(models.TextChoices):
-        ASSET = "asset", "Asset"
-        LIABILITY = "liability", "Liability"
-        EQUITY = "equity", "Equity"
-        REVENUE = "revenue", "Revenue"
-        EXPENSE = "expense", "Expense"
+        ASSET = "asset", _("Asset")
+        LIABILITY = "liability", _("Liability")
+        EQUITY = "equity", _("Equity")
+        REVENUE = "revenue", _("Revenue")
+        EXPENSE = "expense", _("Expense")
 
-    code = models.CharField(max_length=20, unique=True)
-    name = models.CharField(max_length=200)
+    code = models.CharField(_("Code"), max_length=20, unique=True)
+    name = models.CharField(_("Name"), max_length=200)
 
     account_type = models.CharField(
+        _("Account Type"),
         max_length=20,
         choices=AccountType.choices,
     )
 
     parent = models.ForeignKey(
         "self",
+        verbose_name=_("Parent Account"),
         on_delete=models.PROTECT,
         null=True,
         blank=True,
         related_name="children",
     )
 
-    allow_posting = models.BooleanField(default=True)
-    is_active = models.BooleanField(default=True)
+    allow_posting = models.BooleanField(_("Allow Posting"), default=True)
+    is_active = models.BooleanField(_("Is Active"), default=True)
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
+
+    class Meta:
+        verbose_name = _("Account")
+        verbose_name_plural = _("Accounts")
 
     def __str__(self):
         return f"{self.code} - {self.name}"
@@ -42,40 +49,44 @@ class Account(models.Model):
 
 class JournalEntry(models.Model):
     class Status(models.TextChoices):
-        DRAFT = "draft", "Draft"
-        POSTED = "posted", "Posted"
-        REVERSED = "reversed", "Reversed"
+        DRAFT = "draft", _("Draft")
+        POSTED = "posted", _("Posted")
+        REVERSED = "reversed", _("Reversed")
 
     class SourceType(models.TextChoices):
-        MANUAL = "manual", "Manual"
-        PURCHASE = "purchase", "Purchase"
-        POS_SALE = "pos_sale", "POS Sale"
-        RECEIPT = "receipt", "Receipt Voucher"
-        PAYMENT = "payment", "Payment Voucher"
-        WASTE = "waste", "Waste & Loss"
-        SALES_RETURN = "sales_return", "Sales Return"
+        MANUAL = "manual", _("Manual")
+        PURCHASE = "purchase", _("Purchase")
+        POS_SALE = "pos_sale", _("POS Sale")
+        RECEIPT = "receipt", _("Receipt Voucher")
+        PAYMENT = "payment", _("Payment Voucher")
+        WASTE = "waste", _("Waste & Loss")
+        SALES_RETURN = "sales_return", _("Sales Return")
 
     entry_number = models.CharField(
+        _("Entry Number"),
         max_length=30,
         unique=True,
     )
 
-    date = models.DateField()
+    date = models.DateField(_("Date"))
 
-    description = models.TextField(blank=True)
+    description = models.TextField(_("Description"), blank=True)
 
     source_type = models.CharField(
+        _("Source Type"),
         max_length=30,
         choices=SourceType.choices,
         default=SourceType.MANUAL,
     )
 
     source_id = models.PositiveBigIntegerField(
+        _("Source ID"),
         null=True,
         blank=True,
     )
 
     status = models.CharField(
+        _("Status"),
         max_length=20,
         choices=Status.choices,
         default=Status.DRAFT,
@@ -83,20 +94,26 @@ class JournalEntry(models.Model):
 
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
+        verbose_name=_("Created By"),
         on_delete=models.PROTECT,
         related_name="created_journal_entries",
     )
 
     approved_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
+        verbose_name=_("Approved By"),
         on_delete=models.PROTECT,
         related_name="approved_journal_entries",
         null=True,
         blank=True,
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
+
+    class Meta:
+        verbose_name = _("Journal Entry")
+        verbose_name_plural = _("Journal Entries")
 
     def __str__(self):
         return self.entry_number
@@ -105,18 +122,21 @@ class JournalEntry(models.Model):
 class JournalEntryLine(models.Model):
     journal_entry = models.ForeignKey(
         JournalEntry,
+        verbose_name=_("Journal Entry"),
         on_delete=models.CASCADE,
         related_name="lines",
     )
 
     account = models.ForeignKey(
         Account,
+        verbose_name=_("Account"),
         on_delete=models.PROTECT,
         related_name="journal_lines",
     )
 
     customer = models.ForeignKey(
         Customer,
+        verbose_name=_("Customer"),
         on_delete=models.PROTECT,
         null=True,
         blank=True,
@@ -125,6 +145,7 @@ class JournalEntryLine(models.Model):
 
     supplier = models.ForeignKey(
         Supplier,
+        verbose_name=_("Supplier"),
         on_delete=models.PROTECT,
         null=True,
         blank=True,
@@ -132,75 +153,85 @@ class JournalEntryLine(models.Model):
     )
 
     description = models.CharField(
+        _("Description"),
         max_length=255,
         blank=True,
     )
 
     debit = models.DecimalField(
+        _("Debit"),
         max_digits=14,
         decimal_places=3,
         default=0,
     )
 
     credit = models.DecimalField(
+        _("Credit"),
         max_digits=14,
         decimal_places=3,
         default=0,
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("Journal Entry Line")
+        verbose_name_plural = _("Journal Entry Lines")
 
     def clean(self):
         super().clean()
 
         if self.debit < 0:
             raise ValidationError({
-                "debit": "Debit cannot be negative."
+                "debit": _("Debit cannot be negative.")
             })
 
         if self.credit < 0:
             raise ValidationError({
-                "credit": "Credit cannot be negative."
+                "credit": _("Credit cannot be negative.")
             })
 
         if self.debit > 0 and self.credit > 0:
             raise ValidationError(
-                "A journal line cannot contain both debit and credit."
+                _("A journal line cannot contain both debit and credit.")
             )
 
         if self.debit == 0 and self.credit == 0:
             raise ValidationError(
-                "A journal line must contain a debit or credit amount."
+                _("A journal line must contain a debit or credit amount.")
             )
 
         if not self.account.allow_posting:
             raise ValidationError({
-                "account": "This account does not allow direct posting."
+                "account": _("This account does not allow direct posting.")
             })
 
     def __str__(self):
         return f"{self.journal_entry.entry_number} - {self.account}"
 
+
 class ReceiptVoucher(models.Model):
     class Status(models.TextChoices):
-        DRAFT = "draft", "Draft"
-        CONFIRMED = "confirmed", "Confirmed"
-        CANCELLED = "cancelled", "Cancelled"
+        DRAFT = "draft", _("Draft")
+        CONFIRMED = "confirmed", _("Confirmed")
+        CANCELLED = "cancelled", _("Cancelled")
 
     class PaymentMethod(models.TextChoices):
-        CASH = "cash", "Cash"
-        CARD = "card", "Card"
-        BANK = "bank", "Bank"
+        CASH = "cash", _("Cash")
+        CARD = "card", _("Card")
+        BANK = "bank", _("Bank")
 
     voucher_number = models.CharField(
+        _("Voucher Number"),
         max_length=30,
         unique=True,
     )
 
-    date = models.DateField()
+    date = models.DateField(_("Date"))
 
     customer = models.ForeignKey(
         "customers.Customer",
+        verbose_name=_("Customer"),
         on_delete=models.PROTECT,
         null=True,
         blank=True,
@@ -208,35 +239,42 @@ class ReceiptVoucher(models.Model):
     )
 
     received_from = models.CharField(
+        _("Received From"),
         max_length=200,
     )
 
     account = models.ForeignKey(
         Account,
+        verbose_name=_("Account"),
         on_delete=models.PROTECT,
         related_name="receipt_vouchers",
     )
 
     amount = models.DecimalField(
+        _("Amount"),
         max_digits=14,
         decimal_places=3,
     )
 
     payment_method = models.CharField(
+        _("Payment Method"),
         max_length=20,
         choices=PaymentMethod.choices,
     )
 
     reference = models.CharField(
+        _("Reference"),
         max_length=100,
         blank=True,
     )
 
     description = models.TextField(
+        _("Description"),
         blank=True,
     )
 
     status = models.CharField(
+        _("Status"),
         max_length=20,
         choices=Status.choices,
         default=Status.DRAFT,
@@ -244,17 +282,24 @@ class ReceiptVoucher(models.Model):
 
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
+        verbose_name=_("Created By"),
         on_delete=models.PROTECT,
         related_name="created_receipt_vouchers",
     )
 
     created_at = models.DateTimeField(
+        _("Created At"),
         auto_now_add=True,
     )
 
     updated_at = models.DateTimeField(
+        _("Updated At"),
         auto_now=True,
     )
+
+    class Meta:
+        verbose_name = _("Receipt Voucher")
+        verbose_name_plural = _("Receipt Vouchers")
 
     def __str__(self):
         return self.voucher_number
@@ -262,24 +307,26 @@ class ReceiptVoucher(models.Model):
 
 class PaymentVoucher(models.Model):
     class Status(models.TextChoices):
-        DRAFT = "draft", "Draft"
-        CONFIRMED = "confirmed", "Confirmed"
-        CANCELLED = "cancelled", "Cancelled"
+        DRAFT = "draft", _("Draft")
+        CONFIRMED = "confirmed", _("Confirmed")
+        CANCELLED = "cancelled", _("Cancelled")
 
     class PaymentMethod(models.TextChoices):
-        CASH = "cash", "Cash"
-        CARD = "card", "Card"
-        BANK = "bank", "Bank"
+        CASH = "cash", _("Cash")
+        CARD = "card", _("Card")
+        BANK = "bank", _("Bank")
 
     voucher_number = models.CharField(
+        _("Voucher Number"),
         max_length=30,
         unique=True,
     )
 
-    date = models.DateField()
+    date = models.DateField(_("Date"))
 
     supplier = models.ForeignKey(
         "suppliers.Supplier",
+        verbose_name=_("Supplier"),
         on_delete=models.PROTECT,
         null=True,
         blank=True,
@@ -287,35 +334,42 @@ class PaymentVoucher(models.Model):
     )
 
     paid_to = models.CharField(
+        _("Paid To"),
         max_length=200,
     )
 
     account = models.ForeignKey(
         Account,
+        verbose_name=_("Account"),
         on_delete=models.PROTECT,
         related_name="payment_vouchers",
     )
 
     amount = models.DecimalField(
+        _("Amount"),
         max_digits=14,
         decimal_places=3,
     )
 
     payment_method = models.CharField(
+        _("Payment Method"),
         max_length=20,
         choices=PaymentMethod.choices,
     )
 
     reference = models.CharField(
+        _("Reference"),
         max_length=100,
         blank=True,
     )
 
     description = models.TextField(
+        _("Description"),
         blank=True,
     )
 
     status = models.CharField(
+        _("Status"),
         max_length=20,
         choices=Status.choices,
         default=Status.DRAFT,
@@ -323,17 +377,24 @@ class PaymentVoucher(models.Model):
 
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
+        verbose_name=_("Created By"),
         on_delete=models.PROTECT,
         related_name="created_payment_vouchers",
     )
 
     created_at = models.DateTimeField(
+        _("Created At"),
         auto_now_add=True,
     )
 
     updated_at = models.DateTimeField(
+        _("Updated At"),
         auto_now=True,
     )
+
+    class Meta:
+        verbose_name = _("Payment Voucher")
+        verbose_name_plural = _("Payment Vouchers")
 
     def __str__(self):
         return self.voucher_number
