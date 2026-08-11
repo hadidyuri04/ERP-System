@@ -879,3 +879,12 @@ msgstr "بند عرض السعر"
 #: .\quotations\models.py:49
 msgid "Quotation Items"
 msgstr "بنود عرض السعر"
+
+#: pos/services.py:15
+msgid "Cannot complete a sale with an empty cart."
+msgstr "لا يمكن إتمام عملية بيع باستخدام عربة تسوق فارغة."
+
+#: pos/services.py:31
+#, python-format
+msgid "Insufficient stock for product %(product_name)s. Available: %(available)s, Requested: %(quantity)s"
+msgstr "الكمية غير كافية للمنتج %(product_name)s. المتوفر: %(available)s، المطلوبة: %(quantity)s"
