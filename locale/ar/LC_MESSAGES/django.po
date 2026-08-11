@@ -888,3 +888,79 @@ msgstr "لا يمكن إتمام عملية بيع باستخدام عربة ت�
 #, python-format
 msgid "Insufficient stock for product %(product_name)s. Available: %(available)s, Requested: %(quantity)s"
 msgstr "الكمية غير كافية للمنتج %(product_name)s. المتوفر: %(available)s، المطلوبة: %(quantity)s"
+
+#: finance/services.py:215
+msgid "Only confirmed purchase invoices can be posted to accounting."
+msgstr "فقط فواتير الشراء المؤكدة يمكن ترحيلها إلى الحسابات."
+
+#: finance/services.py:226
+#, python-format
+msgid "Purchase Invoice %(invoice_number)s from %(supplier_name)s"
+msgstr "فاتورة الشراء %(invoice_number)s من المورد %(supplier_name)s"
+
+#: finance/services.py:237
+#, python-format
+msgid "Stock purchase from %(supplier_name)s"
+msgstr "شراء مخزون من المورد %(supplier_name)s"
+
+#: finance/services.py:246
+#, python-format
+msgid "Payable for purchase invoice %(invoice_number)s"
+msgstr "المستحق لفاتورة الشراء %(invoice_number)s"
+
+#: finance/services.py:265
+msgid "Only completed POS sales can be posted."
+msgstr "فقط مبيعات نقاط البيع المكتملة يمكن ترحيلها."
+
+#: finance/services.py:279
+#, python-format
+msgid "POS Sale %(sale_number)s"
+msgstr "بيع نقطة بيع %(sale_number)s"
+
+#: finance/services.py:288
+#, python-format
+msgid "Cash received for sale %(sale_number)s"
+msgstr "النقد المستلم للبيع %(sale_number)s"
+
+#: finance/services.py:296
+#, python-format
+msgid "Sales revenue for %(sale_number)s"
+msgstr "إيرادات المبيعات لـ %(sale_number)s"
+
+#: finance/services.py:309
+#, python-format
+msgid "Cost of Goods Sold for POS Sale %(sale_number)s"
+msgstr "تكلفة البضاعة المباعة لعملية البيع %(sale_number)s"
+
+#: finance/services.py:318
+#, python-format
+msgid "COGS for sale %(sale_number)s"
+msgstr "تكلفة البضاعة المباعة للبيع %(sale_number)s"
+
+#: finance/services.py:326
+#, python-format
+msgid "Inventory reduction for sale %(sale_number)s"
+msgstr "تخفيض المخزون للبيع %(sale_number)s"
+
+#: finance/services.py:343
+msgid "Only confirmed waste and loss documents can be posted."
+msgstr "فقط مستندات الهالك والخسائر المؤكدة يمكن ترحيلها."
+
+#: finance/services.py:350
+msgid "Waste document total cost cannot be zero."
+msgstr "لا يمكن أن تكون التكلفة الإجمالية لمستند الهالك صفراً."
+
+#: finance/services.py:354
+#, python-format
+msgid "Waste & Loss document %(document_number)s"
+msgstr "مستند الهالك والخسائر %(document_number)s"
+
+#: finance/services.py:363
+#, python-format
+msgid "Waste write-off for document %(document_number)s"
+msgstr "شطب الهالك للمستند %(document_number)s"
+
+#: finance/services.py:371
+#, python-format
+msgid "Inventory reduction due to waste %(document_number)s"
+msgstr "تخفيض المخزون بسبب الهالك %(document_number)s"

@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
-
+from django.utils.translation import gettext_lazy as _
 from .models import (
     Account,
     JournalEntry,
@@ -240,3 +240,184 @@ def post_payment_voucher(voucher_id, user):
     )
 
     return voucher
+
+@transaction.atomic
+def post_purchase_invoice(invoice_id, user):
+    """
+    Creates and posts a journal entry for a confirmed Purchase Invoice:
+    Debit: Inventory (Account 1400)
+    Credit: Accounts Payable (Account 2100) or Cash
+    """
+    from purchasing.models import PurchaseInvoice
+    invoice = PurchaseInvoice.objects.select_related('supplier', 'warehouse').get(pk=invoice_id)
+
+    if invoice.status != PurchaseInvoice.Status.CONFIRMED:
+        raise ValidationError(_("Only confirmed purchase invoices can be posted to accounting."))
+
+    inventory_account = Account.objects.get(code="1400")
+    payable_account = Account.objects.get(code="2100") # Or cash depending on payment type
+
+    journal = JournalEntry.objects.create(
+        entry_number=f"PI-{invoice.invoice_number}",
+        date=invoice.invoice_date,
+        description=_("Purchase Invoice %(invoice_number)s from %(supplier_name)s") % {
+            'invoice_number': invoice.invoice_number,
+            'supplier_name': invoice.supplier.name
+        },
+        source_type=JournalEntry.SourceType.PURCHASE,
+        source_id=invoice.id,
+        status=JournalEntry.Status.DRAFT,
+        created_by=user,
+    )
+
+    # Debit Inventory
+    JournalEntryLine.objects.create(
+        journal_entry=journal,
+        account=inventory_account,
+        description=_("Stock purchase from %(supplier_name)s") % {'supplier_name': invoice.supplier.name},
+        debit=invoice.subtotal, # Adjust if including tax/discounts per design rules
+        credit=Decimal("0.000"),
+    )
+
+    # Credit Accounts Payable
+    JournalEntryLine.objects.create(
+        journal_entry=journal,
+        account=payable_account,
+        supplier=invoice.supplier,
+        description=_("Payable for purchase invoice %(invoice_number)s") % {'invoice_number': invoice.invoice_number},
+        debit=Decimal("0.000"),
+        credit=invoice.total,
+    )
+
+    return post_journal_entry(journal.id)
+
+
+@transaction.atomic
+def post_pos_sale(sale_id, user):
+    """
+    Creates and posts journal entries for a completed POS Sale:
+    1. Revenue Entry: Debit Cash/Receivable, Credit Sales Revenue
+    2. COGS Entry: Debit Cost of Goods Sold, Credit Inventory
+    """
+    from pos.models import POSSale
+    sale = POSSale.objects.prefetch_related('items', 'payments').get(pk=sale_id)
+
+    if sale.status != POSSale.Status.COMPLETED:
+        raise ValidationError(_("Only completed POS sales can be posted."))
+
+    cash_account = Account.objects.get(code="1100") # Assuming Cash/Main Account
+    sales_revenue_account = Account.objects.get(code="4100")
+    cogs_account = Account.objects.get(code="5100")
+    inventory_account = Account.objects.get(code="1400")
+
+    # Calculate total cost of goods sold (COGS) from items
+    total_cogs = sum((item.quantity * item.unit_cost for item in sale.items.all()), Decimal("0.000"))
+
+    # 1. Sales Revenue Journal Entry
+    journal_sale = JournalEntry.objects.create(
+        entry_number=f"POS-{sale.sale_number}",
+        date=sale.date.date(),
+        description=_("POS Sale %(sale_number)s") % {'sale_number': sale.sale_number},
+        source_type=JournalEntry.SourceType.POS_SALE,
+        source_id=sale.id,
+        status=JournalEntry.Status.DRAFT,
+        created_by=user,
+    )
+
+    JournalEntryLine.objects.create(
+        journal_entry=journal_sale,
+        account=cash_account,
+        description=_("Cash received for sale %(sale_number)s") % {'sale_number': sale.sale_number},
+        debit=sale.total,
+        credit=Decimal("0.000"),
+    )
+
+    JournalEntryLine.objects.create(
+        journal_entry=journal_sale,
+        account=sales_revenue_account,
+        description=_("Sales revenue for %(sale_number)s") % {'sale_number': sale.sale_number},
+        debit=Decimal("0.000"),
+        credit=sale.total,
+    )
+    post_journal_entry(journal_sale.id)
+
+    # 2. COGS Journal Entry (if items have cost)
+    if total_cogs > 0:
+        journal_cogs = JournalEntry.objects.create(
+            entry_number=f"COGS-{sale.sale_number}",
+            date=sale.date.date(),
+            description=_("Cost of Goods Sold for POS Sale %(sale_number)s") % {'sale_number': sale.sale_number},
+            source_type=JournalEntry.SourceType.POS_SALE,
+            source_id=sale.id,
+            status=JournalEntry.Status.DRAFT,
+            created_by=user,
+        )
+
+        JournalEntryLine.objects.create(
+            journal_entry=journal_cogs,
+            account=cogs_account,
+            description=_("COGS for sale %(sale_number)s") % {'sale_number': sale.sale_number},
+            debit=total_cogs,
+            credit=Decimal("0.000"),
+        )
+
+        JournalEntryLine.objects.create(
+            journal_entry=journal_cogs,
+            account=inventory_account,
+            description=_("Inventory reduction for sale %(sale_number)s") % {'sale_number': sale.sale_number},
+            debit=Decimal("0.000"),
+            credit=total_cogs,
+        )
+        post_journal_entry(journal_cogs.id)
+
+    return sale
+
+
+@transaction.atomic
+def post_waste_loss(waste_id, user):
+    """
+    Creates and posts a journal entry for confirmed Waste & Loss:
+    Debit: Waste & Loss Expense (Account 6300)
+    Credit: Inventory (Account 1400)
+    """
+    from inventory.models import WasteLoss
+    waste = WasteLoss.objects.prefetch_related('items').get(pk=waste_id)
+
+    if waste.status != WasteLoss.Status.CONFIRMED:
+        raise ValidationError(_("Only confirmed waste and loss documents can be posted."))
+
+    waste_account = Account.objects.get(code="6300")
+    inventory_account = Account.objects.get(code="1400")
+
+    total_waste_cost = sum((item.total_cost for item in waste.items.all()), Decimal("0.000"))
+
+    if total_waste_cost <= 0:
+        raise ValidationError(_("Waste document total cost cannot be zero."))
+
+    journal = JournalEntry.objects.create(
+        entry_number=f"WST-{waste.document_number}",
+        date=waste.date,
+        description=_("Waste & Loss document %(document_number)s") % {'document_number': waste.document_number},
+        source_type=JournalEntry.SourceType.WASTE,
+        source_id=waste.id,
+        status=JournalEntry.Status.DRAFT,
+        created_by=user,
+    )
+
+    JournalEntryLine.objects.create(
+        journal_entry=journal,
+        account=waste_account,
+        description=_("Waste write-off for document %(document_number)s") % {'document_number': waste.document_number},
+        debit=total_waste_cost,
+        credit=Decimal("0.000"),
+    )
+
+    JournalEntryLine.objects.create(
+        journal_entry=journal,
+        account=inventory_account,
+        description=_("Inventory reduction due to waste %(document_number)s") % {'document_number': waste.document_number},
+        debit=Decimal("0.000"),
+        credit=total_waste_cost,
+    )
+
+    return post_journal_entry(journal.id)
