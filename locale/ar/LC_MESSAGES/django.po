@@ -1,24 +1,23 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Arabic (Jordan) translation - Finance / Inventory / POS ERP
+# Merged: model strings (backend) + template strings (frontend).
+# On duplicate msgids the backend wording was kept for consistency.
+# Regenerate with: django-admin makemessages -l ar --ignore=preview*
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: ERP System 1.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-08-11 14:32+0300\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"PO-Revision-Date: 2026-08-11 15:00+0300\n"
+"Last-Translator: Sphereka team\n"
+"Language-Team: Arabic\n"
 "Language: ar\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
-"&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
 
-#: .\accounts\models.py:8
+#: .\accounts\models.py:8 templates/core/base.html:203
 msgid "Administrator"
 msgstr "مدير النظام"
 
@@ -74,14 +73,19 @@ msgid "Tax Number"
 msgstr "الرقم الضريبي"
 
 #: .\core\models.py:8 .\customers\models.py:18
+#: templates/customers/customer_form.html:30
+#: templates/customers/customer_list.html:43
+#: templates/suppliers/supplier_list.html:37
 msgid "Phone"
 msgstr "رقم الهاتف"
 
 #: .\core\models.py:9 .\customers\models.py:24
+#: templates/customers/customer_form.html:34
 msgid "Email"
 msgstr "البريد الإلكتروني"
 
 #: .\core\models.py:10 .\customers\models.py:29
+#: templates/customers/customer_form.html:38
 msgid "Address"
 msgstr "العنوان"
 
@@ -103,11 +107,18 @@ msgstr "إعدادات الشركة"
 
 #: .\customers\models.py:7 .\finance\models.py:18 .\inventory\models.py:7
 #: .\inventory\models.py:42 .\inventory\models.py:76
+#: templates/customers/customer_list.html:41
+#: templates/inventory/product_list.html:64
+#: templates/reports/trial_balance.html:55
+#: templates/suppliers/supplier_list.html:35
 msgid "Code"
 msgstr "الرمز"
 
 #: .\customers\models.py:13 .\finance\models.py:19 .\inventory\models.py:8
 #: .\inventory\models.py:29 .\inventory\models.py:44 .\inventory\models.py:77
+#: templates/customers/customer_list.html:42
+#: templates/inventory/product_list.html:65
+#: templates/suppliers/supplier_list.html:36
 msgid "Name"
 msgstr "الاسم"
 
@@ -119,9 +130,12 @@ msgstr "حد الائتمان"
 msgid "Opening Balance"
 msgstr "رصيد افتتاحي"
 
-#: .\customers\models.py:54 .\inventory\models.py:148 .\inventory\models.py:206
-#: .\inventory\models.py:279 .\pos\models.py:55 .\purchasing\models.py:110
-#: .\quotations\models.py:26
+#: .\customers\models.py:54 .\inventory\models.py:148
+#: .\inventory\models.py:206 .\inventory\models.py:279 .\pos\models.py:55
+#: .\purchasing\models.py:110 .\quotations\models.py:26
+#: templates/customers/customer_form.html:67
+#: templates/inventory/waste_loss_form.html:125
+#: templates/purchasing/purchase_invoice_form.html:175
 msgid "Notes"
 msgstr "ملاحظات"
 
@@ -132,30 +146,43 @@ msgstr "نشط"
 
 #: .\customers\models.py:74 .\finance\models.py:139 .\finance\models.py:234
 #: .\pos\models.py:18 .\quotations\models.py:16
+#: templates/finance/receipt_voucher_form.html:56
+#: templates/pos/pos_screen.html:110
+#: templates/quotations/quotation_form.html:37
 msgid "Customer"
 msgstr "العميل"
 
-#: .\customers\models.py:75
+#: .\customers\models.py:75 templates/core/base.html:71
+#: templates/customers/customer_list.html:4
+#: templates/customers/customer_list.html:7
 msgid "Customers"
 msgstr "العملاء"
 
-#: .\finance\models.py:12
+#: .\finance\models.py:12 templates/reports/trial_balance.html:36
+#: templates/reports/trial_balance.html:79
+#: templates/reports/trial_balance.html:86
+#: templates/reports/trial_balance.html:93
+#: templates/reports/trial_balance.html:100
 msgid "Asset"
 msgstr "أصل"
 
-#: .\finance\models.py:13
+#: .\finance\models.py:13 templates/reports/trial_balance.html:37
+#: templates/reports/trial_balance.html:107
 msgid "Liability"
 msgstr "التزام"
 
-#: .\finance\models.py:14
+#: .\finance\models.py:14 templates/reports/trial_balance.html:38
 msgid "Equity"
 msgstr "حقوق ملكية"
 
-#: .\finance\models.py:15
+#: .\finance\models.py:15 templates/reports/trial_balance.html:39
+#: templates/reports/trial_balance.html:114
 msgid "Revenue"
 msgstr "إيراد"
 
-#: .\finance\models.py:16
+#: .\finance\models.py:16 templates/reports/trial_balance.html:40
+#: templates/reports/trial_balance.html:121
+#: templates/reports/trial_balance.html:128
 msgid "Expense"
 msgstr "مصروف"
 
@@ -172,7 +199,7 @@ msgid "Allow Posting"
 msgstr "السماح بالترحيل"
 
 #: .\finance\models.py:43 .\finance\models.py:132 .\finance\models.py:248
-#: .\finance\models.py:343
+#: .\finance\models.py:343 templates/reports/general_ledger.html:25
 msgid "Account"
 msgstr "حساب"
 
@@ -182,7 +209,10 @@ msgstr "الحسابات"
 
 #: .\finance\models.py:52 .\finance\models.py:215 .\finance\models.py:310
 #: .\inventory\models.py:181 .\pos\models.py:9 .\purchasing\models.py:11
-#: .\quotations\models.py:9
+#: .\quotations\models.py:9 templates/finance/payment_voucher_form.html:36
+#: templates/finance/receipt_voucher_form.html:36
+#: templates/inventory/warehouse_list.html:107
+#: templates/purchasing/purchase_invoice_form.html:12
 msgid "Draft"
 msgstr "مسودة"
 
@@ -199,10 +229,13 @@ msgid "Manual"
 msgstr "يدوي"
 
 #: .\finance\models.py:58 .\inventory\models.py:126
+#: templates/reports/general_ledger.html:130
 msgid "Purchase"
 msgstr "شراء"
 
 #: .\finance\models.py:59 .\pos\models.py:58
+#: templates/reports/general_ledger.html:103
+#: templates/reports/general_ledger.html:139
 msgid "POS Sale"
 msgstr "مبيعات نقطة البيع"
 
@@ -214,7 +247,10 @@ msgstr "سند قبض"
 msgid "Payment Voucher"
 msgstr "سند صرف"
 
-#: .\finance\models.py:62
+#: .\finance\models.py:62 templates/core/base.html:111
+#: templates/inventory/waste_loss_form.html:4
+#: templates/inventory/waste_loss_form.html:7
+#: templates/reports/trial_balance.html:127
 msgid "Waste & Loss"
 msgstr "الهالك والفاقد"
 
@@ -228,13 +264,21 @@ msgstr "رقم القيد"
 
 #: .\finance\models.py:71 .\finance\models.py:230 .\finance\models.py:325
 #: .\inventory\models.py:199 .\inventory\models.py:273 .\pos\models.py:39
-#: .\quotations\models.py:17
+#: .\quotations\models.py:17 templates/finance/payment_voucher_form.html:47
+#: templates/finance/receipt_voucher_form.html:47
+#: templates/inventory/warehouse_list.html:83
+#: templates/inventory/waste_loss_form.html:39
+#: templates/quotations/quotation_form.html:45
+#: templates/reports/general_ledger.html:69
 msgid "Date"
 msgstr "التاريخ"
 
 #: .\finance\models.py:73 .\finance\models.py:156 .\finance\models.py:272
 #: .\finance\models.py:367 .\inventory\models.py:17 .\inventory\models.py:45
-#: .\inventory\models.py:79
+#: .\inventory\models.py:79 templates/finance/payment_voucher_form.html:108
+#: templates/finance/receipt_voucher_form.html:109
+#: templates/inventory/product_form.html:72
+#: templates/reports/general_ledger.html:71
 msgid "Description"
 msgstr "الوصف"
 
@@ -249,6 +293,12 @@ msgstr "معرف المصدر"
 #: .\finance\models.py:89 .\finance\models.py:277 .\finance\models.py:372
 #: .\inventory\models.py:112 .\inventory\models.py:201 .\pos\models.py:41
 #: .\purchasing\models.py:61 .\quotations\models.py:19
+#: templates/customers/customer_form.html:76
+#: templates/customers/customer_list.html:46
+#: templates/inventory/product_form.html:134
+#: templates/inventory/product_list.html:70
+#: templates/inventory/warehouse_list.html:87
+#: templates/suppliers/supplier_list.html:40
 msgid "Status"
 msgstr "الحالة"
 
@@ -272,15 +322,27 @@ msgid "Journal Entries"
 msgstr "قيود اليومية"
 
 #: .\finance\models.py:148 .\finance\models.py:329 .\inventory\models.py:109
-#: .\purchasing\models.py:27
+#: .\purchasing\models.py:27 templates/finance/payment_voucher_form.html:56
+#: templates/purchasing/purchase_invoice_form.html:34
 msgid "Supplier"
 msgstr "المورد"
 
-#: .\finance\models.py:162
+#: .\finance\models.py:162 templates/finance/payment_voucher_form.html:123
+#: templates/finance/receipt_voucher_form.html:124
+#: templates/inventory/waste_loss_form.html:142
+#: templates/reports/general_ledger.html:73
+#: templates/reports/trial_balance.html:58
 msgid "Debit"
 msgstr "مدين"
 
 #: .\finance\models.py:169 .\purchasing\models.py:17
+#: templates/finance/payment_voucher_form.html:128
+#: templates/finance/receipt_voucher_form.html:129
+#: templates/inventory/waste_loss_form.html:143
+#: templates/pos/pos_screen.html:157
+#: templates/purchasing/purchase_invoice_form.html:64
+#: templates/reports/general_ledger.html:74
+#: templates/reports/trial_balance.html:59
 msgid "Credit"
 msgstr "دائن / ذمم"
 
@@ -313,6 +375,7 @@ msgid "This account does not allow direct posting."
 msgstr "هذا الحساب لا يسمح بالترحيل المباشر إليه."
 
 #: .\finance\models.py:216 .\finance\models.py:311 .\purchasing\models.py:12
+#: templates/inventory/warehouse_list.html:98
 msgid "Confirmed"
 msgstr "مؤكد"
 
@@ -322,15 +385,28 @@ msgid "Cancelled"
 msgstr "ملغي"
 
 #: .\finance\models.py:220 .\finance\models.py:315 .\pos\models.py:109
-#: .\purchasing\models.py:16
+#: .\purchasing\models.py:16 templates/finance/payment_voucher_form.html:86
+#: templates/finance/payment_voucher_form.html:96
+#: templates/finance/receipt_voucher_form.html:86
+#: templates/finance/receipt_voucher_form.html:97
+#: templates/pos/pos_screen.html:148
+#: templates/purchasing/purchase_invoice_form.html:63
+#: templates/reports/general_ledger.html:28
+#: templates/reports/trial_balance.html:78
 msgid "Cash"
 msgstr "نقدي"
 
 #: .\finance\models.py:221 .\finance\models.py:316 .\pos\models.py:110
+#: templates/finance/payment_voucher_form.html:87
+#: templates/finance/receipt_voucher_form.html:87
+#: templates/pos/pos_screen.html:151
 msgid "Card"
 msgstr "بطاقة"
 
 #: .\finance\models.py:222 .\finance\models.py:317
+#: templates/finance/payment_voucher_form.html:97
+#: templates/finance/receipt_voucher_form.html:98
+#: templates/pos/pos_screen.html:154 templates/reports/trial_balance.html:85
 msgid "Bank"
 msgstr "بنك"
 
@@ -343,6 +419,8 @@ msgid "Received From"
 msgstr "مستلم من"
 
 #: .\finance\models.py:254 .\finance\models.py:349 .\pos\models.py:127
+#: templates/finance/payment_voucher_form.html:76
+#: templates/finance/receipt_voucher_form.html:76
 msgid "Amount"
 msgstr "المبلغ"
 
@@ -351,6 +429,8 @@ msgid "Payment Method"
 msgstr "طريقة الدفع"
 
 #: .\finance\models.py:266 .\finance\models.py:361
+#: templates/finance/payment_voucher_form.html:102
+#: templates/finance/receipt_voucher_form.html:103
 msgid "Reference"
 msgstr "المرجع"
 
@@ -371,6 +451,8 @@ msgid "Parent Category"
 msgstr "التصنيف الرئيسي"
 
 #: .\inventory\models.py:21 .\inventory\models.py:49
+#: templates/inventory/product_form.html:62
+#: templates/inventory/product_list.html:66
 msgid "Category"
 msgstr "التصنيف"
 
@@ -383,6 +465,7 @@ msgid "Symbol"
 msgstr "الرمز المختصر"
 
 #: .\inventory\models.py:34 .\inventory\models.py:55
+#: templates/inventory/product_list.html:67
 msgid "Unit"
 msgstr "الوحدة"
 
@@ -390,7 +473,7 @@ msgstr "الوحدة"
 msgid "Units"
 msgstr "الوحدات"
 
-#: .\inventory\models.py:43
+#: .\inventory\models.py:43 templates/inventory/product_form.html:36
 msgid "Barcode"
 msgstr "الباركود"
 
@@ -413,7 +496,15 @@ msgstr "تتبع صلاحية المنتج"
 #: .\inventory\models.py:68 .\inventory\models.py:98 .\inventory\models.py:137
 #: .\inventory\models.py:162 .\inventory\models.py:234
 #: .\inventory\models.py:307 .\pos\models.py:76 .\purchasing\models.py:148
-#: .\quotations\models.py:40
+#: .\quotations\models.py:40 templates/inventory/waste_loss_form.html:68
+#: templates/inventory/waste_loss_form.html:79
+#: templates/inventory/waste_loss_form.html:103
+#: templates/purchasing/purchase_invoice_form.html:97
+#: templates/purchasing/purchase_invoice_form.html:113
+#: templates/purchasing/purchase_invoice_form.html:145
+#: templates/quotations/quotation_form.html:67
+#: templates/quotations/quotation_form.html:79
+#: templates/quotations/quotation_form.html:99
 msgid "Product"
 msgstr "المنتج"
 
@@ -427,20 +518,31 @@ msgstr "الموقع"
 
 #: .\inventory\models.py:83 .\inventory\models.py:99 .\inventory\models.py:138
 #: .\inventory\models.py:163 .\inventory\models.py:269 .\pos\models.py:27
-#: .\purchasing\models.py:34
+#: .\purchasing\models.py:34 templates/inventory/waste_loss_form.html:31
 msgid "Warehouse"
 msgstr "المستودع"
 
-#: .\inventory\models.py:84
+#: .\inventory\models.py:84 templates/core/base.html:86
+#: templates/inventory/warehouse_list.html:4
+#: templates/inventory/warehouse_list.html:7
 msgid "Warehouses"
 msgstr "المستودعات"
 
-#: .\inventory\models.py:93
+#: .\inventory\models.py:93 templates/customers/customer_form.html:79
+#: templates/customers/customer_list.html:30
+#: templates/customers/customer_list.html:58
+#: templates/customers/customer_list.html:82
+#: templates/inventory/product_form.html:139
+#: templates/inventory/warehouse_list.html:43
+#: templates/inventory/warehouse_list.html:66
+#: templates/suppliers/supplier_list.html:52
+#: templates/suppliers/supplier_list.html:64
 msgid "Active"
 msgstr "نشط"
 
 #: .\inventory\models.py:94 .\inventory\models.py:259
 #: .\notifications\models.py:9 .\quotations\models.py:13
+#: templates/inventory/waste_loss_form.html:45
 msgid "Expired"
 msgstr "منتهي الصلاحية"
 
@@ -533,6 +635,15 @@ msgstr "نوع الحركة"
 #: .\inventory\models.py:142 .\inventory\models.py:165
 #: .\inventory\models.py:246 .\inventory\models.py:319 .\pos\models.py:90
 #: .\purchasing\models.py:154 .\quotations\models.py:41
+#: templates/inventory/waste_loss_form.html:70
+#: templates/inventory/waste_loss_form.html:91
+#: templates/inventory/waste_loss_form.html:114
+#: templates/purchasing/purchase_invoice_form.html:98
+#: templates/purchasing/purchase_invoice_form.html:121
+#: templates/purchasing/purchase_invoice_form.html:153
+#: templates/quotations/quotation_form.html:68
+#: templates/quotations/quotation_form.html:85
+#: templates/quotations/quotation_form.html:105
 msgid "Quantity"
 msgstr "الكمية"
 
@@ -600,23 +711,23 @@ msgstr "بند تحويل المستودع"
 msgid "Warehouse Transfer Items"
 msgstr "بنود تحويل المستودع"
 
-#: .\inventory\models.py:260
+#: .\inventory\models.py:260 templates/inventory/waste_loss_form.html:46
 msgid "Damaged"
 msgstr "متضرر"
 
-#: .\inventory\models.py:261
+#: .\inventory\models.py:261 templates/inventory/waste_loss_form.html:47
 msgid "Spoiled"
 msgstr "فاسد"
 
-#: .\inventory\models.py:262
+#: .\inventory\models.py:262 templates/inventory/waste_loss_form.html:48
 msgid "Broken"
 msgstr "مكسور"
 
-#: .\inventory\models.py:263
+#: .\inventory\models.py:263 templates/inventory/waste_loss_form.html:49
 msgid "Missing"
 msgstr "مفقود"
 
-#: .\inventory\models.py:264
+#: .\inventory\models.py:264 templates/inventory/waste_loss_form.html:50
 msgid "Other"
 msgstr "أخرى"
 
@@ -624,7 +735,7 @@ msgstr "أخرى"
 msgid "Document Number"
 msgstr "رقم المستند"
 
-#: .\inventory\models.py:275
+#: .\inventory\models.py:275 templates/inventory/waste_loss_form.html:43
 msgid "Reason"
 msgstr "السبب"
 
@@ -650,14 +761,28 @@ msgstr "بنود الهالك والفاقد"
 
 #: .\inventory\services.py:45
 #, python-format
-msgid "Insufficient unexpired stock for product %(product)s. Short by %(short)s."
-msgid_plural "Insufficient unexpired stock for product %(product)s. Short by %(short)s."
-msgstr[0] "الرصيد غير الصالح أو غير الساري كافٍ للمنتج %(product)s. العجز بمقدار %(short)s."
-msgstr[1] "الرصيد غير الصالح أو غير الساري كافٍ للمنتج %(product)s. العجز بمقدار %(short)s."
-msgstr[2] "الرصيد غير الصالح أو غير الساري كافٍ للمنتج %(product)s. العجز بمقدار %(short)s."
-msgstr[3] "الرصيد غير الصالح أو غير الساري كافٍ للمنتج %(product)s. العجز بمقدار %(short)s."
-msgstr[4] "الرصيد غير الصالح أو غير الساري كافٍ للمنتج %(product)s. العجز بمقدار %(short)s."
-msgstr[5] "الرصيد غير الصالح أو غير الساري كافٍ للمنتج %(product)s. العجز بمقدار %(short)s."
+msgid ""
+"Insufficient unexpired stock for product %(product)s. Short by %(short)s."
+msgid_plural ""
+"Insufficient unexpired stock for product %(product)s. Short by %(short)s."
+msgstr[0] ""
+"الرصيد غير الصالح أو غير الساري كافٍ للمنتج %(product)s. العجز بمقدار "
+"%(short)s."
+msgstr[1] ""
+"الرصيد غير الصالح أو غير الساري كافٍ للمنتج %(product)s. العجز بمقدار "
+"%(short)s."
+msgstr[2] ""
+"الرصيد غير الصالح أو غير الساري كافٍ للمنتج %(product)s. العجز بمقدار "
+"%(short)s."
+msgstr[3] ""
+"الرصيد غير الصالح أو غير الساري كافٍ للمنتج %(product)s. العجز بمقدار "
+"%(short)s."
+msgstr[4] ""
+"الرصيد غير الصالح أو غير الساري كافٍ للمنتج %(product)s. العجز بمقدار "
+"%(short)s."
+msgstr[5] ""
+"الرصيد غير الصالح أو غير الساري كافٍ للمنتج %(product)s. العجز بمقدار "
+"%(short)s."
 
 #: .\inventory\services.py:56
 msgid "Stock addition quantity must be greater than zero."
@@ -669,8 +794,12 @@ msgstr "يجب أن تكون كمية إزالة المخزون أكبر من ا
 
 #: .\inventory\services.py:107
 #, python-format
-msgid "Negative stock rule enforced: Cannot remove %(qty)s of %(product)s. Available: %(available)s."
-msgstr "قاعدة منع المخزون السالب مفعلة: لا يمكن إزالة %(qty)s من %(product)s. المتاح: %(available)s."
+msgid ""
+"Negative stock rule enforced: Cannot remove %(qty)s of %(product)s. "
+"Available: %(available)s."
+msgstr ""
+"قاعدة منع المخزون السالب مفعلة: لا يمكن إزالة %(qty)s من %(product)s. "
+"المتاح: %(available)s."
 
 #: .\notifications\models.py:7
 msgid "Low Stock"
@@ -716,7 +845,8 @@ msgstr "مقروء"
 msgid "Notification"
 msgstr "إشعار"
 
-#: .\notifications\models.py:24
+#: .\notifications\models.py:24 templates/core/base.html:173
+#: templates/core/base.html:179
 msgid "Notifications"
 msgstr "الإشعارات"
 
@@ -725,6 +855,9 @@ msgid "Sale Number"
 msgstr "رقم البيع"
 
 #: .\pos\models.py:47 .\purchasing\models.py:68 .\quotations\models.py:21
+#: templates/pos/pos_screen.html:129
+#: templates/purchasing/purchase_invoice_form.html:184
+#: templates/quotations/quotation_form.html:125
 msgid "Subtotal"
 msgstr "المجموع الفرعي"
 
@@ -741,6 +874,9 @@ msgid "Tax Amount"
 msgstr "قيمة الضريبة"
 
 #: .\pos\models.py:50 .\purchasing\models.py:96 .\quotations\models.py:24
+#: templates/pos/pos_screen.html:138
+#: templates/purchasing/purchase_invoice_form.html:202
+#: templates/quotations/quotation_form.html:129
 msgid "Total"
 msgstr "المجموع الكلي"
 
@@ -865,10 +1001,11 @@ msgid "Expiry Date"
 msgstr "تاريخ الصلاحية"
 
 #: .\quotations\models.py:31 .\quotations\models.py:39
+#: templates/quotations/quotation_form.html:4
 msgid "Quotation"
 msgstr "عرض سعر"
 
-#: .\quotations\models.py:32
+#: .\quotations\models.py:32 templates/core/base.html:101
 msgid "Quotations"
 msgstr "عروض الأسعار"
 
@@ -879,3 +1016,1603 @@ msgstr "بند عرض السعر"
 #: .\quotations\models.py:49
 msgid "Quotation Items"
 msgstr "بنود عرض السعر"
+
+#: templates/core/base.html:8 templates/core/base.html:66
+#: templates/core/dashboard.html:4
+msgid "Dashboard"
+msgstr "لوحة التحكم"
+
+#: templates/core/base.html:8
+msgid "Sphereka ERP"
+msgstr "نظام سفيريكا"
+
+#: templates/core/base.html:53
+msgid "Home"
+msgstr "الرئيسية"
+
+#: templates/core/base.html:57
+msgid "Main navigation"
+msgstr "التنقل الرئيسي"
+
+#: templates/core/base.html:76 templates/suppliers/supplier_list.html:4
+#: templates/suppliers/supplier_list.html:7
+msgid "Suppliers"
+msgstr "الموردين"
+
+#: templates/core/base.html:81 templates/core/dashboard.html:182
+#: templates/inventory/product_list.html:4
+#: templates/inventory/product_list.html:7
+#: templates/inventory/warehouse_list.html:35
+#: templates/inventory/warehouse_list.html:58
+#: templates/purchasing/purchase_invoice_form.html:86
+#: templates/quotations/quotation_form.html:57
+msgid "Items"
+msgstr "الأصناف"
+
+#: templates/core/base.html:91
+msgid "Purchases"
+msgstr "المشتريات"
+
+#: templates/core/base.html:96 templates/pos/pos_screen.html:4
+#: templates/pos/pos_screen.html:7
+msgid "Point of Sale"
+msgstr "نقاط البيع"
+
+#: templates/core/base.html:106
+msgid "Finance"
+msgstr "المالية"
+
+#: templates/core/base.html:116
+msgid "Reports"
+msgstr "التقارير"
+
+#: templates/core/base.html:121 templates/core/base.html:209
+msgid "Settings"
+msgstr "الإعدادات"
+
+#: templates/core/base.html:124 templates/core/base.html:211
+msgid "Sign out of the system?"
+msgstr "تسجيل الخروج من النظام؟"
+
+#: templates/core/base.html:126 templates/core/base.html:212
+msgid "Sign out"
+msgstr "تسجيل الخروج"
+
+#: templates/core/base.html:137
+msgid "Open menu"
+msgstr "فتح القائمة"
+
+#: templates/core/base.html:143
+msgid "Hello, %(name)s!"
+msgstr "مرحبًا، %(name)s!"
+
+#: templates/core/base.html:143
+msgid "there"
+msgstr "بك"
+
+#: templates/core/base.html:144
+msgid "Explore information and activity across your business"
+msgstr "استعرض معلومات ونشاط منشأتك"
+
+#: templates/core/base.html:152
+msgid "Search products, invoices, customers..."
+msgstr "ابحث عن أصناف أو فواتير أو عملاء..."
+
+#: templates/core/base.html:153
+msgid "Global search"
+msgstr "بحث شامل"
+
+#: templates/core/base.html:154 templates/customers/customer_list.html:26
+#: templates/inventory/product_list.html:29
+#: templates/suppliers/supplier_list.html:26
+msgid "Search"
+msgstr "بحث"
+
+#: templates/core/base.html:160
+msgid "Change language"
+msgstr "تغيير اللغة"
+
+#: templates/core/base.html:180
+msgid "Mark all read"
+msgstr "تعليم الكل كمقروء"
+
+#: templates/core/base.html:185
+msgid "3 items expiring within 7 days"
+msgstr "٣ أصناف تنتهي صلاحيتها خلال ٧ أيام"
+
+#: templates/core/base.html:188
+msgid "Low stock: 5 products below minimum"
+msgstr "مخزون منخفض: ٥ أصناف تحت الحد الأدنى"
+
+#: templates/core/base.html:191
+msgid "Supplier payment due tomorrow"
+msgstr "دفعة مورد مستحقة غدًا"
+
+#: templates/core/base.html:200
+msgid "Admin User"
+msgstr "مستخدم النظام"
+
+#: templates/core/base.html:208
+msgid "My profile"
+msgstr "ملفي الشخصي"
+
+#: templates/core/base.html:238 templates/customers/customer_form.html:86
+#: templates/inventory/product_form.html:12
+#: templates/purchasing/purchase_invoice_form.html:13
+msgid "Cancel"
+msgstr "إلغاء"
+
+#: templates/core/base.html:239
+msgid "Confirm"
+msgstr "تأكيد"
+
+#: templates/core/base.html:253
+msgid "Close"
+msgstr "إغلاق"
+
+#: templates/core/base.html:254
+msgid "Success"
+msgstr "تم بنجاح"
+
+#: templates/core/base.html:255
+msgid "Error"
+msgstr "خطأ"
+
+#: templates/core/base.html:256
+msgid "Warning"
+msgstr "تحذير"
+
+#: templates/core/base.html:257
+msgid "Notice"
+msgstr "تنبيه"
+
+#: templates/core/base.html:258
+msgid "Saving..."
+msgstr "جارٍ الحفظ..."
+
+#: templates/core/base.html:259
+msgid "Saved"
+msgstr "تم الحفظ"
+
+#: templates/core/base.html:260
+msgid "Your changes have been saved."
+msgstr "تم حفظ التغييرات."
+
+#: templates/core/base.html:261
+msgid "Could not save"
+msgstr "تعذّر الحفظ"
+
+#: templates/core/base.html:262
+msgid "Please check the highlighted fields."
+msgstr "يرجى مراجعة الحقول المحددة."
+
+#: templates/core/base.html:263
+msgid "Request failed"
+msgstr "فشل الطلب"
+
+#: templates/core/base.html:264
+msgid "Please try again."
+msgstr "يرجى المحاولة مرة أخرى."
+
+#: templates/core/base.html:265
+msgid "Added to cart"
+msgstr "أُضيف إلى السلة"
+
+#: templates/core/base.html:266
+msgid "Cannot remove"
+msgstr "لا يمكن الحذف"
+
+#: templates/core/base.html:267
+msgid "An invoice needs at least one line."
+msgstr "يجب أن تحتوي الفاتورة على بند واحد على الأقل."
+
+#: templates/core/base.html:268
+msgid "Increase"
+msgstr "زيادة"
+
+#: templates/core/base.html:269
+msgid "Decrease"
+msgstr "إنقاص"
+
+#: templates/core/base.html:270
+msgid "Remove"
+msgstr "حذف"
+
+#: templates/core/dashboard.html:16
+msgid "Purchases this month"
+msgstr "مشتريات هذا الشهر"
+
+#: templates/core/dashboard.html:19 templates/core/dashboard.html:55
+#: templates/customers/customer_form.html:55
+#: templates/customers/customer_form.html:62
+#: templates/finance/payment_voucher_form.html:80
+#: templates/finance/receipt_voucher_form.html:80
+#: templates/inventory/product_form.html:88
+#: templates/inventory/product_form.html:97
+#: templates/inventory/waste_loss_form.html:135
+#: templates/pos/pos_screen.html:140
+#: templates/purchasing/purchase_invoice_form.html:77
+#: templates/purchasing/purchase_invoice_form.html:204
+#: templates/quotations/quotation_form.html:131
+msgid "JOD"
+msgstr "د.أ"
+
+#: templates/core/dashboard.html:37
+msgid "Active customers"
+msgstr "العملاء النشطون"
+
+#: templates/core/dashboard.html:53
+msgid "Sales today"
+msgstr "مبيعات اليوم"
+
+#: templates/core/dashboard.html:67
+msgid "POS activity"
+msgstr "نشاط نقاط البيع"
+
+#: templates/core/dashboard.html:86
+msgid "Stock movement"
+msgstr "حركة المخزون"
+
+#: templates/core/dashboard.html:87
+msgid "On track"
+msgstr "ضمن المعدل"
+
+#: templates/core/dashboard.html:90
+msgid "Monthly"
+msgstr "شهري"
+
+#: templates/core/dashboard.html:91
+msgid "Weekly"
+msgstr "أسبوعي"
+
+#: templates/core/dashboard.html:99
+msgid "Stock in"
+msgstr "الوارد"
+
+#: templates/core/dashboard.html:108
+#: templates/inventory/warehouse_list.html:39
+#: templates/inventory/warehouse_list.html:62
+msgid "Stock value"
+msgstr "قيمة المخزون"
+
+#: templates/core/dashboard.html:118
+msgid "Stock movement over time"
+msgstr "حركة المخزون عبر الزمن"
+
+#: templates/core/dashboard.html:133
+msgid "Jan"
+msgstr "يناير"
+
+#: templates/core/dashboard.html:133
+msgid "Mar"
+msgstr "مارس"
+
+#: templates/core/dashboard.html:133
+msgid "May"
+msgstr "مايو"
+
+#: templates/core/dashboard.html:134
+msgid "Jul"
+msgstr "يوليو"
+
+#: templates/core/dashboard.html:134
+msgid "Sep"
+msgstr "سبتمبر"
+
+#: templates/core/dashboard.html:134
+msgid "Nov"
+msgstr "نوفمبر"
+
+#: templates/core/dashboard.html:144
+msgid "Cash position"
+msgstr "المركز النقدي"
+
+#: templates/core/dashboard.html:145
+msgid "Total received"
+msgstr "إجمالي المقبوضات"
+
+#: templates/core/dashboard.html:147
+msgid "34% more than last month"
+msgstr "أعلى بنسبة ٣٤٪ عن الشهر الماضي"
+
+#: templates/core/dashboard.html:151
+msgid "Collection rate"
+msgstr "نسبة التحصيل"
+
+#: templates/core/dashboard.html:163
+msgid "Collected"
+msgstr "المحصّل"
+
+#: templates/core/dashboard.html:173
+msgid "Yousef Badr"
+msgstr "يوسف بدر"
+
+#: templates/core/dashboard.html:174
+msgid "Cashier · Main branch"
+msgstr "أمين صندوق · الفرع الرئيسي"
+
+#: templates/core/dashboard.html:178
+msgid "Sales"
+msgstr "المبيعات"
+
+#: templates/core/dashboard.html:186
+msgid "Returns"
+msgstr "المرتجعات"
+
+#: templates/core/dashboard.html:200
+msgid "Batches expiring soon"
+msgstr "دفعات قاربت على انتهاء الصلاحية"
+
+#: templates/core/dashboard.html:202
+msgid ""
+"Items reaching their expiration date within %(days)s days. Expired stock is "
+"blocked from sale and must be written off through Waste &amp; Loss."
+msgstr ""
+"أصناف تنتهي صلاحيتها خلال %(days)s أيام. المخزون منتهي الصلاحية ممنوع من "
+"البيع ويجب إخراجه عبر الهالك والخسائر."
+
+#: templates/core/dashboard.html:205
+msgid "Review batches"
+msgstr "مراجعة الدفعات"
+
+#: templates/core/dashboard.html:213 templates/inventory/product_list.html:93
+#: templates/inventory/waste_loss_form.html:81
+#: templates/inventory/waste_loss_form.html:105
+#: templates/pos/pos_screen.html:52 templates/pos/pos_screen.html:54
+#: templates/purchasing/purchase_invoice_form.html:115
+#: templates/purchasing/purchase_invoice_form.html:147
+#: templates/quotations/quotation_form.html:81
+#: templates/quotations/quotation_form.html:101
+msgid "Fresh Milk 1L"
+msgstr "حليب طازج ١ لتر"
+
+#: templates/core/dashboard.html:214 templates/core/dashboard.html:222
+#: templates/core/dashboard.html:230
+#: templates/inventory/waste_loss_form.html:69
+#: templates/inventory/waste_loss_form.html:86
+#: templates/inventory/waste_loss_form.html:110
+msgid "Batch"
+msgstr "الدفعة"
+
+#: templates/core/dashboard.html:214 templates/core/dashboard.html:222
+#: templates/core/dashboard.html:230 templates/inventory/product_list.html:95
+#: templates/inventory/product_list.html:111
+#: templates/inventory/product_list.html:126 templates/pos/pos_screen.html:52
+#: templates/pos/pos_screen.html:55 templates/pos/pos_screen.html:59
+#: templates/pos/pos_screen.html:62 templates/pos/pos_screen.html:66
+#: templates/pos/pos_screen.html:69 templates/pos/pos_screen.html:80
+#: templates/pos/pos_screen.html:83
+msgid "pcs"
+msgstr "قطعة"
+
+#: templates/core/dashboard.html:216 templates/core/dashboard.html:232
+msgid "days"
+msgstr "أيام"
+
+#: templates/core/dashboard.html:221 templates/inventory/product_list.html:109
+#: templates/inventory/waste_loss_form.html:82
+#: templates/inventory/waste_loss_form.html:106
+#: templates/pos/pos_screen.html:59 templates/pos/pos_screen.html:61
+#: templates/purchasing/purchase_invoice_form.html:116
+#: templates/purchasing/purchase_invoice_form.html:148
+msgid "Labneh 500g"
+msgstr "لبنة ٥٠٠ غرام"
+
+#: templates/core/dashboard.html:224
+msgid "day"
+msgstr "يوم"
+
+#: templates/core/dashboard.html:229 templates/inventory/product_list.html:124
+#: templates/pos/pos_screen.html:66 templates/pos/pos_screen.html:68
+msgid "Orange Juice 250ml"
+msgstr "عصير برتقال ٢٥٠ مل"
+
+#: templates/core/dashboard.html:242
+msgid "Recent transactions"
+msgstr "أحدث الحركات"
+
+#: templates/core/dashboard.html:248 templates/core/dashboard.html:264
+#: templates/inventory/warehouse_list.html:84
+#: templates/reports/general_ledger.html:33
+#: templates/reports/trial_balance.html:27
+msgid "From"
+msgstr "من"
+
+#: templates/core/dashboard.html:249 templates/core/dashboard.html:257
+#: templates/core/dashboard.html:265
+msgid "Today"
+msgstr "اليوم"
+
+#: templates/core/dashboard.html:256
+#: templates/inventory/warehouse_list.html:85
+#: templates/reports/general_ledger.html:37
+#: templates/reports/trial_balance.html:31
+msgid "To"
+msgstr "إلى"
+
+#: templates/core/dashboard.html:280
+msgid "Books are balanced"
+msgstr "الدفاتر متوازنة"
+
+#: templates/core/dashboard.html:281
+msgid "Total debits equal total credits across all posted entries."
+msgstr "إجمالي المدين يساوي إجمالي الدائن في جميع القيود المرحّلة."
+
+#: templates/core/dashboard.html:283
+msgid "Open trial balance"
+msgstr "فتح ميزان المراجعة"
+
+#: templates/customers/customer_form.html:4
+#: templates/customers/customer_form.html:7
+#: templates/customers/customer_list.html:13
+msgid "New customer"
+msgstr "عميل جديد"
+
+#: templates/customers/customer_form.html:8
+msgid "Add a customer record with contact details and credit terms"
+msgstr "إضافة عميل مع بيانات الاتصال وشروط الائتمان"
+
+#: templates/customers/customer_form.html:19
+msgid "Contact details"
+msgstr "بيانات الاتصال"
+
+#: templates/customers/customer_form.html:22
+msgid "Customer code"
+msgstr "رمز العميل"
+
+#: templates/customers/customer_form.html:26
+msgid "Customer name"
+msgstr "اسم العميل"
+
+#: templates/customers/customer_form.html:45
+msgid "Financial settings"
+msgstr "الإعدادات المالية"
+
+#: templates/customers/customer_form.html:48
+#: templates/suppliers/supplier_list.html:38
+msgid "Tax number"
+msgstr "الرقم الضريبي"
+
+#: templates/customers/customer_form.html:52
+#: templates/customers/customer_list.html:44
+msgid "Credit limit"
+msgstr "سقف الائتمان"
+
+#: templates/customers/customer_form.html:59
+#: templates/reports/general_ledger.html:48
+#: templates/reports/general_ledger.html:81
+msgid "Opening balance"
+msgstr "الرصيد الافتتاحي"
+
+#: templates/customers/customer_form.html:64
+msgid "Balance carried over at system start."
+msgstr "الرصيد المرحّل عند بدء تشغيل النظام."
+
+#: templates/customers/customer_form.html:84
+msgid "Save customer"
+msgstr "حفظ العميل"
+
+#: templates/customers/customer_list.html:8
+msgid "Customer records, balances and related transactions"
+msgstr "بيانات العملاء وأرصدتهم وحركاتهم"
+
+#: templates/customers/customer_list.html:24
+#: templates/suppliers/supplier_list.html:24
+msgid "Search by code, name or phone..."
+msgstr "ابحث بالرمز أو الاسم أو الهاتف..."
+
+#: templates/customers/customer_list.html:25
+msgid "Search customers"
+msgstr "البحث في العملاء"
+
+#: templates/customers/customer_list.html:28
+msgid "Filter by status"
+msgstr "تصفية حسب الحالة"
+
+#: templates/customers/customer_list.html:29
+msgid "All customers"
+msgstr "جميع العملاء"
+
+#: templates/customers/customer_list.html:31
+msgid "Inactive"
+msgstr "غير نشط"
+
+#: templates/customers/customer_list.html:32
+msgid "Over credit limit"
+msgstr "تجاوز سقف الائتمان"
+
+#: templates/customers/customer_list.html:34
+#: templates/inventory/product_list.html:55
+#: templates/reports/general_ledger.html:16
+#: templates/reports/trial_balance.html:16
+#: templates/suppliers/supplier_list.html:28
+msgid "Export"
+msgstr "تصدير"
+
+#: templates/customers/customer_list.html:45
+#: templates/reports/general_ledger.html:75
+msgid "Balance"
+msgstr "الرصيد"
+
+#: templates/customers/customer_list.html:47
+#: templates/inventory/product_list.html:71
+#: templates/inventory/warehouse_list.html:88
+#: templates/suppliers/supplier_list.html:41
+msgid "Actions"
+msgstr "إجراءات"
+
+#: templates/customers/customer_list.html:54
+#: templates/finance/receipt_voucher_form.html:60
+#: templates/pos/pos_screen.html:113
+#: templates/quotations/quotation_form.html:40
+msgid "Anna Jones"
+msgstr "آنا جونز"
+
+#: templates/customers/customer_list.html:60
+#: templates/suppliers/supplier_list.html:54
+msgid "Statement"
+msgstr "كشف حساب"
+
+#: templates/customers/customer_list.html:66
+#: templates/finance/receipt_voucher_form.html:61
+#: templates/pos/pos_screen.html:114
+#: templates/quotations/quotation_form.html:41
+msgid "Carlos Brown"
+msgstr "كارلوس براون"
+
+#: templates/customers/customer_list.html:70
+msgid "Over limit"
+msgstr "تجاوز السقف"
+
+#: templates/customers/customer_list.html:78
+msgid "Joel Cannan"
+msgstr "جويل كانان"
+
+#: templates/customers/customer_list.html:94
+msgid "No customers match your search."
+msgstr "لا يوجد عملاء مطابقون لبحثك."
+
+#: templates/finance/payment_voucher_form.html:4
+#: templates/finance/payment_voucher_form.html:7
+#: templates/finance/payment_voucher_form.html:32
+msgid "Payment voucher"
+msgstr "سند صرف"
+
+#: templates/finance/payment_voucher_form.html:8
+msgid "Record money paid to a supplier or another party"
+msgstr "تسجيل مبلغ مدفوع لمورد أو جهة أخرى"
+
+#: templates/finance/payment_voucher_form.html:13
+#: templates/finance/receipt_voucher_form.html:13
+#: templates/quotations/quotation_form.html:13
+#: templates/reports/general_ledger.html:13
+#: templates/reports/trial_balance.html:13
+msgid "Print"
+msgstr "طباعة"
+
+#: templates/finance/payment_voucher_form.html:33
+msgid "سند صرف"
+msgstr "سند صرف"
+
+#: templates/finance/payment_voucher_form.html:42
+#: templates/finance/receipt_voucher_form.html:42
+msgid "Voucher number"
+msgstr "رقم السند"
+
+#: templates/finance/payment_voucher_form.html:52
+msgid "Paid to"
+msgstr "المدفوع إلى"
+
+#: templates/finance/payment_voucher_form.html:58
+msgid "Not linked to a supplier"
+msgstr "غير مرتبط بمورد"
+
+#: templates/finance/payment_voucher_form.html:60
+#: templates/purchasing/purchase_invoice_form.html:38
+#: templates/suppliers/supplier_list.html:48
+msgid "Jordan Dairy Co."
+msgstr "شركة الألبان الأردنية"
+
+#: templates/finance/payment_voucher_form.html:61
+#: templates/purchasing/purchase_invoice_form.html:39
+#: templates/suppliers/supplier_list.html:60
+msgid "Amman Trading House"
+msgstr "دار عمان للتجارة"
+
+#: templates/finance/payment_voucher_form.html:63
+msgid "Leave empty for a general expense payment."
+msgstr "اتركه فارغًا للمصروفات العامة."
+
+#: templates/finance/payment_voucher_form.html:66
+msgid "Payee name"
+msgstr "اسم المستفيد"
+
+#: templates/finance/payment_voucher_form.html:68
+msgid "Name of the person or company being paid"
+msgstr "اسم الشخص أو الشركة المستلمة للمبلغ"
+
+#: templates/finance/payment_voucher_form.html:72
+#: templates/finance/receipt_voucher_form.html:72
+msgid "Amount and account"
+msgstr "المبلغ والحساب"
+
+#: templates/finance/payment_voucher_form.html:84
+#: templates/finance/receipt_voucher_form.html:84
+msgid "Payment method"
+msgstr "طريقة الدفع"
+
+#: templates/finance/payment_voucher_form.html:88
+#: templates/finance/receipt_voucher_form.html:88
+msgid "Bank transfer"
+msgstr "حوالة بنكية"
+
+#: templates/finance/payment_voucher_form.html:93
+msgid "Credit account"
+msgstr "الحساب الدائن"
+
+#: templates/finance/payment_voucher_form.html:95
+#: templates/finance/receipt_voucher_form.html:95
+#: templates/reports/general_ledger.html:26
+msgid "Select an account"
+msgstr "اختر حسابًا"
+
+#: templates/finance/payment_voucher_form.html:99
+msgid "The cash or bank account the money leaves from."
+msgstr "حساب الصندوق أو البنك الذي يُصرف منه المبلغ."
+
+#: templates/finance/payment_voucher_form.html:104
+#: templates/finance/receipt_voucher_form.html:105
+msgid "Cheque or transfer number"
+msgstr "رقم الشيك أو الحوالة"
+
+#: templates/finance/payment_voucher_form.html:110
+#: templates/finance/receipt_voucher_form.html:111
+msgid "What is this payment for?"
+msgstr "ما سبب هذه الدفعة؟"
+
+#: templates/finance/payment_voucher_form.html:118
+#: templates/finance/receipt_voucher_form.html:119
+#: templates/inventory/waste_loss_form.html:139
+msgid "Journal entry preview"
+msgstr "معاينة القيد المحاسبي"
+
+#: templates/finance/payment_voucher_form.html:122
+#: templates/reports/general_ledger.html:30
+#: templates/reports/trial_balance.html:106
+msgid "Accounts Payable"
+msgstr "الذمم الدائنة"
+
+#: templates/finance/payment_voucher_form.html:127
+#: templates/finance/receipt_voucher_form.html:123
+msgid "Cash / Bank"
+msgstr "الصندوق / البنك"
+
+#: templates/finance/payment_voucher_form.html:136
+#: templates/finance/receipt_voucher_form.html:137
+#: templates/inventory/waste_loss_form.html:147
+#: templates/purchasing/purchase_invoice_form.html:209
+#: templates/quotations/quotation_form.html:134
+msgid "Save draft"
+msgstr "حفظ كمسودة"
+
+#: templates/finance/payment_voucher_form.html:139
+#: templates/finance/receipt_voucher_form.html:140
+msgid "Confirming posts a balanced journal entry. Continue?"
+msgstr "التأكيد سيُرحّل قيدًا محاسبيًا متوازنًا. هل تريد المتابعة؟"
+
+#: templates/finance/payment_voucher_form.html:140
+#: templates/finance/receipt_voucher_form.html:141
+msgid "Confirm voucher"
+msgstr "تأكيد السند"
+
+#: templates/finance/receipt_voucher_form.html:4
+#: templates/finance/receipt_voucher_form.html:7
+#: templates/finance/receipt_voucher_form.html:32
+msgid "Receipt voucher"
+msgstr "سند قبض"
+
+#: templates/finance/receipt_voucher_form.html:8
+msgid "Record money received from a customer or another party"
+msgstr "تسجيل مبلغ مقبوض من عميل أو جهة أخرى"
+
+#: templates/finance/receipt_voucher_form.html:33
+msgid "سند قبض"
+msgstr "سند قبض"
+
+#: templates/finance/receipt_voucher_form.html:52
+msgid "Received from"
+msgstr "المقبوض من"
+
+#: templates/finance/receipt_voucher_form.html:58
+msgid "Not linked to a customer"
+msgstr "غير مرتبط بعميل"
+
+#: templates/finance/receipt_voucher_form.html:63
+msgid "Leave empty for a non-customer receipt."
+msgstr "اتركه فارغًا للقبض من غير العملاء."
+
+#: templates/finance/receipt_voucher_form.html:66
+msgid "Payer name"
+msgstr "اسم الدافع"
+
+#: templates/finance/receipt_voucher_form.html:68
+msgid "Name of the person or company paying"
+msgstr "اسم الشخص أو الشركة الدافعة"
+
+#: templates/finance/receipt_voucher_form.html:93
+msgid "Debit account"
+msgstr "الحساب المدين"
+
+#: templates/finance/receipt_voucher_form.html:100
+msgid "The cash or bank account receiving the money."
+msgstr "حساب الصندوق أو البنك المستلم للمبلغ."
+
+#: templates/finance/receipt_voucher_form.html:128
+#: templates/reports/general_ledger.html:29
+#: templates/reports/trial_balance.html:92
+msgid "Accounts Receivable"
+msgstr "الذمم المدينة"
+
+#: templates/inventory/product_form.html:4
+#: templates/inventory/product_form.html:7
+#: templates/inventory/product_list.html:13
+msgid "New product"
+msgstr "صنف جديد"
+
+#: templates/inventory/product_form.html:8
+msgid "Add an item to the catalogue with pricing and stock settings"
+msgstr "إضافة صنف إلى الدليل مع الأسعار وإعدادات المخزون"
+
+#: templates/inventory/product_form.html:27
+msgid "Identification"
+msgstr "بيانات التعريف"
+
+#: templates/inventory/product_form.html:30
+msgid "Item code"
+msgstr "رمز الصنف"
+
+#: templates/inventory/product_form.html:33
+msgid "Must be unique."
+msgstr "يجب أن يكون فريدًا."
+
+#: templates/inventory/product_form.html:42
+msgid "Optional, but unique when set."
+msgstr "اختياري، لكنه فريد عند إدخاله."
+
+#: templates/inventory/product_form.html:45
+msgid "Unit of measure"
+msgstr "وحدة القياس"
+
+#: templates/inventory/product_form.html:47
+msgid "Select a unit"
+msgstr "اختر وحدة"
+
+#: templates/inventory/product_form.html:49
+msgid "Piece"
+msgstr "قطعة"
+
+#: templates/inventory/product_form.html:50
+msgid "Kilogram"
+msgstr "كيلوغرام"
+
+#: templates/inventory/product_form.html:51
+msgid "Liter"
+msgstr "لتر"
+
+#: templates/inventory/product_form.html:52
+msgid "Box"
+msgstr "صندوق"
+
+#: templates/inventory/product_form.html:57
+msgid "Product name"
+msgstr "اسم الصنف"
+
+#: templates/inventory/product_form.html:59
+msgid "e.g. Fresh Milk 1L"
+msgstr "مثال: حليب طازج ١ لتر"
+
+#: templates/inventory/product_form.html:64
+msgid "Select a category"
+msgstr "اختر فئة"
+
+#: templates/inventory/product_form.html:65
+#: templates/inventory/product_list.html:35
+#: templates/inventory/product_list.html:94
+#: templates/inventory/product_list.html:110 templates/pos/pos_screen.html:38
+msgid "Dairy"
+msgstr "الألبان"
+
+#: templates/inventory/product_form.html:66
+#: templates/inventory/product_list.html:36
+#: templates/inventory/product_list.html:125 templates/pos/pos_screen.html:39
+msgid "Beverages"
+msgstr "المشروبات"
+
+#: templates/inventory/product_form.html:67
+#: templates/inventory/product_list.html:37
+#: templates/inventory/product_list.html:140
+#: templates/inventory/product_list.html:155 templates/pos/pos_screen.html:40
+msgid "Dry goods"
+msgstr "المواد الجافة"
+
+#: templates/inventory/product_form.html:74
+msgid "Optional notes about this product"
+msgstr "ملاحظات اختيارية عن هذا الصنف"
+
+#: templates/inventory/product_form.html:81
+msgid "Pricing"
+msgstr "التسعير"
+
+#: templates/inventory/product_form.html:84
+msgid "Purchase price"
+msgstr "سعر الشراء"
+
+#: templates/inventory/product_form.html:90
+msgid "Default cost. Actual cost is stored per purchase line."
+msgstr "التكلفة الافتراضية. التكلفة الفعلية تُحفظ في كل بند شراء."
+
+#: templates/inventory/product_form.html:93
+#: templates/inventory/product_list.html:68
+msgid "Selling price"
+msgstr "سعر البيع"
+
+#: templates/inventory/product_form.html:105
+msgid "Stock and expiration"
+msgstr "المخزون والصلاحية"
+
+#: templates/inventory/product_form.html:108
+msgid "Minimum stock level"
+msgstr "الحد الأدنى للمخزون"
+
+#: templates/inventory/product_form.html:111
+msgid "Triggers a low-stock notification when reached."
+msgstr "يُفعّل تنبيه انخفاض المخزون عند بلوغه."
+
+#: templates/inventory/product_form.html:119
+msgid "Track expiration by batch"
+msgstr "تتبّع الصلاحية حسب الدفعة"
+
+#: templates/inventory/product_form.html:123
+msgid ""
+"Required for perishable goods. Expiration dates are stored on stock batches,"
+" never on the product itself."
+msgstr ""
+"مطلوب للسلع القابلة للتلف. تواريخ الصلاحية تُحفظ على دفعات المخزون وليس على "
+"الصنف نفسه."
+
+#: templates/inventory/product_form.html:143
+msgid "Inactive products stay in history but cannot be sold or purchased."
+msgstr "الأصناف غير النشطة تبقى في السجل لكن لا يمكن بيعها أو شراؤها."
+
+#: templates/inventory/product_form.html:151
+msgid "Opening stock"
+msgstr "المخزون الافتتاحي"
+
+#: templates/inventory/product_form.html:153
+msgid ""
+"Stock is not entered here. Add quantities through a purchase invoice or an "
+"opening-balance stock movement so the inventory audit trail stays complete."
+msgstr ""
+"لا تُدخل الكميات هنا. أضفها عبر فاتورة شراء أو حركة رصيد افتتاحي حتى يبقى "
+"سجل تدقيق المخزون مكتملًا."
+
+#: templates/inventory/product_form.html:161
+msgid "Save product"
+msgstr "حفظ الصنف"
+
+#: templates/inventory/product_form.html:163
+msgid "Clear form"
+msgstr "مسح النموذج"
+
+#: templates/inventory/product_list.html:8
+msgid "Products, categories, units, prices and stock levels"
+msgstr "الأصناف والفئات والوحدات والأسعار ومستويات المخزون"
+
+#: templates/inventory/product_list.html:27
+msgid "Search by code, barcode or name..."
+msgstr "ابحث بالرمز أو الباركود أو الاسم..."
+
+#: templates/inventory/product_list.html:28
+msgid "Search products"
+msgstr "البحث في الأصناف"
+
+#: templates/inventory/product_list.html:32
+msgid "Filter by category"
+msgstr "تصفية حسب الفئة"
+
+#: templates/inventory/product_list.html:33
+msgid "All categories"
+msgstr "جميع الفئات"
+
+#: templates/inventory/product_list.html:40
+msgid "Filter by warehouse"
+msgstr "تصفية حسب المخزن"
+
+#: templates/inventory/product_list.html:41
+msgid "All warehouses"
+msgstr "جميع المخازن"
+
+#: templates/inventory/product_list.html:42
+#: templates/inventory/warehouse_list.html:30
+#: templates/inventory/warehouse_list.html:95
+#: templates/inventory/warehouse_list.html:105
+#: templates/inventory/waste_loss_form.html:34
+#: templates/pos/pos_screen.html:13
+#: templates/purchasing/purchase_invoice_form.html:46
+msgid "Main warehouse"
+msgstr "المخزن الرئيسي"
+
+#: templates/inventory/product_list.html:43
+#: templates/inventory/warehouse_list.html:53
+#: templates/inventory/warehouse_list.html:96
+#: templates/inventory/warehouse_list.html:104
+#: templates/inventory/waste_loss_form.html:35
+#: templates/purchasing/purchase_invoice_form.html:47
+msgid "Branch store"
+msgstr "مخزن الفرع"
+
+#: templates/inventory/product_list.html:46
+msgid "Filter by stock status"
+msgstr "تصفية حسب حالة المخزون"
+
+#: templates/inventory/product_list.html:47
+msgid "Any stock level"
+msgstr "أي مستوى مخزون"
+
+#: templates/inventory/product_list.html:48
+#: templates/inventory/product_list.html:129
+msgid "Below minimum"
+msgstr "تحت الحد الأدنى"
+
+#: templates/inventory/product_list.html:49
+#: templates/inventory/product_list.html:144
+msgid "Out of stock"
+msgstr "نفد المخزون"
+
+#: templates/inventory/product_list.html:50
+#: templates/inventory/product_list.html:114
+msgid "Expiring soon"
+msgstr "قارب على الانتهاء"
+
+#: templates/inventory/product_list.html:69
+msgid "Stock quantity"
+msgstr "الكمية المتوفرة"
+
+#: templates/inventory/product_list.html:98
+#: templates/inventory/product_list.html:159
+msgid "In stock"
+msgstr "متوفر"
+
+#: templates/inventory/product_list.html:100
+msgid "View batches"
+msgstr "عرض الدفعات"
+
+#: templates/inventory/product_list.html:101
+msgid "Edit"
+msgstr "تعديل"
+
+#: templates/inventory/product_list.html:102
+#: templates/inventory/product_list.html:118
+#: templates/inventory/product_list.html:133
+#: templates/inventory/product_list.html:148
+#: templates/inventory/product_list.html:163
+msgid "Deactivate this product?"
+msgstr "إلغاء تفعيل هذا الصنف؟"
+
+#: templates/inventory/product_list.html:103
+msgid "Deactivate"
+msgstr "إلغاء التفعيل"
+
+#: templates/inventory/product_list.html:139
+msgid "White Rice 5kg"
+msgstr "أرز أبيض ٥ كغم"
+
+#: templates/inventory/product_list.html:141 templates/pos/pos_screen.html:87
+#: templates/pos/pos_screen.html:90
+msgid "kg"
+msgstr "كغم"
+
+#: templates/inventory/product_list.html:154 templates/pos/pos_screen.html:73
+#: templates/pos/pos_screen.html:75
+#: templates/purchasing/purchase_invoice_form.html:117
+#: templates/purchasing/purchase_invoice_form.html:149
+#: templates/quotations/quotation_form.html:82
+#: templates/quotations/quotation_form.html:102
+msgid "Olive Oil 1L"
+msgstr "زيت زيتون ١ لتر"
+
+#: templates/inventory/product_list.html:156 templates/pos/pos_screen.html:73
+#: templates/pos/pos_screen.html:76
+msgid "L"
+msgstr "لتر"
+
+#: templates/inventory/product_list.html:173
+msgid "No products match your search."
+msgstr "لا توجد أصناف مطابقة لبحثك."
+
+#: templates/inventory/product_list.html:179
+msgid "Showing %(start)s–%(end)s of %(total)s products"
+msgstr "عرض %(start)s–%(end)s من أصل %(total)s صنف"
+
+#: templates/inventory/product_list.html:181
+msgid "Pagination"
+msgstr "ترقيم الصفحات"
+
+#: templates/inventory/warehouse_list.html:8
+msgid "Storage locations and stock held in each one"
+msgstr "مواقع التخزين والكميات في كل منها"
+
+#: templates/inventory/warehouse_list.html:13
+msgid "New transfer"
+msgstr "تحويل جديد"
+
+#: templates/inventory/warehouse_list.html:16
+msgid "New warehouse"
+msgstr "مخزن جديد"
+
+#: templates/inventory/warehouse_list.html:31
+msgid "Amman, Jordan"
+msgstr "عمّان، الأردن"
+
+#: templates/inventory/warehouse_list.html:54
+msgid "Zarqa, Jordan"
+msgstr "الزرقاء، الأردن"
+
+#: templates/inventory/warehouse_list.html:74
+msgid "Recent warehouse transfers"
+msgstr "أحدث التحويلات بين المخازن"
+
+#: templates/inventory/warehouse_list.html:76
+msgid "Total company stock is unchanged by a transfer"
+msgstr "إجمالي مخزون الشركة لا يتغير بالتحويل"
+
+#: templates/inventory/warehouse_list.html:82
+msgid "Transfer no."
+msgstr "رقم التحويل"
+
+#: templates/inventory/warehouse_list.html:86
+msgid "Lines"
+msgstr "البنود"
+
+#: templates/inventory/warehouse_list.html:115
+msgid "No transfers recorded yet."
+msgstr "لا توجد تحويلات مسجلة بعد."
+
+#: templates/inventory/waste_loss_form.html:8
+msgid "Write off expired, damaged or missing stock — الهالك والخسائر"
+msgstr "إخراج المخزون منتهي الصلاحية أو التالف أو المفقود — الهالك والخسائر"
+
+#: templates/inventory/waste_loss_form.html:16
+msgid ""
+"Confirming this document permanently removes the quantities from inventory "
+"and posts the cost as a loss. It cannot be edited afterwards."
+msgstr ""
+"تأكيد هذا المستند يحذف الكميات نهائيًا من المخزون ويسجّل التكلفة كخسارة، ولا"
+" يمكن تعديله بعد ذلك."
+
+#: templates/inventory/waste_loss_form.html:23
+msgid "Document details"
+msgstr "بيانات المستند"
+
+#: templates/inventory/waste_loss_form.html:26
+msgid "Document number"
+msgstr "رقم المستند"
+
+#: templates/inventory/waste_loss_form.html:33
+#: templates/purchasing/purchase_invoice_form.html:45
+msgid "Select a warehouse"
+msgstr "اختر مخزنًا"
+
+#: templates/inventory/waste_loss_form.html:58
+msgid "Items to write off"
+msgstr "الأصناف المراد إخراجها"
+
+#: templates/inventory/waste_loss_form.html:61
+#: templates/purchasing/purchase_invoice_form.html:89
+#: templates/quotations/quotation_form.html:60
+msgid "Add line"
+msgstr "إضافة بند"
+
+#: templates/inventory/waste_loss_form.html:71
+#: templates/inventory/waste_loss_form.html:92
+#: templates/inventory/waste_loss_form.html:115
+#: templates/purchasing/purchase_invoice_form.html:99
+#: templates/purchasing/purchase_invoice_form.html:123
+#: templates/purchasing/purchase_invoice_form.html:155
+msgid "Unit cost"
+msgstr "تكلفة الوحدة"
+
+#: templates/inventory/waste_loss_form.html:72
+msgid "Total cost"
+msgstr "إجمالي التكلفة"
+
+#: templates/inventory/waste_loss_form.html:80
+#: templates/inventory/waste_loss_form.html:104
+#: templates/purchasing/purchase_invoice_form.html:114
+#: templates/purchasing/purchase_invoice_form.html:146
+#: templates/quotations/quotation_form.html:80
+#: templates/quotations/quotation_form.html:100
+msgid "Select product"
+msgstr "اختر صنفًا"
+
+#: templates/inventory/waste_loss_form.html:87
+#: templates/inventory/waste_loss_form.html:111
+msgid "Select batch"
+msgstr "اختر دفعة"
+
+#: templates/inventory/waste_loss_form.html:88
+msgid "expires"
+msgstr "تنتهي في"
+
+#: templates/inventory/waste_loss_form.html:94
+#: templates/inventory/waste_loss_form.html:117
+#: templates/purchasing/purchase_invoice_form.html:134
+#: templates/purchasing/purchase_invoice_form.html:165
+#: templates/quotations/quotation_form.html:90
+#: templates/quotations/quotation_form.html:110
+msgid "Remove line"
+msgstr "حذف البند"
+
+#: templates/inventory/waste_loss_form.html:127
+msgid "Explain the circumstances of the loss"
+msgstr "وضّح ظروف الخسارة"
+
+#: templates/inventory/waste_loss_form.html:133
+msgid "Total loss value"
+msgstr "إجمالي قيمة الخسارة"
+
+#: templates/inventory/waste_loss_form.html:142
+msgid "Waste & Loss Expense"
+msgstr "مصروف الهالك والخسائر"
+
+#: templates/inventory/waste_loss_form.html:143
+#: templates/reports/trial_balance.html:99
+msgid "Inventory"
+msgstr "المخزون"
+
+#: templates/inventory/waste_loss_form.html:149
+msgid "This permanently removes the stock and posts a loss. Continue?"
+msgstr "سيؤدي هذا إلى حذف المخزون نهائيًا وتسجيل خسارة. هل تريد المتابعة؟"
+
+#: templates/inventory/waste_loss_form.html:150
+msgid "Confirm write-off"
+msgstr "تأكيد الإخراج"
+
+#: templates/pos/pos_screen.html:8
+msgid "Scan or search an item to start a sale"
+msgstr "امسح الباركود أو ابحث عن صنف لبدء عملية بيع"
+
+#: templates/pos/pos_screen.html:14
+msgid "Session open"
+msgstr "الجلسة مفتوحة"
+
+#: templates/pos/pos_screen.html:28
+msgid "Scan barcode or search product name / code..."
+msgstr "امسح الباركود أو ابحث بالاسم أو الرمز..."
+
+#: templates/pos/pos_screen.html:29
+msgid "Product search"
+msgstr "البحث عن صنف"
+
+#: templates/pos/pos_screen.html:37
+msgid "All"
+msgstr "الكل"
+
+#: templates/pos/pos_screen.html:80 templates/pos/pos_screen.html:82
+msgid "Arabic Bread"
+msgstr "خبز عربي"
+
+#: templates/pos/pos_screen.html:87 templates/pos/pos_screen.html:89
+msgid "White Sugar 1kg"
+msgstr "سكر أبيض ١ كغم"
+
+#: templates/pos/pos_screen.html:99
+msgid "Current sale"
+msgstr "عملية البيع الحالية"
+
+#: templates/pos/pos_screen.html:100
+msgid "items"
+msgstr "صنف"
+
+#: templates/pos/pos_screen.html:103
+msgid "Clear cart"
+msgstr "إفراغ السلة"
+
+#: templates/pos/pos_screen.html:111
+msgid "Walk-in customer"
+msgstr "عميل نقدي"
+
+#: templates/pos/pos_screen.html:123
+msgid "Cart is empty. Scan or tap a product to begin."
+msgstr "السلة فارغة. امسح أو اختر صنفًا للبدء."
+
+#: templates/pos/pos_screen.html:132
+#: templates/purchasing/purchase_invoice_form.html:100
+#: templates/purchasing/purchase_invoice_form.html:125
+#: templates/purchasing/purchase_invoice_form.html:157
+#: templates/purchasing/purchase_invoice_form.html:188
+#: templates/quotations/quotation_form.html:70
+#: templates/quotations/quotation_form.html:87
+#: templates/quotations/quotation_form.html:107
+#: templates/quotations/quotation_form.html:126
+msgid "Discount"
+msgstr "الخصم"
+
+#: templates/pos/pos_screen.html:135
+#: templates/purchasing/purchase_invoice_form.html:101
+#: templates/purchasing/purchase_invoice_form.html:127
+#: templates/purchasing/purchase_invoice_form.html:159
+#: templates/purchasing/purchase_invoice_form.html:192
+#: templates/quotations/quotation_form.html:71
+#: templates/quotations/quotation_form.html:88
+#: templates/quotations/quotation_form.html:108
+#: templates/quotations/quotation_form.html:127
+msgid "Tax"
+msgstr "الضريبة"
+
+#: templates/pos/pos_screen.html:162
+msgid "Amount received"
+msgstr "المبلغ المستلم"
+
+#: templates/pos/pos_screen.html:167
+msgid "Change due"
+msgstr "الباقي"
+
+#: templates/pos/pos_screen.html:183
+msgid "Backspace"
+msgstr "مسح"
+
+#: templates/pos/pos_screen.html:189
+msgid "Complete sale"
+msgstr "إتمام البيع"
+
+#: templates/pos/pos_screen.html:193
+msgid "Hold"
+msgstr "تعليق"
+
+#: templates/pos/pos_screen.html:195
+msgid "Reprint"
+msgstr "إعادة طباعة"
+
+#: templates/pos/pos_screen.html:241
+msgid "Product not found"
+msgstr "الصنف غير موجود"
+
+#: templates/pos/pos_screen.html:242
+msgid "No product matches that barcode."
+msgstr "لا يوجد صنف مطابق لهذا الباركود."
+
+#: templates/pos/pos_screen.html:281
+msgid "Cart cleared"
+msgstr "تم إفراغ السلة"
+
+#: templates/pos/pos_screen.html:292
+msgid "Insufficient payment"
+msgstr "المبلغ غير كافٍ"
+
+#: templates/pos/pos_screen.html:293
+msgid "The amount received is less than the total due."
+msgstr "المبلغ المستلم أقل من الإجمالي المستحق."
+
+#: templates/pos/pos_screen.html:310 templates/pos/pos_screen.html:316
+msgid "Sale completed"
+msgstr "تمت عملية البيع"
+
+#: templates/pos/pos_screen.html:317
+msgid "Receipt is ready to print."
+msgstr "الفاتورة جاهزة للطباعة."
+
+#: templates/purchasing/purchase_invoice_form.html:4
+msgid "Purchase invoice"
+msgstr "فاتورة شراء"
+
+#: templates/purchasing/purchase_invoice_form.html:7
+msgid "New purchase invoice"
+msgstr "فاتورة شراء جديدة"
+
+#: templates/purchasing/purchase_invoice_form.html:8
+msgid "Record goods received from a supplier"
+msgstr "تسجيل بضاعة واردة من مورد"
+
+#: templates/purchasing/purchase_invoice_form.html:25
+msgid "Invoice details"
+msgstr "بيانات الفاتورة"
+
+#: templates/purchasing/purchase_invoice_form.html:28
+msgid "Invoice number"
+msgstr "رقم الفاتورة"
+
+#: templates/purchasing/purchase_invoice_form.html:31
+msgid "Generated automatically."
+msgstr "يُنشأ تلقائيًا."
+
+#: templates/purchasing/purchase_invoice_form.html:36
+msgid "Select a supplier"
+msgstr "اختر موردًا"
+
+#: templates/purchasing/purchase_invoice_form.html:43
+msgid "Receiving warehouse"
+msgstr "المخزن المستلم"
+
+#: templates/purchasing/purchase_invoice_form.html:51
+msgid "Supplier invoice no."
+msgstr "رقم فاتورة المورد"
+
+#: templates/purchasing/purchase_invoice_form.html:53
+msgid "Optional"
+msgstr "اختياري"
+
+#: templates/purchasing/purchase_invoice_form.html:57
+msgid "Invoice date"
+msgstr "تاريخ الفاتورة"
+
+#: templates/purchasing/purchase_invoice_form.html:61
+msgid "Payment type"
+msgstr "نوع الدفع"
+
+#: templates/purchasing/purchase_invoice_form.html:68
+msgid "Due date"
+msgstr "تاريخ الاستحقاق"
+
+#: templates/purchasing/purchase_invoice_form.html:70
+msgid "For credit purchases."
+msgstr "لمشتريات الآجل."
+
+#: templates/purchasing/purchase_invoice_form.html:73
+msgid "Paid amount"
+msgstr "المبلغ المدفوع"
+
+#: templates/purchasing/purchase_invoice_form.html:102
+#: templates/purchasing/purchase_invoice_form.html:129
+#: templates/purchasing/purchase_invoice_form.html:160
+msgid "Batch number"
+msgstr "رقم الدفعة"
+
+#: templates/purchasing/purchase_invoice_form.html:103
+#: templates/purchasing/purchase_invoice_form.html:130
+#: templates/purchasing/purchase_invoice_form.html:161
+msgid "Expiry date"
+msgstr "تاريخ انتهاء الصلاحية"
+
+#: templates/purchasing/purchase_invoice_form.html:104
+#: templates/quotations/quotation_form.html:72
+msgid "Line total"
+msgstr "إجمالي البند"
+
+#: templates/purchasing/purchase_invoice_form.html:177
+msgid "Delivery notes, reference details..."
+msgstr "ملاحظات التسليم أو تفاصيل مرجعية..."
+
+#: templates/purchasing/purchase_invoice_form.html:196
+#: templates/purchasing/purchase_invoice_form.html:199
+msgid "Additional expenses"
+msgstr "مصاريف إضافية"
+
+#: templates/purchasing/purchase_invoice_form.html:212
+msgid ""
+"Confirming will add stock and post a journal entry. This cannot be edited "
+"afterwards. Continue?"
+msgstr ""
+"التأكيد سيضيف المخزون ويُرحّل قيدًا محاسبيًا، ولا يمكن التعديل بعد ذلك. هل "
+"تريد المتابعة؟"
+
+#: templates/purchasing/purchase_invoice_form.html:213
+msgid "Confirm invoice"
+msgstr "تأكيد الفاتورة"
+
+#: templates/purchasing/purchase_invoice_form.html:219
+msgid ""
+"On confirmation the system creates stock batches, records a PURCHASE stock "
+"movement, updates balances and posts Inventory (Dr) / Payables (Cr)."
+msgstr ""
+"عند التأكيد يُنشئ النظام دفعات المخزون، ويسجّل حركة مخزون من نوع شراء، "
+"ويحدّث الأرصدة، ويُرحّل قيد المخزون (مدين) / الذمم الدائنة (دائن)."
+
+#: templates/quotations/quotation_form.html:7
+msgid "New quotation"
+msgstr "عرض سعر جديد"
+
+#: templates/quotations/quotation_form.html:8
+msgid "Price offer for a customer — عرض سعر"
+msgstr "عرض سعر لعميل — عرض سعر"
+
+#: templates/quotations/quotation_form.html:22
+msgid ""
+"A quotation does not affect stock or accounting balances until it is "
+"converted into a sale."
+msgstr ""
+"عرض السعر لا يؤثر على المخزون أو الأرصدة المحاسبية حتى يتحوّل إلى عملية بيع."
+
+#: templates/quotations/quotation_form.html:29
+msgid "Quotation details"
+msgstr "بيانات عرض السعر"
+
+#: templates/quotations/quotation_form.html:32
+msgid "Quotation number"
+msgstr "رقم عرض السعر"
+
+#: templates/quotations/quotation_form.html:39
+msgid "Select a customer"
+msgstr "اختر عميلًا"
+
+#: templates/quotations/quotation_form.html:49
+msgid "Valid until"
+msgstr "صالح حتى"
+
+#: templates/quotations/quotation_form.html:69
+#: templates/quotations/quotation_form.html:86
+#: templates/quotations/quotation_form.html:106
+msgid "Unit price"
+msgstr "سعر الوحدة"
+
+#: templates/quotations/quotation_form.html:118
+msgid "Notes and terms"
+msgstr "الملاحظات والشروط"
+
+#: templates/quotations/quotation_form.html:120
+msgid "Delivery terms, validity conditions..."
+msgstr "شروط التسليم ومدة الصلاحية..."
+
+#: templates/quotations/quotation_form.html:136
+msgid "Send to customer"
+msgstr "إرسال للعميل"
+
+#: templates/reports/general_ledger.html:4
+#: templates/reports/general_ledger.html:7
+msgid "General ledger"
+msgstr "دفتر الأستاذ"
+
+#: templates/reports/general_ledger.html:8
+msgid "Transactions and running balance for a selected account — دفتر الأستاذ"
+msgstr "حركات الحساب المحدد ورصيده المتحرك — دفتر الأستاذ"
+
+#: templates/reports/general_ledger.html:34
+#: templates/reports/trial_balance.html:28
+msgid "From date"
+msgstr "من تاريخ"
+
+#: templates/reports/general_ledger.html:38
+#: templates/reports/trial_balance.html:32
+msgid "To date"
+msgstr "إلى تاريخ"
+
+#: templates/reports/general_ledger.html:41
+#: templates/reports/trial_balance.html:47
+msgid "Apply"
+msgstr "تطبيق"
+
+#: templates/reports/general_ledger.html:52
+msgid "Total debit"
+msgstr "إجمالي المدين"
+
+#: templates/reports/general_ledger.html:56
+msgid "Total credit"
+msgstr "إجمالي الدائن"
+
+#: templates/reports/general_ledger.html:60
+#: templates/reports/general_ledger.html:148
+msgid "Closing balance"
+msgstr "الرصيد الختامي"
+
+#: templates/reports/general_ledger.html:70
+msgid "Entry no."
+msgstr "رقم القيد"
+
+#: templates/reports/general_ledger.html:72
+msgid "Source"
+msgstr "المصدر"
+
+#: templates/reports/general_ledger.html:102
+msgid "POS sale POS-2026-000318"
+msgstr "بيع نقاط بيع POS-2026-000318"
+
+#: templates/reports/general_ledger.html:111
+msgid "Payment voucher PV-2026-000042"
+msgstr "سند صرف PV-2026-000042"
+
+#: templates/reports/general_ledger.html:112
+msgid "Payment"
+msgstr "صرف"
+
+#: templates/reports/general_ledger.html:120
+msgid "Receipt voucher RV-2026-000027"
+msgstr "سند قبض RV-2026-000027"
+
+#: templates/reports/general_ledger.html:121
+msgid "Receipt"
+msgstr "قبض"
+
+#: templates/reports/general_ledger.html:129
+msgid "Purchase invoice PI-2026-000078"
+msgstr "فاتورة شراء PI-2026-000078"
+
+#: templates/reports/general_ledger.html:138
+msgid "POS sale POS-2026-000355"
+msgstr "بيع نقاط بيع POS-2026-000355"
+
+#: templates/reports/general_ledger.html:159
+msgid "No transactions for this account in the selected period."
+msgstr "لا توجد حركات على هذا الحساب في الفترة المحددة."
+
+#: templates/reports/trial_balance.html:4
+#: templates/reports/trial_balance.html:7
+msgid "Trial balance"
+msgstr "ميزان المراجعة"
+
+#: templates/reports/trial_balance.html:8
+msgid "Debit and credit totals by account — ميزان المراجعة"
+msgstr "إجماليات المدين والدائن حسب الحساب — ميزان المراجعة"
+
+#: templates/reports/trial_balance.html:34
+msgid "Account type"
+msgstr "نوع الحساب"
+
+#: templates/reports/trial_balance.html:35
+msgid "All account types"
+msgstr "جميع أنواع الحسابات"
+
+#: templates/reports/trial_balance.html:44
+msgid "Hide zero balances"
+msgstr "إخفاء الأرصدة الصفرية"
+
+#: templates/reports/trial_balance.html:56
+msgid "Account name"
+msgstr "اسم الحساب"
+
+#: templates/reports/trial_balance.html:57
+msgid "Type"
+msgstr "النوع"
+
+#: templates/reports/trial_balance.html:113
+msgid "Sales Revenue"
+msgstr "إيرادات المبيعات"
+
+#: templates/reports/trial_balance.html:120
+msgid "Cost of Goods Sold"
+msgstr "تكلفة البضاعة المباعة"
+
+#: templates/reports/trial_balance.html:136
+msgid "Totals"
+msgstr "الإجماليات"
+
+#: templates/reports/trial_balance.html:150
+msgid "Trial balance is balanced"
+msgstr "ميزان المراجعة متوازن"
+
+#: templates/reports/trial_balance.html:152
+msgid ""
+"Total debits equal total credits across all posted journal entries in this "
+"period."
+msgstr ""
+"إجمالي المدين يساوي إجمالي الدائن في جميع القيود المرحّلة خلال هذه الفترة."
+
+#: templates/reports/trial_balance.html:163
+msgid "Trial balance is out of balance"
+msgstr "ميزان المراجعة غير متوازن"
+
+#: templates/reports/trial_balance.html:165
+msgid ""
+"Difference: %(difference)s JOD. Review unposted or partially reversed "
+"entries."
+msgstr ""
+"الفرق: %(difference)s د.أ. راجع القيود غير المرحّلة أو المعكوسة جزئيًا."
+
+#: templates/suppliers/supplier_list.html:8
+msgid "Supplier records, balances and purchase history"
+msgstr "بيانات الموردين وأرصدتهم وسجل المشتريات"
+
+#: templates/suppliers/supplier_list.html:13
+msgid "New supplier"
+msgstr "مورد جديد"
+
+#: templates/suppliers/supplier_list.html:25
+msgid "Search suppliers"
+msgstr "البحث في الموردين"
+
+#: templates/suppliers/supplier_list.html:39
+msgid "Payable balance"
+msgstr "رصيد الذمم الدائنة"
+
+#: templates/suppliers/supplier_list.html:76
+msgid "No suppliers match your search."
+msgstr "لا يوجد موردون مطابقون لبحثك."

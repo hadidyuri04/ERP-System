@@ -1,0 +1,288 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Dashboard" %}{% endblock %}
+
+{% block content %}
+{# nav_active = 'dashboard' — pass from the view context #}
+
+<div class="row g-3 mb-3 stagger">
+
+  {# ================= Stat row (spec: purchases, customers, sales, POS) ============== #}
+  <div class="col-6 col-xl-3">
+    <div class="card-soft stat-card lift">
+      <div class="stat-icon"><i class="bi bi-bag-check-fill"></i></div>
+      <div>
+        <p class="stat-label">{% trans "Purchases this month" %}</p>
+        {# TODO: {{ purchases_month|floatformat:3 }} #}
+        <p class="stat-value"><span data-countup="8420.5" data-decimals="3">0</span>
+          <small class="text-muted fs-6 fw-normal">{% trans "JOD" %}</small></p>
+      </div>
+      <div class="stat-spark">
+        <svg width="52" height="30" viewBox="0 0 52 30" fill="none">
+          <rect x="2"  y="16" width="6" height="14" rx="3" fill="var(--purple-200)"/>
+          <rect x="12" y="10" width="6" height="20" rx="3" fill="var(--purple-300)"/>
+          <rect x="22" y="4"  width="6" height="26" rx="3" fill="var(--purple-600)"/>
+          <rect x="32" y="13" width="6" height="17" rx="3" fill="var(--purple-300)"/>
+          <rect x="42" y="19" width="6" height="11" rx="3" fill="var(--purple-200)"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-xl-3">
+    <div class="card-soft stat-card lift">
+      <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+      <div>
+        <p class="stat-label">{% trans "Active customers" %}</p>
+        <p class="stat-value"><span data-countup="321" data-decimals="0">0</span></p>
+      </div>
+      <div class="stat-spark">
+        <svg width="52" height="26" viewBox="0 0 52 26" fill="none">
+          <path d="M2 20 C10 20, 12 6, 20 8 S34 22, 40 12 S48 5, 50 6"
+                stroke="var(--purple-500)" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-xl-3">
+    <div class="card-soft stat-card lift">
+      <div class="stat-icon"><i class="bi bi-cash-stack"></i></div>
+      <div>
+        <p class="stat-label">{% trans "Sales today" %}</p>
+        <p class="stat-value"><span data-countup="1350.4" data-decimals="3">0</span>
+          <small class="text-muted fs-6 fw-normal">{% trans "JOD" %}</small></p>
+      </div>
+      <div class="stat-spark">
+        <span class="trend trend-up"><i class="bi bi-arrow-up-short"></i>12.4%</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-xl-3">
+    <div class="card-soft stat-card is-featured lift">
+      <div class="stat-icon"><i class="bi bi-upc-scan"></i></div>
+      <div>
+        <p class="stat-label">{% trans "POS activity" %}</p>
+        <p class="stat-value"><span data-countup="540.5" data-decimals="3">0</span></p>
+      </div>
+      <div class="stat-spark">
+        <svg width="54" height="28" viewBox="0 0 54 28" fill="none">
+          <path d="M2 22 C10 22, 11 5, 19 9 S33 24, 40 11 S50 6, 52 8"
+                stroke="rgba(255,255,255,.9)" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+
+  {# ================= Stock & sales movement chart ================= #}
+  <div class="col-12 col-xl-6">
+    <div class="card-soft h-100">
+      <div class="card-head">
+        <h3>{% trans "Stock movement" %}</h3>
+        <span class="badge-soft badge-success">{% trans "On track" %}</span>
+        <div class="spacer"></div>
+        <div class="segmented">
+          <button class="active" type="button">{% trans "Monthly" %}</button>
+          <button type="button">{% trans "Weekly" %}</button>
+        </div>
+      </div>
+      <div class="card-pad">
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <div class="p-3 rounded-3 bg-lavender">
+              <div class="d-flex align-items-center gap-2">
+                <span class="stat-label mb-0">{% trans "Stock in" %}</span>
+                <span class="trend trend-up">+2.45%</span>
+              </div>
+              <div class="fw-800 fs-5 tnum">43.50%</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="p-3 rounded-3 bg-lavender">
+              <div class="d-flex align-items-center gap-2">
+                <span class="stat-label mb-0">{% trans "Stock value" %}</span>
+                <span class="trend trend-down">-4.75%</span>
+              </div>
+              <div class="fw-800 fs-5 tnum">52,422</div>
+            </div>
+          </div>
+        </div>
+
+        {# Placeholder chart — swap for Chart.js fed by an AJAX endpoint #}
+        <svg viewBox="0 0 520 150" class="w-100" style="height:150px" preserveAspectRatio="none" role="img"
+             aria-label="{% trans "Stock movement over time" %}">
+          <defs>
+            <linearGradient id="fillGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"   stop-color="var(--purple-400)" stop-opacity=".28"/>
+              <stop offset="100%" stop-color="var(--purple-400)" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path d="M0 110 C40 108, 60 70, 95 85 S150 120, 185 60 S235 30, 270 72
+                   S320 105, 355 55 S410 25, 445 62 S495 92, 520 70 L520 150 L0 150 Z"
+                fill="url(#fillGrad)"/>
+          <path d="M0 110 C40 108, 60 70, 95 85 S150 120, 185 60 S235 30, 270 72
+                   S320 105, 355 55 S410 25, 445 62 S495 92, 520 70"
+                stroke="var(--purple-600)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        </svg>
+        <div class="d-flex justify-content-between mt-2 small text-muted">
+          <span>{% trans "Jan" %}</span><span>{% trans "Mar" %}</span><span>{% trans "May" %}</span>
+          <span>{% trans "Jul" %}</span><span>{% trans "Sep" %}</span><span>{% trans "Nov" %}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# ================= Cash position gauge ================= #}
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="card-soft card-pad h-100 text-center">
+      <div class="text-start">
+        <h3 class="mb-1">{% trans "Cash position" %}</h3>
+        <p class="stat-label">{% trans "Total received" %}</p>
+        <p class="fs-4 fw-800 text-purple mb-1 tnum">6,078.760</p>
+        <p class="small text-muted">{% trans "34% more than last month" %}</p>
+      </div>
+
+      <svg viewBox="0 0 120 68" style="width:150px;margin:6px auto 0" role="img"
+           aria-label="{% trans "Collection rate" %}">
+        <path d="M10 60 A50 50 0 0 1 110 60" stroke="var(--purple-100)"
+              stroke-width="12" fill="none" stroke-linecap="round"/>
+        <path d="M10 60 A50 50 0 0 1 110 60" stroke="var(--purple-600)"
+              stroke-width="12" fill="none" stroke-linecap="round"
+              stroke-dasharray="157" stroke-dashoffset="31">
+          <animate attributeName="stroke-dashoffset" from="157" to="31" dur="1.1s"
+                   fill="freeze" calcMode="spline" keySplines="0.16 1 0.3 1"/>
+        </path>
+        <text x="60" y="56" text-anchor="middle" font-size="19" font-weight="800"
+              fill="var(--ink)">80%</text>
+      </svg>
+      <p class="stat-label mt-1">{% trans "Collected" %}</p>
+    </div>
+  </div>
+
+  {# ================= Cashier of the day ================= #}
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="card-soft card-pad h-100 text-center">
+      <div class="avatar mx-auto mb-2" style="width:64px;height:64px;border-radius:50%;
+           background:linear-gradient(135deg,var(--purple-400),var(--purple-600));
+           color:#fff;display:grid;place-items:center;font-size:1.4rem;font-weight:800">Y</div>
+      <h3 class="mb-0">{% trans "Yousef Badr" %}</h3>
+      <p class="small text-muted mb-3">{% trans "Cashier · Main branch" %}</p>
+      <div class="row g-0 pt-3" style="border-top:1px solid var(--border)">
+        <div class="col-4">
+          <div class="fw-800">26</div>
+          <div class="stat-label">{% trans "Sales" %}</div>
+        </div>
+        <div class="col-4">
+          <div class="fw-800">356</div>
+          <div class="stat-label">{% trans "Items" %}</div>
+        </div>
+        <div class="col-4">
+          <div class="fw-800">68</div>
+          <div class="stat-label">{% trans "Returns" %}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+
+  {# ================= Expiring batches (spec §5.6) ================= #}
+  <div class="col-12 col-xl-6">
+    <div class="card-soft card-pad h-100">
+      <div class="row align-items-center g-3">
+        <div class="col-12 col-md-6">
+          <h3 class="mb-2">{% trans "Batches expiring soon" %}</h3>
+          <p class="small text-muted mb-3">
+            {% blocktrans with days=company.expiration_warning_days|default:7 %}Items reaching their expiration date within {{ days }} days. Expired stock is blocked from sale and must be written off through Waste &amp; Loss.{% endblocktrans %}
+          </p>
+          <a href="#" class="btn btn-primary btn-sm" data-smooth>
+            <i class="bi bi-eye me-1"></i>{% trans "Review batches" %}
+          </a>
+        </div>
+        <div class="col-12 col-md-6">
+          {# TODO: {% for batch in expiring_batches %} #}
+          <div class="d-flex align-items-center gap-2 p-2 rounded-3 mb-2 bg-lavender">
+            <i class="bi bi-clock-history text-purple"></i>
+            <div class="flex-grow-1 min-w-0">
+              <div class="fw-semibold small text-truncate">{% trans "Fresh Milk 1L" %}</div>
+              <div class="stat-label">{% trans "Batch" %} B-2026-0142 · 120 {% trans "pcs" %}</div>
+            </div>
+            <span class="badge-soft badge-warning">3 {% trans "days" %}</span>
+          </div>
+          <div class="d-flex align-items-center gap-2 p-2 rounded-3 mb-2 bg-lavender">
+            <i class="bi bi-clock-history text-purple"></i>
+            <div class="flex-grow-1 min-w-0">
+              <div class="fw-semibold small text-truncate">{% trans "Labneh 500g" %}</div>
+              <div class="stat-label">{% trans "Batch" %} B-2026-0138 · 45 {% trans "pcs" %}</div>
+            </div>
+            <span class="badge-soft badge-danger">1 {% trans "day" %}</span>
+          </div>
+          <div class="d-flex align-items-center gap-2 p-2 rounded-3 bg-lavender">
+            <i class="bi bi-clock-history text-purple"></i>
+            <div class="flex-grow-1 min-w-0">
+              <div class="fw-semibold small text-truncate">{% trans "Orange Juice 250ml" %}</div>
+              <div class="stat-label">{% trans "Batch" %} B-2026-0151 · 88 {% trans "pcs" %}</div>
+            </div>
+            <span class="badge-soft badge-warning">6 {% trans "days" %}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# ================= Recent transactions ================= #}
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="card-soft h-100">
+      <div class="card-head"><h3>{% trans "Recent transactions" %}</h3></div>
+      <div class="card-pad pt-2">
+        {# TODO: {% for tx in recent_transactions %} #}
+        <div class="d-flex align-items-center gap-2 py-2"
+             style="border-inline-start:3px solid var(--success);padding-inline-start:10px">
+          <div class="flex-grow-1 min-w-0">
+            <div class="fw-semibold small text-truncate">{% trans "From" %} Anna Jones</div>
+            <div class="stat-label">{% trans "Today" %} 14:24</div>
+          </div>
+          <span class="trend trend-up">+2.45</span>
+        </div>
+        <div class="d-flex align-items-center gap-2 py-2"
+             style="border-inline-start:3px solid var(--danger);padding-inline-start:10px">
+          <div class="flex-grow-1 min-w-0">
+            <div class="fw-semibold small text-truncate">{% trans "To" %} Carlos Brown</div>
+            <div class="stat-label">{% trans "Today" %} 15:32</div>
+          </div>
+          <span class="trend trend-down">-4.75</span>
+        </div>
+        <div class="d-flex align-items-center gap-2 py-2"
+             style="border-inline-start:3px solid var(--success);padding-inline-start:10px">
+          <div class="flex-grow-1 min-w-0">
+            <div class="fw-semibold small text-truncate">{% trans "From" %} Joel Cannan</div>
+            <div class="stat-label">{% trans "Today" %} 17:54</div>
+          </div>
+          <span class="trend trend-up">+2.45</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# ================= Trial balance check (spec §8.3) ================= #}
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="card-soft card-pad h-100 text-center d-flex flex-column justify-content-center">
+      <div class="stat-icon mx-auto mb-3" style="width:56px;height:56px;
+           background:var(--success-bg);color:var(--success);font-size:1.4rem">
+        <i class="bi bi-shield-check"></i>
+      </div>
+      <h3 class="mb-1">{% trans "Books are balanced" %}</h3>
+      <p class="small text-muted mb-3">{% trans "Total debits equal total credits across all posted entries." %}</p>
+      <a href="#" class="btn btn-success btn-sm mx-auto" data-smooth>
+        {% trans "Open trial balance" %}
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

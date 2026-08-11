@@ -57,6 +57,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.i18n', # Added for language handling in templates
+                "django.template.context_processors.static",
             ],
         },
     },
@@ -89,13 +90,14 @@ LANGUAGE_CODE = 'en'
 
 LANGUAGES = [
     ('en', _('English')),
-    ('ar', _('Arabic')),
+    ('ar', _('العربية')),
 ]
 
 LOCALE_PATHS = [
     BASE_DIR / 'locale',
 ]
 
+STATICFILES_DIRS = [BASE_DIR / "static"]
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
