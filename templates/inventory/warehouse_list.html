@@ -1,0 +1,118 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Warehouses" %}{% endblock %}
+
+{% block page_header %}
+  <h1>{% trans "Warehouses" %}</h1>
+  <p>{% trans "Storage locations and stock held in each one" %}</p>
+{% endblock %}
+
+{% block topbar_actions %}
+  <a href="#" class="btn btn-soft" data-smooth>
+    <i class="bi bi-arrow-left-right me-1"></i>{% trans "New transfer" %}
+  </a>
+  <a href="#" class="btn btn-primary" data-smooth>
+    <i class="bi bi-plus-lg me-1"></i>{% trans "New warehouse" %}
+  </a>
+{% endblock %}
+
+{% block content %}
+{# nav_active = 'warehouses' — spec 4 (Warehouse) + 5.4 (WarehouseTransfer) #}
+
+<div class="row g-3 mb-3 stagger">
+  {# TODO: {% for warehouse in warehouses %} #}
+  <div class="col-12 col-md-6 col-xl-4">
+    <div class="card-soft card-pad lift">
+      <div class="d-flex align-items-start gap-3">
+        <div class="stat-icon"><i class="bi bi-building-fill"></i></div>
+        <div class="flex-grow-1">
+          <h3 class="mb-0">{% trans "Main warehouse" %}</h3>
+          <p class="stat-label mb-2">WH-001 · {% trans "Amman, Jordan" %}</p>
+          <div class="d-flex gap-3">
+            <div>
+              <div class="fw-800 tnum">1,248</div>
+              <div class="stat-label">{% trans "Items" %}</div>
+            </div>
+            <div>
+              <div class="fw-800 tnum">42,180</div>
+              <div class="stat-label">{% trans "Stock value" %}</div>
+            </div>
+          </div>
+        </div>
+        <span class="badge-soft badge-success">{% trans "Active" %}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-6 col-xl-4">
+    <div class="card-soft card-pad lift">
+      <div class="d-flex align-items-start gap-3">
+        <div class="stat-icon"><i class="bi bi-shop"></i></div>
+        <div class="flex-grow-1">
+          <h3 class="mb-0">{% trans "Branch store" %}</h3>
+          <p class="stat-label mb-2">WH-002 · {% trans "Zarqa, Jordan" %}</p>
+          <div class="d-flex gap-3">
+            <div>
+              <div class="fw-800 tnum">386</div>
+              <div class="stat-label">{% trans "Items" %}</div>
+            </div>
+            <div>
+              <div class="fw-800 tnum">10,242</div>
+              <div class="stat-label">{% trans "Stock value" %}</div>
+            </div>
+          </div>
+        </div>
+        <span class="badge-soft badge-success">{% trans "Active" %}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card-soft" data-table-card>
+  <div class="card-head">
+    <h3>{% trans "Recent warehouse transfers" %}</h3>
+    <div class="spacer"></div>
+    <span class="stat-label">{% trans "Total company stock is unchanged by a transfer" %}</span>
+  </div>
+  <div class="table-wrap">
+    <table class="table-erp" id="transferTable">
+      <thead>
+        <tr>
+          <th>{% trans "Transfer no." %}</th>
+          <th>{% trans "Date" %}</th>
+          <th>{% trans "From" %}</th>
+          <th>{% trans "To" %}</th>
+          <th class="num">{% trans "Lines" %}</th>
+          <th>{% trans "Status" %}</th>
+          <th class="text-end">{% trans "Actions" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr data-row>
+          <td class="cell-strong">TR-2026-000012</td>
+          <td class="cell-muted">2026-08-09</td>
+          <td>{% trans "Main warehouse" %}</td>
+          <td>{% trans "Branch store" %}</td>
+          <td class="num">6</td>
+          <td><span class="badge-soft badge-success">{% trans "Confirmed" %}</span></td>
+          <td class="text-end"><button class="btn-icon"><i class="bi bi-eye"></i></button></td>
+        </tr>
+        <tr data-row>
+          <td class="cell-strong">TR-2026-000013</td>
+          <td class="cell-muted">2026-08-10</td>
+          <td>{% trans "Branch store" %}</td>
+          <td>{% trans "Main warehouse" %}</td>
+          <td class="num">2</td>
+          <td><span class="badge-soft badge-neutral">{% trans "Draft" %}</span></td>
+          <td class="text-end"><button class="btn-icon"><i class="bi bi-pencil"></i></button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="empty-state" data-empty hidden>
+    <i class="bi bi-arrow-left-right"></i>
+    <p>{% trans "No transfers recorded yet." %}</p>
+  </div>
+</div>
+{% endblock %}

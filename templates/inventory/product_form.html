@@ -1,0 +1,168 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "New product" %}{% endblock %}
+
+{% block page_header %}
+  <h1>{% trans "New product" %}</h1>
+  <p>{% trans "Add an item to the catalogue with pricing and stock settings" %}</p>
+{% endblock %}
+
+{% block topbar_actions %}
+  <a href="#" class="btn btn-ghost" data-smooth>{% trans "Cancel" %}</a>
+{% endblock %}
+
+{% block content %}
+{# nav_active = 'items' — fields mirror spec §4 "Product" #}
+
+<form method="post" data-ajax data-reset-on-success
+      {# action="{% url 'inventory:product_create' %}" #}>
+  {% csrf_token %}
+
+  <div class="row g-3">
+    <div class="col-12 col-lg-8">
+
+      {# ---------- Identification ---------- #}
+      <div class="card-soft card-pad mb-3">
+        <div class="form-section-title">{% trans "Identification" %}</div>
+        <div class="row g-3">
+          <div class="col-12 col-md-4">
+            <label class="form-label" for="id_code">{% trans "Item code" %}<span class="req">*</span></label>
+            <input type="text" class="form-control" id="id_code" name="code"
+                   placeholder="P-0001" required>
+            <div class="field-hint">{% trans "Must be unique." %}</div>
+          </div>
+          <div class="col-12 col-md-4">
+            <label class="form-label" for="id_barcode">{% trans "Barcode" %}</label>
+            <div class="input-group">
+              <input type="text" class="form-control" id="id_barcode" name="barcode"
+                     placeholder="6291000000000">
+              <span class="input-suffix"><i class="bi bi-upc-scan"></i></span>
+            </div>
+            <div class="field-hint">{% trans "Optional, but unique when set." %}</div>
+          </div>
+          <div class="col-12 col-md-4">
+            <label class="form-label" for="id_unit">{% trans "Unit of measure" %}<span class="req">*</span></label>
+            <select class="form-select" id="id_unit" name="unit" required>
+              <option value="">{% trans "Select a unit" %}</option>
+              {# TODO: {% for u in units %}<option value="{{ u.id }}">{{ u.name }}</option>{% endfor %} #}
+              <option>{% trans "Piece" %}</option>
+              <option>{% trans "Kilogram" %}</option>
+              <option>{% trans "Liter" %}</option>
+              <option>{% trans "Box" %}</option>
+            </select>
+          </div>
+
+          <div class="col-12 col-md-8">
+            <label class="form-label" for="id_name">{% trans "Product name" %}<span class="req">*</span></label>
+            <input type="text" class="form-control" id="id_name" name="name"
+                   placeholder="{% trans "e.g. Fresh Milk 1L" %}" required>
+          </div>
+          <div class="col-12 col-md-4">
+            <label class="form-label" for="id_category">{% trans "Category" %}<span class="req">*</span></label>
+            <select class="form-select" id="id_category" name="category" required>
+              <option value="">{% trans "Select a category" %}</option>
+              <option>{% trans "Dairy" %}</option>
+              <option>{% trans "Beverages" %}</option>
+              <option>{% trans "Dry goods" %}</option>
+            </select>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label" for="id_description">{% trans "Description" %}</label>
+            <textarea class="form-control" id="id_description" name="description" rows="3"
+                      placeholder="{% trans "Optional notes about this product" %}"></textarea>
+          </div>
+        </div>
+      </div>
+
+      {# ---------- Pricing ---------- #}
+      <div class="card-soft card-pad mb-3">
+        <div class="form-section-title">{% trans "Pricing" %}</div>
+        <div class="row g-3">
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="id_purchase_price">{% trans "Purchase price" %}<span class="req">*</span></label>
+            <div class="input-group">
+              <input type="number" step="0.001" min="0" class="form-control"
+                     id="id_purchase_price" name="purchase_price" placeholder="0.000" required>
+              <span class="input-suffix">{% trans "JOD" %}</span>
+            </div>
+            <div class="field-hint">{% trans "Default cost. Actual cost is stored per purchase line." %}</div>
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="id_selling_price">{% trans "Selling price" %}<span class="req">*</span></label>
+            <div class="input-group">
+              <input type="number" step="0.001" min="0" class="form-control"
+                     id="id_selling_price" name="selling_price" placeholder="0.000" required>
+              <span class="input-suffix">{% trans "JOD" %}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {# ---------- Stock & expiration ---------- #}
+      <div class="card-soft card-pad">
+        <div class="form-section-title">{% trans "Stock and expiration" %}</div>
+        <div class="row g-3">
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="id_minimum_stock">{% trans "Minimum stock level" %}</label>
+            <input type="number" step="0.001" min="0" class="form-control"
+                   id="id_minimum_stock" name="minimum_stock" placeholder="0.000">
+            <div class="field-hint">{% trans "Triggers a low-stock notification when reached." %}</div>
+          </div>
+          <div class="col-12 col-md-6 d-flex align-items-center">
+            <div class="w-100">
+              <div class="form-check form-switch mb-2">
+                <input class="form-check-input" type="checkbox" role="switch"
+                       id="id_track_expiration" name="track_expiration">
+                <label class="form-check-label small fw-semibold" for="id_track_expiration">
+                  {% trans "Track expiration by batch" %}
+                </label>
+              </div>
+              <div class="field-hint">
+                {% trans "Required for perishable goods. Expiration dates are stored on stock batches, never on the product itself." %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# ---------- Side panel ---------- #}
+    <div class="col-12 col-lg-4">
+      <div class="card-soft card-pad mb-3">
+        <div class="form-section-title">{% trans "Status" %}</div>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" role="switch"
+                 id="id_is_active" name="is_active" checked>
+          <label class="form-check-label small fw-semibold" for="id_is_active">
+            {% trans "Active" %}
+          </label>
+        </div>
+        <div class="field-hint mt-1">
+          {% trans "Inactive products stay in history but cannot be sold or purchased." %}
+        </div>
+      </div>
+
+      <div class="card-soft card-pad mb-3" style="background:var(--purple-50);border-color:var(--purple-100)">
+        <div class="d-flex gap-2">
+          <i class="bi bi-info-circle text-purple mt-1"></i>
+          <div>
+            <div class="fw-bold small mb-1">{% trans "Opening stock" %}</div>
+            <p class="small text-muted mb-0">
+              {% trans "Stock is not entered here. Add quantities through a purchase invoice or an opening-balance stock movement so the inventory audit trail stays complete." %}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-soft card-pad">
+        <button type="submit" class="btn btn-primary w-100 mb-2">
+          <i class="bi bi-check-lg me-1"></i>{% trans "Save product" %}
+        </button>
+        <button type="reset" class="btn btn-ghost w-100">{% trans "Clear form" %}</button>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}

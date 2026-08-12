@@ -1,0 +1,277 @@
+{% load i18n static %}<!DOCTYPE html>
+{% get_current_language as LANGUAGE_CODE %}
+{% get_current_language_bidi as LANGUAGE_BIDI %}
+<html lang="{{ LANGUAGE_CODE }}" dir="{% if LANGUAGE_BIDI %}rtl{% else %}ltr{% endif %}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{% trans "Dashboard" %}{% endblock %} · {{ company.company_name|default:_("Sphereka ERP") }}</title>
+
+  {# ---- Bootstrap 5.3: RTL stylesheet is swapped in automatically for Arabic ---- #}
+  {% if LANGUAGE_BIDI %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+  {% else %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  {% endif %}
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+  {# ---- Latin + Arabic webfonts ---- #}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="{% static 'css/erp.css' %}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+{# ==========================================================================
+   Language switcher — posts to Django's built-in set_language view.
+   Add to urls.py:  path('i18n/', include('django.conf.urls.i18n')),
+   ========================================================================== #}
+<form id="langForm" action="{% url 'set_language' %}" method="post" class="d-none">
+  {% csrf_token %}
+  <input name="next" type="hidden" value="{{ request.get_full_path }}">
+  <input name="language" type="hidden" value="">
+</form>
+
+{# ---- Django messages framework → JS toasts ---- #}
+{% if messages %}
+  <div class="d-none">
+    {% for message in messages %}
+      <span data-server-message data-level="{{ message.tags }}">{{ message }}</span>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<div class="app-shell">
+
+  {# ======================================================================
+     SIDEBAR — core modules from the requirements doc (§3)
+     ====================================================================== #}
+  <aside class="sidebar">
+    <a href="/" class="sidebar-brand" data-smooth aria-label="{% trans "Home" %}">
+      <i class="bi bi-hexagon-fill"></i>
+    </a>
+
+    <nav class="sidebar-nav" aria-label="{% trans "Main navigation" %}">
+      {% comment %}
+        Replace href="#" with {% url '<app>:<name>' %} once the backend
+        team adds urls.py for each app. Keep the data-nav value — the
+        active state is driven by {% block nav_active %} in each page.
+      {% endcomment %}
+
+      <a href="#" data-nav="dashboard" data-smooth class="nav-icon {% if nav_active == 'dashboard' %}active{% endif %}">
+        <i class="bi bi-grid-1x2-fill"></i>
+        <span class="nav-label">{% trans "Dashboard" %}</span>
+      </a>
+
+      <a href="#" data-nav="customers" data-smooth class="nav-icon {% if nav_active == 'customers' %}active{% endif %}">
+        <i class="bi bi-people-fill"></i>
+        <span class="nav-label">{% trans "Customers" %}</span>
+      </a>
+
+      <a href="#" data-nav="suppliers" data-smooth class="nav-icon {% if nav_active == 'suppliers' %}active{% endif %}">
+        <i class="bi bi-truck"></i>
+        <span class="nav-label">{% trans "Suppliers" %}</span>
+      </a>
+
+      <a href="#" data-nav="items" data-smooth class="nav-icon {% if nav_active == 'items' %}active{% endif %}">
+        <i class="bi bi-box-seam-fill"></i>
+        <span class="nav-label">{% trans "Items" %}</span>
+      </a>
+
+      <a href="#" data-nav="warehouses" data-smooth class="nav-icon {% if nav_active == 'warehouses' %}active{% endif %}">
+        <i class="bi bi-building-fill"></i>
+        <span class="nav-label">{% trans "Warehouses" %}</span>
+      </a>
+
+      <a href="#" data-nav="purchases" data-smooth class="nav-icon {% if nav_active == 'purchases' %}active{% endif %}">
+        <i class="bi bi-bag-plus-fill"></i>
+        <span class="nav-label">{% trans "Purchases" %}</span>
+      </a>
+
+      <a href="#" data-nav="pos" data-smooth class="nav-icon {% if nav_active == 'pos' %}active{% endif %}">
+        <i class="bi bi-upc-scan"></i>
+        <span class="nav-label">{% trans "Point of Sale" %}</span>
+      </a>
+
+      <a href="#" data-nav="quotations" data-smooth class="nav-icon {% if nav_active == 'quotations' %}active{% endif %}">
+        <i class="bi bi-file-earmark-text-fill"></i>
+        <span class="nav-label">{% trans "Quotations" %}</span>
+      </a>
+
+      <a href="#" data-nav="finance" data-smooth class="nav-icon {% if nav_active == 'finance' %}active{% endif %}">
+        <i class="bi bi-journal-bookmark-fill"></i>
+        <span class="nav-label">{% trans "Finance" %}</span>
+      </a>
+
+      <a href="#" data-nav="waste" data-smooth class="nav-icon {% if nav_active == 'waste' %}active{% endif %}">
+        <i class="bi bi-trash3-fill"></i>
+        <span class="nav-label">{% trans "Waste & Loss" %}</span>
+      </a>
+
+      <a href="#" data-nav="reports" data-smooth class="nav-icon {% if nav_active == 'reports' %}active{% endif %}">
+        <i class="bi bi-bar-chart-line-fill"></i>
+        <span class="nav-label">{% trans "Reports" %}</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="#" class="nav-icon" data-bs-toggle="tooltip" title="{% trans "Settings" %}">
+        <i class="bi bi-gear-fill"></i>
+      </a>
+      <a href="#" class="nav-icon" data-confirm="{% trans "Sign out of the system?" %}">
+        <i class="bi bi-box-arrow-right"></i>
+        <span class="nav-label">{% trans "Sign out" %}</span>
+      </a>
+    </div>
+  </aside>
+
+  {# ======================================================================
+     MAIN COLUMN
+     ====================================================================== #}
+  <div class="main-col" data-page-root>
+
+    <header class="topbar">
+      <button class="icon-btn mobile-only" data-sidebar-toggle aria-label="{% trans "Open menu" %}">
+        <i class="bi bi-list"></i>
+      </button>
+
+      <div class="topbar-greeting">
+        {% block page_header %}
+          <h1>{% blocktrans with name=request.user.first_name|default:_("there") %}Hello, {{ name }}!{% endblocktrans %}</h1>
+          <p>{% trans "Explore information and activity across your business" %}</p>
+        {% endblock %}
+      </div>
+
+      <div class="topbar-actions">
+        {% block topbar_actions %}
+          <div class="search-pill">
+            <input type="search"
+                   placeholder="{% trans "Search products, invoices, customers..." %}"
+                   aria-label="{% trans "Global search" %}">
+            <button type="button" aria-label="{% trans "Search" %}"><i class="bi bi-search"></i></button>
+          </div>
+        {% endblock %}
+
+        {# ---- Language switcher ---- #}
+        <div class="dropdown">
+          <button class="icon-btn" data-bs-toggle="dropdown" aria-label="{% trans "Change language" %}">
+            <i class="bi bi-translate"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item {% if LANGUAGE_CODE == 'en' %}active{% endif %}"
+                   href="#" data-set-language="en">English</a></li>
+            <li><a class="dropdown-item {% if LANGUAGE_CODE == 'ar' %}active{% endif %}"
+                   href="#" data-set-language="ar">العربية</a></li>
+          </ul>
+        </div>
+
+        {# ---- Notifications (spec §9.2) ---- #}
+        <div class="dropdown">
+          <button class="icon-btn" data-bs-toggle="dropdown" aria-label="{% trans "Notifications" %}">
+            <i class="bi bi-bell"></i>
+            {% if unread_count %}<span class="dot pulse"></span>{% else %}<span class="dot pulse"></span>{% endif %}
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end" style="min-width:290px">
+            <li class="px-2 pt-1 pb-2 d-flex align-items-center">
+              <strong class="small">{% trans "Notifications" %}</strong>
+              <a href="#" class="ms-auto small">{% trans "Mark all read" %}</a>
+            </li>
+            {# TODO: {% for n in notifications %} ... {% endfor %} #}
+            <li><a class="dropdown-item" href="#">
+              <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+              {% trans "3 items expiring within 7 days" %}</a></li>
+            <li><a class="dropdown-item" href="#">
+              <i class="bi bi-box text-purple me-2"></i>
+              {% trans "Low stock: 5 products below minimum" %}</a></li>
+            <li><a class="dropdown-item" href="#">
+              <i class="bi bi-cash-coin text-purple me-2"></i>
+              {% trans "Supplier payment due tomorrow" %}</a></li>
+          </ul>
+        </div>
+
+        {# ---- User chip ---- #}
+        <div class="dropdown">
+          <div class="user-chip" data-bs-toggle="dropdown" role="button">
+            <span class="avatar">{{ request.user.first_name|slice:":1"|upper|default:"A" }}</span>
+            <div class="u-meta">
+              <div class="u-name">{{ request.user.get_full_name|default:_("Admin User") }}</div>
+              <div class="u-role">
+                {% comment %}Role choices from spec §4: ADMIN / ACCOUNTANT / CASHIER{% endcomment %}
+                {{ request.user.get_role_display|default:_("Administrator") }}
+              </div>
+            </div>
+          </div>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>{% trans "My profile" %}</a></li>
+            <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i>{% trans "Settings" %}</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#" data-confirm="{% trans "Sign out of the system?" %}">
+              <i class="bi bi-box-arrow-right me-2"></i>{% trans "Sign out" %}</a></li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <main class="page-enter">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+{# ---- Toast host ---- #}
+<div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+
+{# ---- Shared confirm modal ---- #}
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content">
+      <div class="modal-body text-center pt-4">
+        <div class="stat-icon mx-auto mb-3" style="background:var(--warning-bg);color:var(--warning)">
+          <i class="bi bi-question-lg"></i>
+        </div>
+        <p class="mb-0 fw-semibold" data-confirm-text></p>
+      </div>
+      <div class="modal-footer justify-content-center border-0 pb-4">
+        <button class="btn btn-ghost btn-sm" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+        <button class="btn btn-primary btn-sm" data-confirm-ok>{% trans "Confirm" %}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+{# ==========================================================================
+   Strings that erp.js generates at runtime. Keeping them here means the
+   JS file stays translation-free and everything flows through the .po file.
+   ========================================================================== #}
+<script>
+  window.ERP_I18N = {
+    "close":         "{% trans 'Close' %}",
+    "success":       "{% trans 'Success' %}",
+    "error":         "{% trans 'Error' %}",
+    "warning":       "{% trans 'Warning' %}",
+    "info":          "{% trans 'Notice' %}",
+    "saving":        "{% trans 'Saving...' %}",
+    "saved":         "{% trans 'Saved' %}",
+    "changes_saved": "{% trans 'Your changes have been saved.' %}",
+    "save_failed":   "{% trans 'Could not save' %}",
+    "check_fields":  "{% trans 'Please check the highlighted fields.' %}",
+    "request_failed":"{% trans 'Request failed' %}",
+    "try_again":     "{% trans 'Please try again.' %}",
+    "added_to_cart": "{% trans 'Added to cart' %}",
+    "cannot_remove": "{% trans 'Cannot remove' %}",
+    "need_one_line": "{% trans 'An invoice needs at least one line.' %}",
+    "increase":      "{% trans 'Increase' %}",
+    "decrease":      "{% trans 'Decrease' %}",
+    "remove":        "{% trans 'Remove' %}"
+  };
+</script>
+
+<script src="{% static 'js/erp.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>
