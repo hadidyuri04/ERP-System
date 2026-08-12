@@ -4,6 +4,7 @@ from .views import dashboard_redirect_view, admin_dashboard_view, accountant_das
 app_name = 'core'
 
 urlpatterns = [
+    path('', dashboard_redirect_view, name='home'),
     path('dashboard/', dashboard_redirect_view, name='dashboard'),
     path('dashboard/admin/', admin_dashboard_view, name='admin_dashboard'),
     path('dashboard/accountant/', accountant_dashboard_view, name='accountant_dashboard'),

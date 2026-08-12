@@ -681,8 +681,17 @@
      Boot
      ================================================================== */
 
+  ERP.bindNavGroups = function () {
+    const groups = document.querySelectorAll('.sidebar .nav-group');
+    groups.forEach((group) => group.addEventListener('toggle', () => {
+      if (!group.open) return;
+      groups.forEach((other) => { if (other !== group) other.open = false; });
+    }));
+  };
+
   ERP.init = function () {
     ERP.bindSidebar();
+    ERP.bindNavGroups();
     ERP.bindAjaxForms();
     ERP.bindLiveFilters();
     ERP.bindSmoothLinks();

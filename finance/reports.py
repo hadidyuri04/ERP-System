@@ -1,7 +1,7 @@
 from decimal import Decimal
-from django.db.models import Sum, Q
+from django.db.models import Sum
 from django.utils.translation import gettext_lazy as _
-from .models import Account, JournalEntryLine
+from .models import Account, JournalEntry, JournalEntryLine
 
 def get_account_balance(account, start_date=None, end_date=None):
     """
@@ -9,7 +9,7 @@ def get_account_balance(account, start_date=None, end_date=None):
     """
     lines = JournalEntryLine.objects.filter(
         account=account,
-        journal_entry__status='POSTED'
+        journal_entry__status=JournalEntry.Status.POSTED
     )
     
     if start_date:
@@ -26,7 +26,7 @@ def get_account_balance(account, start_date=None, end_date=None):
     credit = totals['total_credit'] or Decimal('0.000')
 
     # Determine balance nature based on account type
-    if account.account_type in ['ASSET', 'EXPENSE']:
+    if account.account_type in [Account.AccountType.ASSET, Account.AccountType.EXPENSE]:
         return debit - credit
     else:
         return credit - debit
@@ -43,7 +43,7 @@ def generate_general_ledger(account_id, start_date=None, end_date=None):
 
     lines = JournalEntryLine.objects.filter(
         account=account,
-        journal_entry__status='POSTED'
+        journal_entry__status=JournalEntry.Status.POSTED
     ).select_related('journal_entry', 'customer', 'supplier').order_by('journal_entry__date', 'journal_entry__id')
 
     if start_date:
@@ -55,7 +55,7 @@ def generate_general_ledger(account_id, start_date=None, end_date=None):
     running_balance = Decimal('0.000')
 
     for line in lines:
-        if account.account_type in ['ASSET', 'EXPENSE']:
+        if account.account_type in [Account.AccountType.ASSET, Account.AccountType.EXPENSE]:
             running_balance += (line.debit - line.credit)
         else:
             running_balance += (line.credit - line.debit)
@@ -91,7 +91,7 @@ def generate_trial_balance(start_date=None, end_date=None):
     for account in accounts:
         lines = JournalEntryLine.objects.filter(
             account=account,
-            journal_entry__status='POSTED'
+            journal_entry__status=JournalEntry.Status.POSTED
         )
         
         if start_date:

@@ -20,7 +20,6 @@ def role_required(*allowed_roles):
         return _wrapped_view
     return decorator
 
-# Convenience Shortcuts
-admin_required = role_required('ADMIN')
-accountant_required = role_required('ADMIN', 'ACCOUNTANT')
-cashier_required = role_required('ADMIN', 'ACCOUNTANT', 'CASHIER')
+admin_required = role_required("admin")
+accountant_required = role_required("admin", "accountant")
+cashier_required = role_required("admin", "accountant", "cashier")

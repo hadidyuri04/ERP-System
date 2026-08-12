@@ -1,327 +1,50 @@
-{% extends "core/base.html" %}
-{% load i18n %}
-
-{% block title %}{% trans "Point of Sale" %}{% endblock %}
-
-{% block page_header %}
-  <h1>{% trans "Point of Sale" %}</h1>
-  <p>{% trans "Scan or search an item to start a sale" %}</p>
-{% endblock %}
-
-{% block topbar_actions %}
-  <div class="d-flex align-items-center gap-2">
-    <span class="badge-soft badge-info"><i class="bi bi-shop"></i>&nbsp;{% trans "Main warehouse" %}</span>
-    <span class="badge-soft badge-success">{% trans "Session open" %}</span>
-  </div>
-{% endblock %}
-
+{% extends "core/base.html" %}{% load i18n %}
+{% block title %}{% trans "Point of sale" %}{% endblock %}
+{% block page_header %}<span class="eyebrow">{% trans "Sales" %}</span><h1>{% trans "Point of sale" %}</h1><p>{% trans "Select products, review the order, and complete payment." %}</p>{% endblock %}
+{% block topbar_actions %}<a class="btn btn-soft" href="{% url 'pos:sale_list' %}"><i class="bi bi-receipt me-1"></i>{% trans "Sales history" %}</a>{% endblock %}
 {% block content %}
-{# nav_active = 'pos' — mirrors spec §7 (POSSale / POSSaleItem / POSPayment) #}
-
 <div class="pos-layout">
-
-  {# ================= LEFT: search + product grid ================= #}
-  <div>
-    <div class="pos-search mb-3">
-      <i class="bi bi-upc-scan fs-5 text-purple"></i>
-      <input type="search" id="posSearch" autofocus
-             placeholder="{% trans "Scan barcode or search product name / code..." %}"
-             aria-label="{% trans "Product search" %}">
-      <button type="button" class="btn btn-soft btn-sm">
-        <i class="bi bi-sliders"></i>
-      </button>
+  <section>
+    <div class="pos-search mb-3"><i class="bi bi-search text-purple"></i><input id="product-search" type="search" placeholder="{% trans 'Search products by name or code...' %}" autocomplete="off"><span id="product-count" class="badge-soft badge-info">{{ products|length }} {% trans "items" %}</span></div>
+    <div class="pos-product-grid" id="product-grid">
+      {% for product in products %}<button type="button" class="pos-tile product-button" data-id="{{ product.pk }}" data-code="{{ product.code }}" data-name="{{ product.name }}" data-price="{{ product.selling_price }}">
+        <span class="t-thumb"><i class="bi bi-box-seam"></i></span><span class="t-stock">{{ product.code }} · {{ product.available_stock|default:0|floatformat:3 }} {% trans "in stock" %}</span><span class="t-name">{{ product.name }}</span><span class="t-price">{{ product.selling_price|floatformat:3 }}</span>
+      </button>{% empty %}<div class="empty-state"><i class="bi bi-box-seam"></i><p>{% trans "No active products are available." %}</p></div>{% endfor %}
     </div>
-
-    <div class="d-flex flex-wrap gap-2 mb-3">
-      <div class="segmented">
-        <button type="button" class="active">{% trans "All" %}</button>
-        <button type="button">{% trans "Dairy" %}</button>
-        <button type="button">{% trans "Beverages" %}</button>
-        <button type="button">{% trans "Dry goods" %}</button>
-      </div>
-    </div>
-
-    <div class="pos-product-grid" id="posProducts">
-      {% comment %}
-        Replace with {% for p in products %} ... {% endfor %}.
-        data-* attributes are what ERP.POS.add() consumes.
-        The backend must exclude expired / blocked batches (spec §5.6).
-      {% endcomment %}
-
-      <button type="button" class="pos-tile" data-id="1" data-code="P-0001"
-              data-name="{% trans "Fresh Milk 1L" %}" data-price="1.100" data-unit="{% trans "pcs" %}">
-        <div class="t-thumb"><i class="bi bi-cup-straw"></i></div>
-        <p class="t-name">{% trans "Fresh Milk 1L" %}</p>
-        <p class="t-price">1.100 <span class="t-stock">· 248 {% trans "pcs" %}</span></p>
-      </button>
-
-      <button type="button" class="pos-tile" data-id="2" data-code="P-0002"
-              data-name="{% trans "Labneh 500g" %}" data-price="2.250" data-unit="{% trans "pcs" %}">
-        <div class="t-thumb"><i class="bi bi-egg-fried"></i></div>
-        <p class="t-name">{% trans "Labneh 500g" %}</p>
-        <p class="t-price">2.250 <span class="t-stock">· 45 {% trans "pcs" %}</span></p>
-      </button>
-
-      <button type="button" class="pos-tile" data-id="3" data-code="P-0003"
-              data-name="{% trans "Orange Juice 250ml" %}" data-price="0.750" data-unit="{% trans "pcs" %}">
-        <div class="t-thumb"><i class="bi bi-cup"></i></div>
-        <p class="t-name">{% trans "Orange Juice 250ml" %}</p>
-        <p class="t-price">0.750 <span class="t-stock">· 12 {% trans "pcs" %}</span></p>
-      </button>
-
-      <button type="button" class="pos-tile" data-id="5" data-code="P-0005"
-              data-name="{% trans "Olive Oil 1L" %}" data-price="8.900" data-unit="{% trans "L" %}">
-        <div class="t-thumb"><i class="bi bi-droplet"></i></div>
-        <p class="t-name">{% trans "Olive Oil 1L" %}</p>
-        <p class="t-price">8.900 <span class="t-stock">· 76 {% trans "L" %}</span></p>
-      </button>
-
-      <button type="button" class="pos-tile" data-id="6" data-code="P-0006"
-              data-name="{% trans "Arabic Bread" %}" data-price="0.400" data-unit="{% trans "pcs" %}">
-        <div class="t-thumb"><i class="bi bi-basket"></i></div>
-        <p class="t-name">{% trans "Arabic Bread" %}</p>
-        <p class="t-price">0.400 <span class="t-stock">· 310 {% trans "pcs" %}</span></p>
-      </button>
-
-      <button type="button" class="pos-tile" data-id="7" data-code="P-0007"
-              data-name="{% trans "White Sugar 1kg" %}" data-price="1.350" data-unit="{% trans "kg" %}">
-        <div class="t-thumb"><i class="bi bi-box"></i></div>
-        <p class="t-name">{% trans "White Sugar 1kg" %}</p>
-        <p class="t-price">1.350 <span class="t-stock">· 92 {% trans "kg" %}</span></p>
-      </button>
-    </div>
-  </div>
-
-  {# ================= RIGHT: cart + payment ================= #}
-  <div class="card-soft pos-cart">
-
-    <div class="card-head">
-      <h3>{% trans "Current sale" %}</h3>
-      <span class="badge-soft badge-info"><span id="posItemCount">0</span>&nbsp;{% trans "items" %}</span>
-      <div class="spacer"></div>
-      <button type="button" class="btn-icon danger" id="posClear"
-              data-bs-toggle="tooltip" title="{% trans "Clear cart" %}">
-        <i class="bi bi-trash3"></i>
-      </button>
-    </div>
-
-    {# ---- Customer (optional — null means walk-in, spec §7.1) ---- #}
-    <div class="px-3 py-2" style="border-bottom:1px solid var(--border)">
-      <select class="form-select form-select-sm" id="posCustomer" aria-label="{% trans "Customer" %}">
-        <option value="">{% trans "Walk-in customer" %}</option>
-        {# TODO: {% for c in customers %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %} #}
-        <option>{% trans "Anna Jones" %}</option>
-        <option>{% trans "Carlos Brown" %}</option>
-      </select>
-    </div>
-
-    {# ---- Cart lines (rendered by ERP.POS.render) ---- #}
-    <div class="pos-cart-items" id="posCartItems"></div>
-
-    <div class="empty-state py-4" id="posCartEmpty">
-      <i class="bi bi-cart3"></i>
-      <p>{% trans "Cart is empty. Scan or tap a product to begin." %}</p>
-    </div>
-
-    {# ---- Totals ---- #}
-    <div class="pos-totals">
-      <div class="total-line">
-        <span>{% trans "Subtotal" %}</span><span class="v" id="posSubtotal">0.000</span>
-      </div>
-      <div class="total-line">
-        <span>{% trans "Discount" %}</span><span class="v" id="posDiscount">0.000</span>
-      </div>
-      <div class="total-line">
-        <span>{% trans "Tax" %}</span><span class="v" id="posTax">0.000</span>
-      </div>
-      <div class="total-line grand">
-        <span>{% trans "Total" %}</span>
-        <span class="v"><span id="posTotal">0.000</span>
-          <small class="text-muted fs-6 fw-normal">{% trans "JOD" %}</small></span>
-      </div>
-    </div>
-
-    {# ---- Payment method (spec §7.3) ---- #}
-    <div class="px-3 pb-2">
-      <div class="d-flex gap-2 mb-3">
-        <button type="button" class="pay-method active" data-method="CASH">
-          <i class="bi bi-cash"></i>{% trans "Cash" %}
-        </button>
-        <button type="button" class="pay-method" data-method="CARD">
-          <i class="bi bi-credit-card"></i>{% trans "Card" %}
-        </button>
-        <button type="button" class="pay-method" data-method="BANK">
-          <i class="bi bi-bank"></i>{% trans "Bank" %}
-        </button>
-        <button type="button" class="pay-method" data-method="CREDIT">
-          <i class="bi bi-person-lines-fill"></i>{% trans "Credit" %}
-        </button>
-      </div>
-
-      {# ---- Amount received + keypad ---- #}
-      <label class="form-label" for="posReceived">{% trans "Amount received" %}</label>
-      <input type="text" inputmode="decimal" class="form-control text-end fw-800 mb-2"
-             id="posReceived" value="0.000" style="font-size:1.15rem">
-
-      <div class="d-flex justify-content-between small mb-2">
-        <span class="text-muted">{% trans "Change due" %}</span>
-        <strong class="tnum" id="posChange">0.000</strong>
-      </div>
-
-      <div class="keypad mb-3" id="posKeypad">
-        <button type="button" data-k="7">7</button>
-        <button type="button" data-k="8">8</button>
-        <button type="button" data-k="9">9</button>
-        <button type="button" data-k="4">4</button>
-        <button type="button" data-k="5">5</button>
-        <button type="button" data-k="6">6</button>
-        <button type="button" data-k="1">1</button>
-        <button type="button" data-k="2">2</button>
-        <button type="button" data-k="3">3</button>
-        <button type="button" data-k=".">.</button>
-        <button type="button" data-k="0">0</button>
-        <button type="button" data-k="back" aria-label="{% trans "Backspace" %}">
-          <i class="bi bi-backspace"></i>
-        </button>
-      </div>
-
-      <button type="button" class="btn btn-primary btn-lg w-100 mb-2" id="posPayBtn" disabled>
-        <i class="bi bi-check2-circle me-1"></i>{% trans "Complete sale" %}
-      </button>
-
-      <div class="d-flex gap-2">
-        <button type="button" class="btn btn-ghost btn-sm flex-fill">{% trans "Hold" %}</button>
-        <button type="button" class="btn btn-ghost btn-sm flex-fill">
-          <i class="bi bi-printer me-1"></i>{% trans "Reprint" %}
-        </button>
-      </div>
-    </div>
-  </div>
+  </section>
+  <aside class="card-soft pos-cart">
+    <div class="card-head"><div><span class="section-kicker">{% trans "Current order" %}</span><h3>{% trans "Cart" %} <span id="cart-count" class="cart-count">0</span></h3></div><button id="clear-cart" type="button" class="btn btn-ghost btn-sm">{% trans "Clear" %}</button></div>
+    <div class="pos-order-fields"><div><label for="warehouse">{% trans "Warehouse" %}</label><select id="warehouse" required><option value="">{% trans "Select warehouse" %}</option>{% for warehouse in warehouses %}<option value="{{ warehouse.pk }}">{{ warehouse }}</option>{% endfor %}</select></div><div><label for="customer">{% trans "Customer" %}</label><select id="customer"><option value="">{% trans "Walk-in customer" %}</option>{% for customer in customers %}<option value="{{ customer.pk }}">{{ customer }}</option>{% endfor %}</select></div></div>
+    <div id="cart-empty" class="empty-state cart-empty"><i class="bi bi-bag"></i><strong>{% trans "Your cart is empty" %}</strong><p>{% trans "Choose a product to start a sale." %}</p></div>
+    <div id="cart" class="pos-cart-items"></div>
+    <div class="pos-payment"><label for="payment-method">{% trans "Payment method" %}</label><select id="payment-method"><option value="cash">{% trans "Cash" %}</option><option value="card">{% trans "Card" %}</option><option value="bank">{% trans "Bank transfer" %}</option><option value="credit">{% trans "Customer credit" %}</option></select></div>
+    <div class="pos-totals"><div class="total-line"><span>{% trans "Items" %}</span><span id="quantity-total">0</span></div><div class="total-line grand"><span>{% trans "Total" %}</span><span><span id="total">0.000</span> <small>{% trans "JOD" %}</small></span></div><button id="complete" class="btn btn-primary btn-lg w-100" disabled><i class="bi bi-check2-circle me-1"></i>{% trans "Complete sale" %}</button></div>
+  </aside>
 </div>
-{% endblock %}
-
-{% block extra_js %}
 <script>
-(function () {
-  // ---- Tap a product tile to add it to the cart ----
-  document.getElementById('posProducts').addEventListener('click', function (e) {
-    const tile = e.target.closest('.pos-tile');
-    if (!tile) return;
-    ERP.POS.add({
-      id:    tile.dataset.id,
-      code:  tile.dataset.code,
-      name:  tile.dataset.name,
-      price: tile.dataset.price,
-      unit:  tile.dataset.unit
-    });
-    recalcChange();
-  });
-
-  // ---- Barcode scanner: hardware scanners type fast then hit Enter ----
-  const search = document.getElementById('posSearch');
-  search.addEventListener('keydown', function (e) {
-    if (e.key !== 'Enter') return;
-    e.preventDefault();
-    const code = search.value.trim();
-    if (!code) return;
-
-    // Local match first, so the screen stays instant while offline.
-    const tile = document.querySelector('.pos-tile[data-code="' + CSS.escape(code) + '"]');
-    if (tile) {
-      tile.click();
-      search.value = '';
-      return;
+(() => {
+  const cart = new Map();
+  const cartRoot = document.getElementById('cart');
+  const empty = document.getElementById('cart-empty');
+  const complete = document.getElementById('complete');
+  const money = value => Number(value).toFixed(3);
+  function notify(message, type='warning') { if (window.ERP?.toast?.[type]) ERP.toast[type](message); else alert(message); }
+  function draw() {
+    cartRoot.innerHTML = ''; let total = 0; let quantity = 0;
+    for (const item of cart.values()) {
+      total += item.quantity * item.unit_price; quantity += item.quantity;
+      const row = document.createElement('div'); row.className = 'cart-row';
+      row.innerHTML = '<div class="flex-grow-1 min-w-0"><p class="c-name text-truncate"></p><span class="c-meta"></span></div><div class="qty-stepper"><button type="button" data-action="minus"><i class="bi bi-dash"></i></button><span class="q"></span><button type="button" data-action="plus"><i class="bi bi-plus"></i></button></div><span class="c-total"></span><button type="button" class="btn-icon danger" data-action="remove"><i class="bi bi-x-lg"></i></button>';
+      row.querySelector('.c-name').textContent = item.name; row.querySelector('.c-meta').textContent = money(item.unit_price) + ' × ' + item.quantity; row.querySelector('.q').textContent = item.quantity; row.querySelector('.c-total').textContent = money(item.quantity * item.unit_price);
+      row.addEventListener('click', event => { const action = event.target.closest('[data-action]')?.dataset.action; if (!action) return; if (action === 'plus') item.quantity += 1; if (action === 'minus') item.quantity -= 1; if (action === 'remove' || item.quantity <= 0) cart.delete(item.product_id); draw(); }); cartRoot.appendChild(row);
     }
-
-    // Otherwise ask the backend.
-    // ERP.get("{# {% url 'pos:lookup' %} #}?barcode=" + encodeURIComponent(code))
-    //   .then(p => { ERP.POS.add(p); search.value = ''; })
-    //   .catch(() => {});
-    ERP.toast.warning(
-      "{% trans 'Product not found' %}",
-      "{% trans 'No product matches that barcode.' %}"
-    );
-    search.value = '';
-  });
-
-  // ---- Payment method ----
-  document.querySelectorAll('.pay-method').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      document.querySelectorAll('.pay-method').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-    });
-  });
-
-  // ---- Keypad ----
-  const received = document.getElementById('posReceived');
-  document.getElementById('posKeypad').addEventListener('click', function (e) {
-    const k = e.target.closest('[data-k]')?.dataset.k;
-    if (!k) return;
-    let v = received.value === '0.000' ? '' : received.value;
-    if (k === 'back') v = v.slice(0, -1);
-    else if (k === '.' && v.includes('.')) { /* ignore second dot */ }
-    else v += k;
-    received.value = v || '0.000';
-    recalcChange();
-  });
-  received.addEventListener('input', recalcChange);
-
-  function recalcChange() {
-    const total = ERP.POS.totals().total;
-    const paid = parseFloat(received.value) || 0;
-    document.getElementById('posChange').textContent = ERP.formatMoney(Math.max(0, paid - total));
+    document.getElementById('total').textContent = money(total); document.getElementById('quantity-total').textContent = quantity; document.getElementById('cart-count').textContent = cart.size; empty.hidden = cart.size > 0; complete.disabled = cart.size === 0;
   }
-
-  // ---- Clear cart ----
-  document.getElementById('posClear').addEventListener('click', function () {
-    if (!ERP.POS.items.length) return;
-    ERP.POS.clear();
-    received.value = '0.000';
-    recalcChange();
-    ERP.toast.info("{% trans 'Cart cleared' %}", '', 1600);
-  });
-
-  // ---- Complete sale ----
-  document.getElementById('posPayBtn').addEventListener('click', function () {
-    const t = ERP.POS.totals();
-    const paid = parseFloat(received.value) || 0;
-    const method = document.querySelector('.pay-method.active').dataset.method;
-
-    if (method !== 'CREDIT' && paid < t.total) {
-      ERP.toast.warning(
-        "{% trans 'Insufficient payment' %}",
-        "{% trans 'The amount received is less than the total due.' %}"
-      );
-      return;
-    }
-
-    const payload = {
-      customer: document.getElementById('posCustomer').value || null,
-      items: ERP.POS.items.map(i => ({ product: i.id, quantity: i.qty, unit_price: i.price })),
-      payment: { method: method, amount: paid },
-      totals: t
-    };
-
-    // Wire up once pos/views.py exposes the endpoint. The backend runs
-    // complete_sale() inside transaction.atomic() (spec §12).
-    //
-    // ERP.post("{# {% url 'pos:complete_sale' %} #}", payload)
-    //   .then(function (data) {
-    //     ERP.toast.success("{% trans 'Sale completed' %}", data.sale_number);
-    //     ERP.POS.clear(); received.value = '0.000'; recalcChange();
-    //   });
-
-    console.log('POS payload →', payload);
-    ERP.toast.success(
-      "{% trans 'Sale completed' %}",
-      "{% trans 'Receipt is ready to print.' %}"
-    );
-    ERP.POS.clear();
-    received.value = '0.000';
-    recalcChange();
-  });
-
-  ERP.POS.render();
+  document.querySelectorAll('.product-button').forEach(button => button.addEventListener('click', () => { const id = Number(button.dataset.id); if (cart.has(id)) cart.get(id).quantity += 1; else cart.set(id, {product_id:id, name:button.dataset.name, quantity:1, unit_price:Number(button.dataset.price)}); draw(); }));
+  document.getElementById('clear-cart').addEventListener('click', () => { cart.clear(); draw(); });
+  document.getElementById('product-search').addEventListener('input', event => { const query = event.target.value.trim().toLowerCase(); let visible = 0; document.querySelectorAll('.product-button').forEach(button => { const match = !query || (button.dataset.name + ' ' + button.dataset.code).toLowerCase().includes(query); button.hidden = !match; if (match) visible += 1; }); document.getElementById('product-count').textContent = visible + ' {% trans "items" %}'; });
+  complete.addEventListener('click', async () => { const warehouse = document.getElementById('warehouse').value; const total = Number(document.getElementById('total').textContent); if (!warehouse) { notify('{% trans "Select a warehouse before completing the sale." %}'); return; } complete.disabled = true; complete.classList.add('is-loading'); try { const response = await fetch('{% url "pos:complete_sale" %}', {method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'}, body:JSON.stringify({warehouse_id:warehouse, customer_id:document.getElementById('customer').value || null, items:[...cart.values()], payments:[{payment_method:document.getElementById('payment-method').value, amount:money(total)}]})}); const data = await response.json(); if (data.ok) window.location = data.detail_url; else notify(data.error || '{% trans "Could not complete the sale." %}', 'error'); } catch (error) { notify('{% trans "Could not connect to the server." %}', 'error'); } finally { complete.disabled = cart.size === 0; complete.classList.remove('is-loading'); } });
+  draw();
 })();
 </script>
 {% endblock %}
