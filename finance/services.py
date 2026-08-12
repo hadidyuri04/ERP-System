@@ -294,84 +294,208 @@ def post_purchase_invoice(invoice_id, user):
 
 @transaction.atomic
 def post_pos_sale(sale_id, user):
-    """
-    Creates and posts journal entries for a completed POS Sale:
-    1. Revenue Entry: Debit Cash/Receivable, Credit Sales Revenue
-    2. COGS Entry: Debit Cost of Goods Sold, Credit Inventory
-    """
-    from pos.models import POSSale
-    sale = POSSale.objects.prefetch_related('items', 'payments').get(pk=sale_id)
+    from pos.models import POSSale, POSPayment
 
-    if sale.status != POSSale.Status.COMPLETED:
-        raise ValidationError(_("Only completed POS sales can be posted."))
+    sale = (
+        POSSale.objects
+        .prefetch_related("items", "payments")
+        .select_related("customer")
+        .get(pk=sale_id)
+    )
 
-    cash_account = Account.objects.get(code="1100") # Assuming Cash/Main Account
+    # Only completed sales can reach accounting
+    if sale.status != POSSale.SaleStatus.COMPLETED:
+        raise ValidationError(
+            _("Only completed POS sales can be posted.")
+        )
+
+    # Prevent posting the same sale twice
+    entry_number = f"POS-{sale.sale_number}"
+
+    if JournalEntry.objects.filter(
+        entry_number=entry_number
+    ).exists():
+        raise ValidationError(
+            _("This POS sale has already been posted to accounting.")
+        )
+
+    # Accounting accounts
+    cash_account = Account.objects.get(code="1100")
+    bank_account = Account.objects.get(code="1200")
+    card_account = Account.objects.get(code="1210")
+    receivable_account = Account.objects.get(code="1300")
+
     sales_revenue_account = Account.objects.get(code="4100")
     cogs_account = Account.objects.get(code="5100")
     inventory_account = Account.objects.get(code="1400")
 
-    # Calculate total cost of goods sold (COGS) from items
-    total_cogs = sum((item.quantity * item.unit_cost for item in sale.items.all()), Decimal("0.000"))
+    payments = list(sale.payments.all())
 
-    # 1. Sales Revenue Journal Entry
-    journal_sale = JournalEntry.objects.create(
-        entry_number=f"POS-{sale.sale_number}",
+    if not payments:
+        raise ValidationError(
+            _("A completed POS sale must contain at least one payment.")
+        )
+
+    # Calculate COGS
+    total_cogs = sum(
+        (
+            item.quantity * item.unit_cost
+            for item in sale.items.all()
+        ),
+        Decimal("0.000"),
+    )
+
+    journal = JournalEntry.objects.create(
+        entry_number=entry_number,
         date=sale.date.date(),
-        description=_("POS Sale %(sale_number)s") % {'sale_number': sale.sale_number},
+        description=_(
+            "POS Sale %(sale_number)s"
+        ) % {
+            "sale_number": sale.sale_number
+        },
         source_type=JournalEntry.SourceType.POS_SALE,
         source_id=sale.id,
         status=JournalEntry.Status.DRAFT,
         created_by=user,
     )
 
-    JournalEntryLine.objects.create(
-        journal_entry=journal_sale,
-        account=cash_account,
-        description=_("Cash received for sale %(sale_number)s") % {'sale_number': sale.sale_number},
-        debit=sale.total,
-        credit=Decimal("0.000"),
-    )
+    # Amount of change given back to customer.
+    # Change must reduce the accounting value of CASH received.
+    remaining_change = sale.change_amount
 
+    total_payment_posted = Decimal("0.000")
+
+    for payment in payments:
+        amount = payment.amount
+
+        # If customer gave extra physical cash,
+        # subtract the change from the cash debit.
+        if (
+            payment.payment_method == POSPayment.PaymentMethod.CASH
+            and remaining_change > 0
+        ):
+            change_from_this_payment = min(
+                amount,
+                remaining_change,
+            )
+
+            amount -= change_from_this_payment
+            remaining_change -= change_from_this_payment
+
+        if amount <= 0:
+            continue
+
+        if payment.payment_method == POSPayment.PaymentMethod.CASH:
+            debit_account = cash_account
+
+        elif payment.payment_method == POSPayment.PaymentMethod.CARD:
+            debit_account = card_account
+
+        elif payment.payment_method == POSPayment.PaymentMethod.BANK:
+            debit_account = bank_account
+
+        elif payment.payment_method == POSPayment.PaymentMethod.CREDIT:
+            if sale.customer is None:
+                raise ValidationError(
+                    _(
+                        "Credit sales require a customer."
+                    )
+                )
+
+            debit_account = receivable_account
+
+        else:
+            raise ValidationError(
+                _(
+                    "Unsupported payment method: %(method)s"
+                ) % {
+                    "method": payment.payment_method
+                }
+            )
+
+        total_payment_posted += amount
+
+        JournalEntryLine.objects.create(
+            journal_entry=journal,
+            account=debit_account,
+            customer=(
+                sale.customer
+                if payment.payment_method
+                == POSPayment.PaymentMethod.CREDIT
+                else None
+            ),
+            description=_(
+                "%(method)s payment for POS sale %(sale)s"
+            ) % {
+                "method": payment.get_payment_method_display(),
+                "sale": sale.sale_number,
+            },
+            debit=amount,
+            credit=Decimal("0.000"),
+        )
+
+    if remaining_change > 0:
+        raise ValidationError(
+            _(
+                "Sale change exceeds the available cash payment."
+            )
+        )
+
+    # After accounting for change, payments must equal sale total
+    if total_payment_posted != sale.total:
+        raise ValidationError(
+            _(
+                "POS payment total does not match sale total. "
+                "Payments: %(payments)s, Sale total: %(total)s"
+            ) % {
+                "payments": total_payment_posted,
+                "total": sale.total,
+            }
+        )
+
+    # Sales Revenue
     JournalEntryLine.objects.create(
-        journal_entry=journal_sale,
+        journal_entry=journal,
         account=sales_revenue_account,
-        description=_("Sales revenue for %(sale_number)s") % {'sale_number': sale.sale_number},
+        description=_(
+            "Sales revenue for %(sale)s"
+        ) % {
+            "sale": sale.sale_number,
+        },
         debit=Decimal("0.000"),
         credit=sale.total,
     )
-    post_journal_entry(journal_sale.id)
 
-    # 2. COGS Journal Entry (if items have cost)
+    # Cost of Goods Sold
     if total_cogs > 0:
-        journal_cogs = JournalEntry.objects.create(
-            entry_number=f"COGS-{sale.sale_number}",
-            date=sale.date.date(),
-            description=_("Cost of Goods Sold for POS Sale %(sale_number)s") % {'sale_number': sale.sale_number},
-            source_type=JournalEntry.SourceType.POS_SALE,
-            source_id=sale.id,
-            status=JournalEntry.Status.DRAFT,
-            created_by=user,
-        )
-
         JournalEntryLine.objects.create(
-            journal_entry=journal_cogs,
+            journal_entry=journal,
             account=cogs_account,
-            description=_("COGS for sale %(sale_number)s") % {'sale_number': sale.sale_number},
+            description=_(
+                "COGS for %(sale)s"
+            ) % {
+                "sale": sale.sale_number,
+            },
             debit=total_cogs,
             credit=Decimal("0.000"),
         )
 
+        # Inventory reduction
         JournalEntryLine.objects.create(
-            journal_entry=journal_cogs,
+            journal_entry=journal,
             account=inventory_account,
-            description=_("Inventory reduction for sale %(sale_number)s") % {'sale_number': sale.sale_number},
+            description=_(
+                "Inventory reduction for %(sale)s"
+            ) % {
+                "sale": sale.sale_number,
+            },
             debit=Decimal("0.000"),
             credit=total_cogs,
         )
-        post_journal_entry(journal_cogs.id)
 
-    return sale
+    post_journal_entry(journal.id)
 
+    return journal
 
 @transaction.atomic
 def post_waste_loss(waste_id, user):
