@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
 from customers.models import Customer
@@ -55,7 +56,7 @@ class JournalEntry(models.Model):
 
     class SourceType(models.TextChoices):
         MANUAL = "manual", _("Manual")
-        PURCHASE = "PURCHASE", _("Purchase")
+        PURCHASE = "purchase", _("Purchase")
         POS_SALE = "pos_sale", _("POS Sale")
         RECEIPT = "receipt", _("Receipt Voucher")
         PAYMENT = "payment", _("Payment Voucher")
@@ -114,6 +115,13 @@ class JournalEntry(models.Model):
     class Meta:
         verbose_name = _("Journal Entry")
         verbose_name_plural = _("Journal Entries")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["source_type", "source_id"],
+                condition=Q(source_id__isnull=False),
+                name="unique_journal_source",
+            ),
+        ]
 
     def __str__(self):
         return self.entry_number

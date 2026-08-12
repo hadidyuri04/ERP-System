@@ -3,6 +3,7 @@ from django.db import transaction
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from finance.services import post_pos_sale
 from inventory.services import remove_stock, get_available_stock
 from .models import POSSale, POSSaleItem, POSPayment
 
@@ -63,7 +64,7 @@ def complete_sale(warehouse, cashier, items_data, payments_data, customer=None, 
         warehouse=warehouse,
         cashier=cashier,
         date=timezone.now(),
-        status=POSSale.Status.COMPLETED,
+        status=POSSale.SaleStatus.COMPLETED,
         subtotal=subtotal,
         total=subtotal, # Expand with global tax/discount if needed
         paid_amount=total_paid,
@@ -77,7 +78,7 @@ def complete_sale(warehouse, cashier, items_data, payments_data, customer=None, 
         quantity = item_data['quantity']
         
         # Remove stock using inventory service FEFO logic
-        remove_stock(
+        removed_cost = remove_stock(
             product=product,
             warehouse=warehouse,
             quantity=quantity,
@@ -92,7 +93,7 @@ def complete_sale(warehouse, cashier, items_data, payments_data, customer=None, 
             product=product,
             quantity=quantity,
             unit_price=item_data['unit_price'],
-            unit_cost=product.purchase_price, # Fallback baseline cost for COGS
+            unit_cost=removed_cost / quantity,
             discount_amount=item_data['discount_amount'],
             tax_amount=item_data['tax_amount'],
             line_total=item_data['line_total']
@@ -109,5 +110,6 @@ def complete_sale(warehouse, cashier, items_data, payments_data, customer=None, 
             created_by=cashier
         )
 
-    # TODO: Trigger finance service to post Journal Entry for Sales Revenue and COGS
+    post_pos_sale(sale.id, cashier)
+
     return sale

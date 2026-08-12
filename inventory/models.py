@@ -255,6 +255,11 @@ class WarehouseTransferItem(models.Model):
 
 class WasteLoss(models.Model):
     """Records expired, damaged, spoiled, broken, or missing stock."""
+    class Status(models.TextChoices):
+        DRAFT = "draft", _("Draft")
+        CONFIRMED = "confirmed", _("Confirmed")
+        CANCELLED = "cancelled", _("Cancelled")
+
     class WasteReason(models.TextChoices):
         EXPIRED = 'EXPIRED', _('Expired')
         DAMAGED = 'DAMAGED', _('Damaged')
@@ -275,6 +280,12 @@ class WasteLoss(models.Model):
         _("Reason"),
         max_length=30, 
         choices=WasteReason.choices
+    )
+    status = models.CharField(
+        _("Status"),
+        max_length=20,
+        choices=Status.choices,
+        default=Status.DRAFT,
     )
     notes = models.TextField(_("Notes"), blank=True, null=True)
     
