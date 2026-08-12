@@ -106,10 +106,10 @@ class POSSaleItem(models.Model):
 class POSPayment(models.Model):
     """Tracks payment methods for a sale, allowing split tenders."""
     class PaymentMethod(models.TextChoices):
-        CASH = 'CASH', _('Cash')
-        CARD = 'CARD', _('Card')
-        BANK = 'BANK', _('Bank Transfer')
-        CREDIT = 'CREDIT', _('Store Credit')
+        CASH = 'cash', _('Cash')
+        CARD = 'card', _('Card')
+        BANK = 'bank', _('Bank Transfer')
+        CREDIT = 'credit', _('Store Credit')
 
     sale = models.ForeignKey(
         POSSale, 
