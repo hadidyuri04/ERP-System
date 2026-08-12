@@ -1007,3 +1007,36 @@ msgstr "الاسترداد النقدي للمرتجع %(return_number)s"
 #: finance/reports.py:34
 msgid "Selected account does not exist."
 msgstr "الحساب المحدد غير موجود."
+
+
+
+
+#: core/views.py:23
+msgid "Database backup triggered successfully."
+msgstr "تم تشغيل النسخ الاحتياطي لقاعدة البيانات بنجاح."
+
+#: quotations/services.py:15
+msgid "Cannot create a quotation with no items."
+msgstr "لا يمكن إنشاء عرض سعر بدون أصناف."
+
+#: quotations/services.py:73
+msgid "Cannot convert a rejected or expired quotation."
+msgstr "لا يمكن تحويل عرض سعر مرفوض أو منتهي الصلاحية."
+
+#: quotations/services.py:78
+msgid "This quotation has expired and cannot be converted."
+msgstr "انتهت صلاحية عرض السعر هذا ولا يمكن تحويله."
+
+#: quotations/services.py:99
+#, python-format
+msgid "Converted from Quotation %(q_num)s"
+msgstr "تم التحويل من عرض السعر %(q_num)s"
+
+#: quotations/views.py:38
+msgid "Quotation created successfully."
+msgstr "تم إنشاء عرض السعر بنجاح."
+
+#: quotations/views.py:65
+#, python-format
+msgid "Quotation successfully converted to POS Sale %(sale_num)s"
+msgstr "تم تحويل عرض السعر بنجاح إلى عملية بيع %(sale_num)s"
