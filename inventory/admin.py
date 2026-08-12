@@ -1,4 +1,6 @@
 from django.contrib import admin
+
+from .services import confirm_waste_loss
 from .models import (
     Category,
     Unit,
@@ -80,10 +82,57 @@ class WasteLossItemInline(admin.TabularInline):
     model = WasteLossItem
     extra = 1
 
+    def get_readonly_fields(self, request, obj=None):
+        if obj and obj.status != WasteLoss.Status.DRAFT:
+            return ("product", "batch", "quantity", "unit_cost", "total_cost")
+        return ()
+
+    def has_add_permission(self, request, obj=None):
+        if obj and obj.status != WasteLoss.Status.DRAFT:
+            return False
+        return super().has_add_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        if obj and obj.status != WasteLoss.Status.DRAFT:
+            return False
+        return super().has_delete_permission(request, obj)
+
+
+@admin.action(description="Confirm and post selected waste/loss documents")
+def confirm_and_post_selected_waste(modeladmin, request, queryset):
+    for waste_id in queryset.values_list("id", flat=True):
+        try:
+            waste, _journal = confirm_waste_loss(waste_id, request.user)
+            modeladmin.message_user(
+                request,
+                f"{waste.document_number} confirmed and posted successfully.",
+            )
+        except Exception as exc:
+            modeladmin.message_user(
+                request,
+                str(exc),
+                level="ERROR",
+            )
+
 
 @admin.register(WasteLoss)
 class WasteLossAdmin(admin.ModelAdmin):
-    list_display = ('document_number', 'warehouse', 'date', 'reason', 'created_by')
+    list_display = ('document_number', 'warehouse', 'date', 'reason', 'status', 'created_by')
     search_fields = ('document_number',)
-    list_filter = ('reason', 'warehouse')
+    list_filter = ('status', 'reason', 'warehouse')
     inlines = [WasteLossItemInline]
+    actions = [confirm_and_post_selected_waste]
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj and obj.status != WasteLoss.Status.DRAFT:
+            return (
+                'document_number',
+                'warehouse',
+                'date',
+                'reason',
+                'notes',
+                'status',
+                'created_by',
+                'created_at',
+            )
+        return ('status', 'created_at')

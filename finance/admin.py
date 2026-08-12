@@ -90,13 +90,45 @@ class AccountAdmin(admin.ModelAdmin):
 
 
 # =========================
-# JOURNAL ENTRY ADMIN
+# JOURNAL ENTRY LINE INLINE
 # =========================
 
 class JournalEntryLineInline(admin.TabularInline):
     model = JournalEntryLine
     extra = 2
 
+    def get_readonly_fields(self, request, obj=None):
+        if obj and obj.status == JournalEntry.Status.POSTED:
+            return (
+                "account",
+                "customer",
+                "supplier",
+                "description",
+                "debit",
+                "credit",
+                "created_at",
+            )
+
+        return (
+            "created_at",
+        )
+
+    def has_add_permission(self, request, obj=None):
+        if obj and obj.status == JournalEntry.Status.POSTED:
+            return False
+
+        return super().has_add_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        if obj and obj.status == JournalEntry.Status.POSTED:
+            return False
+
+        return super().has_delete_permission(request, obj)
+
+
+# =========================
+# JOURNAL ENTRY ADMIN
+# =========================
 
 @admin.register(JournalEntry)
 class JournalEntryAdmin(admin.ModelAdmin):
@@ -106,6 +138,7 @@ class JournalEntryAdmin(admin.ModelAdmin):
         "source_type",
         "status",
         "created_by",
+        "approved_by",
     )
 
     list_filter = (
@@ -122,6 +155,34 @@ class JournalEntryAdmin(admin.ModelAdmin):
     inlines = [
         JournalEntryLineInline,
     ]
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj and obj.status == JournalEntry.Status.POSTED:
+            return (
+                "entry_number",
+                "date",
+                "description",
+                "source_type",
+                "source_id",
+                "status",
+                "created_by",
+                "approved_by",
+                "created_at",
+                "updated_at",
+            )
+
+        return (
+            "status",
+            "approved_by",
+            "created_at",
+            "updated_at",
+        )
+
+    def has_delete_permission(self, request, obj=None):
+        if obj and obj.status == JournalEntry.Status.POSTED:
+            return False
+
+        return super().has_delete_permission(request, obj)
 
 
 # =========================
@@ -157,11 +218,36 @@ class ReceiptVoucherAdmin(admin.ModelAdmin):
     actions = [
         post_selected_receipts,
     ]
-    readonly_fields = (
-        "status",
-        "created_at",
-        "updated_at",
-    )
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj and obj.status == ReceiptVoucher.Status.CONFIRMED:
+            return (
+                "voucher_number",
+                "date",
+                "customer",
+                "received_from",
+                "account",
+                "amount",
+                "payment_method",
+                "reference",
+                "description",
+                "status",
+                "created_by",
+                "created_at",
+                "updated_at",
+            )
+
+        return (
+            "status",
+            "created_at",
+            "updated_at",
+        )
+
+    def has_delete_permission(self, request, obj=None):
+        if obj and obj.status == ReceiptVoucher.Status.CONFIRMED:
+            return False
+
+        return super().has_delete_permission(request, obj)
 
 
 # =========================
@@ -197,8 +283,33 @@ class PaymentVoucherAdmin(admin.ModelAdmin):
     actions = [
         post_selected_payments,
     ]
-    readonly_fields = (
-        "status",
-        "created_at",
-        "updated_at",
-    )
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj and obj.status == PaymentVoucher.Status.CONFIRMED:
+            return (
+                "voucher_number",
+                "date",
+                "supplier",
+                "paid_to",
+                "account",
+                "amount",
+                "payment_method",
+                "reference",
+                "description",
+                "status",
+                "created_by",
+                "created_at",
+                "updated_at",
+            )
+
+        return (
+            "status",
+            "created_at",
+            "updated_at",
+        )
+
+    def has_delete_permission(self, request, obj=None):
+        if obj and obj.status == PaymentVoucher.Status.CONFIRMED:
+            return False
+
+        return super().has_delete_permission(request, obj)

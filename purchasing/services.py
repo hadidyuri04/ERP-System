@@ -3,8 +3,7 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
-from finance.models import Account, JournalEntry, JournalEntryLine
-from finance.services import post_journal_entry
+from finance.services import post_purchase_invoice
 from inventory.models import StockBatch, StockBalance, StockMovement
 
 from .models import PurchaseInvoice
@@ -34,8 +33,6 @@ def confirm_purchase(purchase_id, user):
             "Purchase invoice must contain at least one item."
         )
 
-    total_inventory_cost = Decimal("0.000")
-
     # 3. Process every purchased item
     for item in items:
 
@@ -48,10 +45,6 @@ def confirm_purchase(purchase_id, user):
             raise ValidationError(
                 f"Unit cost for {item.product.name} cannot be negative."
             )
-
-        # Cost that will enter inventory
-        item_cost = item.quantity * item.unit_cost
-        total_inventory_cost += item_cost
 
         # 4. Create the stock batch
         batch = StockBatch.objects.create(
@@ -98,48 +91,7 @@ def confirm_purchase(purchase_id, user):
             ]
         )
 
-    # 7. Find the accounting accounts
-    inventory_account = Account.objects.get(code="1400")
-
-    if purchase.payment_type == PurchaseInvoice.PaymentType.CASH:
-        credit_account = Account.objects.get(code="1100")
-    else:
-        credit_account = Account.objects.get(code="2100")
-
-    # 8. Create accounting journal
-    journal = JournalEntry.objects.create(
-        entry_number=f"PUR-{purchase.invoice_number}",
-        date=purchase.invoice_date,
-        description=f"Purchase Invoice {purchase.invoice_number}",
-        source_type=JournalEntry.SourceType.PURCHASE,
-        source_id=purchase.id,
-        status=JournalEntry.Status.DRAFT,
-        created_by=user,
-    )
-
-    # Inventory increases → Debit
-    JournalEntryLine.objects.create(
-        journal_entry=journal,
-        account=inventory_account,
-        debit=total_inventory_cost,
-        credit=Decimal("0.000"),
-        description=f"Inventory purchased - {purchase.invoice_number}",
-    )
-
-    # Cash / Accounts Payable increases on credit side
-    JournalEntryLine.objects.create(
-        journal_entry=journal,
-        account=credit_account,
-        debit=Decimal("0.000"),
-        credit=total_inventory_cost,
-        supplier=purchase.supplier,
-        description=f"Purchase from {purchase.supplier.name}",
-    )
-
-    # 9. Use the finance engine you already created
-    post_journal_entry(journal.id)
-
-    # 10. Finally confirm the purchase
+    # Confirm before posting because finance accepts confirmed purchases only.
     purchase.status = PurchaseInvoice.Status.CONFIRMED
 
     purchase.save(
@@ -148,5 +100,7 @@ def confirm_purchase(purchase_id, user):
             "updated_at",
         ]
     )
+
+    post_purchase_invoice(purchase.id, user)
 
     return purchase

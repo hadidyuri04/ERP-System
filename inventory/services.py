@@ -22,7 +22,7 @@ def select_fefo_batch(product, warehouse, required_quantity):
     active_batches = StockBatch.objects.filter(
         product=product,
         warehouse=warehouse,
-        status=StockBatch.Status.ACTIVE,
+        status=StockBatch.BatchStatus.ACTIVE,
         quantity_remaining__gt=0
     ).order_by('expiration_date', 'received_date')
 
@@ -69,7 +69,7 @@ def add_stock(product, warehouse, quantity, unit_cost, reference_type, reference
             quantity_remaining=quantity,
             supplier=supplier,
             purchase_item=purchase_item,
-            status=StockBatch.Status.ACTIVE
+            status=StockBatch.BatchStatus.ACTIVE
         )
 
     # Create audit trail movement
@@ -112,11 +112,13 @@ def remove_stock(product, warehouse, quantity, reference_type, reference_id, use
 
     # Fetch batches using FEFO
     allocations = select_fefo_batch(product, warehouse, quantity)
+    total_cost = Decimal("0.000")
 
     for batch, qty_to_take in allocations:
+        total_cost += qty_to_take * batch.unit_cost
         batch.quantity_remaining -= qty_to_take
         if batch.quantity_remaining == 0:
-            batch.status = StockBatch.Status.DEPLETED
+            batch.status = StockBatch.BatchStatus.DEPLETED
         batch.save()
 
         # Create movement record per batch line
@@ -137,84 +139,54 @@ def remove_stock(product, warehouse, quantity, reference_type, reference_id, use
     balance.quantity -= quantity
     balance.save()
 
-@transaction.atomic
-def confirm_warehouse_transfer(transfer_id, user):
-    """
-    Confirms a warehouse transfer:
-    1. Removes stock from the source warehouse.
-    2. Adds stock to the destination warehouse.
-    3. Total company stock remains unchanged.
-    """
-    from .models import WarehouseTransfer
-    transfer = WarehouseTransfer.objects.prefetch_related('items').select_for_update().get(pk=transfer_id)
-
-    if transfer.status != WarehouseTransfer.Status.DRAFT:
-        raise ValidationError(_("Only draft warehouse transfers can be confirmed."))
-
-    if transfer.from_warehouse == transfer.to_warehouse:
-        raise ValidationError(_("Source and destination warehouses cannot be the same."))
-
-    for item in transfer.items.all():
-        # Remove stock from source warehouse (using FEFO/batch tracking)
-        remove_stock(
-            product=item.product,
-            warehouse=transfer.from_warehouse,
-            quantity=item.quantity,
-            reference_type='WAREHOUSE_TRANSFER',
-            reference_id=transfer.id,
-            user=user,
-            movement_type='TRANSFER_OUT'
-        )
-
-        # Add stock to destination warehouse
-        add_stock(
-            product=item.product,
-            warehouse=transfer.to_warehouse,
-            quantity=item.quantity,
-            unit_cost=item.unit_cost,
-            reference_type='WAREHOUSE_TRANSFER',
-            reference_id=transfer.id,
-            user=user,
-            batch_number=item.batch.batch_number if item.batch else None,
-            expiration_date=item.batch.expiration_date if item.batch else None
-        )
-
-    transfer.status = WarehouseTransfer.Status.CONFIRMED
-    transfer.approved_by = user
-    transfer.save(update_fields=['status', 'approved_by'])
-    return transfer
+    return total_cost
 
 
 @transaction.atomic
 def confirm_waste_loss(waste_id, user):
-    """
-    Confirms a waste & loss document:
-    1. Removes expired or damaged stock from available inventory.
-    2. Triggers financial waste posting.
-    """
-    from .models import WasteLoss
-    from finance.services import post_waste_loss
-
-    waste = WasteLoss.objects.prefetch_related('items').select_for_update().get(pk=waste_id)
+    """Confirm a waste document and post its accounting journal atomically."""
+    waste = (
+        WasteLoss.objects
+        .select_for_update()
+        .prefetch_related("items")
+        .get(pk=waste_id)
+    )
 
     if waste.status != WasteLoss.Status.DRAFT:
-        raise ValidationError(_("Only draft waste and loss documents can be confirmed."))
-
-    for item in waste.items.all():
-        remove_stock(
-            product=item.product,
-            warehouse=waste.warehouse,
-            quantity=item.quantity,
-            reference_type='WASTE_LOSS',
-            reference_id=waste.id,
-            user=user,
-            movement_type='WASTE'
+        raise ValidationError(
+            _("Only draft waste and loss documents can be confirmed.")
         )
 
-    waste.status = WasteLoss.Status.CONFIRMED
-    waste.approved_by = user
-    waste.save(update_fields=['status', 'approved_by'])
+    items = list(waste.items.all())
+    if not items:
+        raise ValidationError(
+            _("A waste and loss document must contain at least one item.")
+        )
 
-    # Post financial expense entry
-    post_waste_loss(waste.id, user)
-    return waste
+    for item in items:
+        if item.quantity <= 0:
+            raise ValidationError(
+                _("Waste quantity must be greater than zero.")
+            )
+        if item.unit_cost < 0:
+            raise ValidationError(
+                _("Waste unit cost cannot be negative.")
+            )
+
+        expected_total = item.quantity * item.unit_cost
+        if item.total_cost != expected_total:
+            raise ValidationError(
+                _(
+                    "Waste item total does not match quantity multiplied by "
+                    "unit cost."
+                )
+            )
+
+    waste.status = WasteLoss.Status.CONFIRMED
+    waste.save(update_fields=["status"])
+
+    # Local import keeps the inventory and finance modules free of import cycles.
+    from finance.services import post_waste_loss
+
+    journal = post_waste_loss(waste.id, user)
+    return waste, journal
