@@ -1,0 +1,159 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Payment voucher" %}{% endblock %}
+
+{% block page_header %}
+  <h1>{% trans "Payment voucher" %}</h1>
+  <p>{% trans "Record money paid to a supplier or another party" %}</p>
+{% endblock %}
+
+{% block topbar_actions %}
+  <button class="btn btn-ghost no-print" onclick="window.print()">
+    <i class="bi bi-printer me-1"></i>{% trans "Print" %}
+  </button>
+{% endblock %}
+
+{% block content %}
+{# nav_active = 'finance' — fields mirror spec §8.5 (PaymentVoucher) #}
+
+<form method="post" data-ajax {# action="{% url 'finance:payment_create' %}" #}>
+  {% csrf_token %}
+
+  <div class="row g-3 justify-content-center">
+    <div class="col-12 col-xl-8">
+
+      <div class="card-soft">
+        <div class="card-head">
+          <div class="stat-icon" style="background:var(--warning-bg);color:var(--warning)">
+            <i class="bi bi-arrow-up-right"></i>
+          </div>
+          <div>
+            <h3 class="mb-0">{% trans "Payment voucher" %}</h3>
+            <span class="stat-label">{% trans "سند صرف" %}</span>
+          </div>
+          <div class="spacer"></div>
+          <span class="badge-soft badge-neutral">{% trans "Draft" %}</span>
+        </div>
+
+        <div class="card-pad">
+          <div class="row g-3">
+            <div class="col-12 col-md-6">
+              <label class="form-label" for="id_voucher_number">{% trans "Voucher number" %}</label>
+              <input type="text" class="form-control" id="id_voucher_number"
+                     name="voucher_number" value="PV-2026-000001" readonly>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label" for="id_date">{% trans "Date" %}<span class="req">*</span></label>
+              <input type="date" class="form-control" id="id_date" name="date" required>
+            </div>
+
+            <div class="col-12">
+              <div class="form-section-title">{% trans "Paid to" %}</div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label" for="id_supplier">{% trans "Supplier" %}</label>
+              <select class="form-select" id="id_supplier" name="supplier">
+                <option value="">{% trans "Not linked to a supplier" %}</option>
+                {# TODO: {% for s in suppliers %}<option value="{{ s.id }}">{{ s.name }}</option>{% endfor %} #}
+                <option>{% trans "Jordan Dairy Co." %}</option>
+                <option>{% trans "Amman Trading House" %}</option>
+              </select>
+              <div class="field-hint">{% trans "Leave empty for a general expense payment." %}</div>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label" for="id_paid_to">{% trans "Payee name" %}<span class="req">*</span></label>
+              <input type="text" class="form-control" id="id_paid_to" name="paid_to"
+                     placeholder="{% trans "Name of the person or company being paid" %}" required>
+            </div>
+
+            <div class="col-12">
+              <div class="form-section-title">{% trans "Amount and account" %}</div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label" for="id_amount">{% trans "Amount" %}<span class="req">*</span></label>
+              <div class="input-group">
+                <input type="number" step="0.001" min="0.001" class="form-control fw-800 text-end"
+                       id="id_amount" name="amount" placeholder="0.000" required style="font-size:1.05rem">
+                <span class="input-suffix">{% trans "JOD" %}</span>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label" for="id_payment_method">{% trans "Payment method" %}<span class="req">*</span></label>
+              <select class="form-select" id="id_payment_method" name="payment_method" required>
+                <option value="cash">{% trans "Cash" %}</option>
+                <option value="card">{% trans "Card" %}</option>
+                <option value="bank">{% trans "Bank transfer" %}</option>
+              </select>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label" for="id_account">{% trans "Credit account" %}<span class="req">*</span></label>
+              <select class="form-select" id="id_account" name="account" required>
+                <option value="">{% trans "Select an account" %}</option>
+                <option>1100 · {% trans "Cash" %}</option>
+                <option>1200 · {% trans "Bank" %}</option>
+              </select>
+              <div class="field-hint">{% trans "The cash or bank account the money leaves from." %}</div>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label" for="id_reference">{% trans "Reference" %}</label>
+              <input type="text" class="form-control" id="id_reference" name="reference"
+                     placeholder="{% trans "Cheque or transfer number" %}">
+            </div>
+
+            <div class="col-12">
+              <label class="form-label" for="id_description">{% trans "Description" %}<span class="req">*</span></label>
+              <textarea class="form-control" id="id_description" name="description" rows="3"
+                        placeholder="{% trans "What is this payment for?" %}" required></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-pad pt-0">
+          <div class="p-3 rounded-3 bg-lavender mb-3">
+            <div class="fw-bold small mb-2">
+              <i class="bi bi-journal-text me-1 text-purple"></i>{% trans "Journal entry preview" %}
+            </div>
+            <table class="table-erp" style="font-size:.8rem">
+              <tr>
+                <td>{% trans "Accounts Payable" %}</td>
+                <td class="num cell-strong">{% trans "Debit" %}</td>
+                <td class="num" data-out="je_amount">0.000</td>
+              </tr>
+              <tr>
+                <td>{% trans "Cash / Bank" %}</td>
+                <td class="num cell-strong">{% trans "Credit" %}</td>
+                <td class="num" data-out="je_amount">0.000</td>
+              </tr>
+            </table>
+          </div>
+
+          <div class="d-flex gap-2 no-print">
+            <button type="submit" name="action" value="draft" class="btn btn-ghost flex-fill">
+              {% trans "Save draft" %}
+            </button>
+            <button type="submit" name="action" value="confirm" class="btn btn-primary flex-fill"
+                    data-confirm="{% trans "Confirming posts a balanced journal entry. Continue?" %}">
+              <i class="bi bi-check2-circle me-1"></i>{% trans "Confirm voucher" %}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.getElementById('id_amount').addEventListener('input', function () {
+    const v = parseFloat(this.value) || 0;
+    document.querySelectorAll('[data-out=je_amount]').forEach(function (el) {
+      el.textContent = ERP.formatMoney(v);
+    });
+  });
+</script>
+{% endblock %}

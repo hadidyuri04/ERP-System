@@ -1,0 +1,192 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Items" %}{% endblock %}
+
+{% block page_header %}
+  <h1>{% trans "Items" %}</h1>
+  <p>{% trans "Products, categories, units, prices and stock levels" %}</p>
+{% endblock %}
+
+{% block topbar_actions %}
+  <a href="#" class="btn btn-primary" data-smooth>
+    <i class="bi bi-plus-lg me-1"></i>{% trans "New product" %}
+  </a>
+{% endblock %}
+
+{% block content %}
+{# nav_active = 'items' #}
+
+<div class="card-soft" data-table-card>
+
+  <div class="filter-bar">
+    <div class="search-pill" style="min-width:260px;box-shadow:none;border:1px solid var(--border-strong)">
+      <input type="search"
+             data-live-filter="#productTable"
+             {# data-url="{% url 'inventory:product_rows' %}"  ← enable once the AJAX endpoint exists #}
+             placeholder="{% trans "Search by code, barcode or name..." %}"
+             aria-label="{% trans "Search products" %}">
+      <button type="button" aria-label="{% trans "Search" %}"><i class="bi bi-search"></i></button>
+    </div>
+
+    <select class="form-select form-select-sm" aria-label="{% trans "Filter by category" %}">
+      <option value="">{% trans "All categories" %}</option>
+      {# TODO: {% for c in categories %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %} #}
+      <option>{% trans "Dairy" %}</option>
+      <option>{% trans "Beverages" %}</option>
+      <option>{% trans "Dry goods" %}</option>
+    </select>
+
+    <select class="form-select form-select-sm" aria-label="{% trans "Filter by warehouse" %}">
+      <option value="">{% trans "All warehouses" %}</option>
+      <option>{% trans "Main warehouse" %}</option>
+      <option>{% trans "Branch store" %}</option>
+    </select>
+
+    <select class="form-select form-select-sm" aria-label="{% trans "Filter by stock status" %}">
+      <option value="">{% trans "Any stock level" %}</option>
+      <option>{% trans "Below minimum" %}</option>
+      <option>{% trans "Out of stock" %}</option>
+      <option>{% trans "Expiring soon" %}</option>
+    </select>
+
+    <div class="ms-auto d-flex gap-2">
+      <button class="btn btn-ghost btn-sm" type="button">
+        <i class="bi bi-download me-1"></i>{% trans "Export" %}
+      </button>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table class="table-erp" id="productTable">
+      <thead>
+        <tr>
+          <th>{% trans "Code" %}</th>
+          <th>{% trans "Name" %}</th>
+          <th>{% trans "Category" %}</th>
+          <th>{% trans "Unit" %}</th>
+          <th class="num">{% trans "Selling price" %}</th>
+          <th class="num">{% trans "Stock quantity" %}</th>
+          <th>{% trans "Status" %}</th>
+          <th class="text-end">{% trans "Actions" %}</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% comment %}
+          Replace this dummy block with:
+          {% for product in products %}
+            <tr data-row>
+              <td class="cell-muted">{{ product.code }}</td>
+              <td class="cell-strong">{{ product.name }}</td>
+              <td>{{ product.category.name }}</td>
+              <td>{{ product.unit.symbol }}</td>
+              <td class="num">{{ product.selling_price|floatformat:3 }}</td>
+              <td class="num">{{ product.stock_quantity|floatformat:3 }}</td>
+              ...
+            </tr>
+          {% empty %} ... {% endfor %}
+        {% endcomment %}
+
+        <tr data-row>
+          <td class="cell-muted">P-0001</td>
+          <td class="cell-strong">{% trans "Fresh Milk 1L" %}</td>
+          <td>{% trans "Dairy" %}</td>
+          <td>{% trans "pcs" %}</td>
+          <td class="num">1.100</td>
+          <td class="num">248.000</td>
+          <td><span class="badge-soft badge-success">{% trans "In stock" %}</span></td>
+          <td class="text-end">
+            <button class="btn-icon" data-bs-toggle="tooltip" title="{% trans "View batches" %}"><i class="bi bi-layers"></i></button>
+            <button class="btn-icon" data-bs-toggle="tooltip" title="{% trans "Edit" %}"><i class="bi bi-pencil"></i></button>
+            <button class="btn-icon danger" data-confirm="{% trans "Deactivate this product?" %}"
+                    data-bs-toggle="tooltip" title="{% trans "Deactivate" %}"><i class="bi bi-slash-circle"></i></button>
+          </td>
+        </tr>
+
+        <tr data-row>
+          <td class="cell-muted">P-0002</td>
+          <td class="cell-strong">{% trans "Labneh 500g" %}</td>
+          <td>{% trans "Dairy" %}</td>
+          <td>{% trans "pcs" %}</td>
+          <td class="num">2.250</td>
+          <td class="num">45.000</td>
+          <td><span class="badge-soft badge-warning">{% trans "Expiring soon" %}</span></td>
+          <td class="text-end">
+            <button class="btn-icon"><i class="bi bi-layers"></i></button>
+            <button class="btn-icon"><i class="bi bi-pencil"></i></button>
+            <button class="btn-icon danger" data-confirm="{% trans "Deactivate this product?" %}"><i class="bi bi-slash-circle"></i></button>
+          </td>
+        </tr>
+
+        <tr data-row>
+          <td class="cell-muted">P-0003</td>
+          <td class="cell-strong">{% trans "Orange Juice 250ml" %}</td>
+          <td>{% trans "Beverages" %}</td>
+          <td>{% trans "pcs" %}</td>
+          <td class="num">0.750</td>
+          <td class="num">12.000</td>
+          <td><span class="badge-soft badge-danger">{% trans "Below minimum" %}</span></td>
+          <td class="text-end">
+            <button class="btn-icon"><i class="bi bi-layers"></i></button>
+            <button class="btn-icon"><i class="bi bi-pencil"></i></button>
+            <button class="btn-icon danger" data-confirm="{% trans "Deactivate this product?" %}"><i class="bi bi-slash-circle"></i></button>
+          </td>
+        </tr>
+
+        <tr data-row>
+          <td class="cell-muted">P-0004</td>
+          <td class="cell-strong">{% trans "White Rice 5kg" %}</td>
+          <td>{% trans "Dry goods" %}</td>
+          <td>{% trans "kg" %}</td>
+          <td class="num">6.500</td>
+          <td class="num">0.000</td>
+          <td><span class="badge-soft badge-neutral">{% trans "Out of stock" %}</span></td>
+          <td class="text-end">
+            <button class="btn-icon"><i class="bi bi-layers"></i></button>
+            <button class="btn-icon"><i class="bi bi-pencil"></i></button>
+            <button class="btn-icon danger" data-confirm="{% trans "Deactivate this product?" %}"><i class="bi bi-slash-circle"></i></button>
+          </td>
+        </tr>
+
+        <tr data-row>
+          <td class="cell-muted">P-0005</td>
+          <td class="cell-strong">{% trans "Olive Oil 1L" %}</td>
+          <td>{% trans "Dry goods" %}</td>
+          <td>{% trans "L" %}</td>
+          <td class="num">8.900</td>
+          <td class="num">76.500</td>
+          <td><span class="badge-soft badge-success">{% trans "In stock" %}</span></td>
+          <td class="text-end">
+            <button class="btn-icon"><i class="bi bi-layers"></i></button>
+            <button class="btn-icon"><i class="bi bi-pencil"></i></button>
+            <button class="btn-icon danger" data-confirm="{% trans "Deactivate this product?" %}"><i class="bi bi-slash-circle"></i></button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  {# Shown by erp.js when a live filter returns nothing #}
+  <div class="empty-state" data-empty hidden>
+    <i class="bi bi-inbox"></i>
+    <p>{% trans "No products match your search." %}</p>
+  </div>
+
+  <div class="d-flex align-items-center flex-wrap gap-2 px-3 py-3"
+       style="border-top:1px solid var(--border)">
+    <span class="small text-muted">
+      {% blocktrans with start=1 end=5 total=128 %}Showing {{ start }}–{{ end }} of {{ total }} products{% endblocktrans %}
+    </span>
+    <nav class="ms-auto" aria-label="{% trans "Pagination" %}">
+      <ul class="pagination pagination-sm mb-0">
+        <li class="page-item disabled"><a class="page-link" href="#"><i class="bi bi-chevron-left"></i></a></li>
+        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+        <li class="page-item"><a class="page-link" href="#">2</a></li>
+        <li class="page-item"><a class="page-link" href="#">3</a></li>
+        <li class="page-item"><a class="page-link" href="#"><i class="bi bi-chevron-right"></i></a></li>
+      </ul>
+    </nav>
+  </div>
+</div>
+{% endblock %}

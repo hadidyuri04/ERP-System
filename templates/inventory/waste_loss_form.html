@@ -1,0 +1,161 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Waste & Loss" %}{% endblock %}
+
+{% block page_header %}
+  <h1>{% trans "Waste & Loss" %}</h1>
+  <p>{% trans "Write off expired, damaged or missing stock — الهالك والخسائر" %}</p>
+{% endblock %}
+
+{% block content %}
+{# nav_active = 'waste' — spec 5.5. Confirming reduces stock and posts an expense. #}
+
+<div class="d-flex align-items-center gap-2 p-3 rounded-3 mb-3" style="background:var(--warning-bg)">
+  <i class="bi bi-exclamation-triangle" style="color:var(--warning)"></i>
+  <span class="small">{% trans "Confirming this document permanently removes the quantities from inventory and posts the cost as a loss. It cannot be edited afterwards." %}</span>
+</div>
+
+<form method="post" data-ajax id="wasteGrid">
+  {% csrf_token %}
+
+  <div class="card-soft card-pad mb-3">
+    <div class="form-section-title">{% trans "Document details" %}</div>
+    <div class="row g-3">
+      <div class="col-6 col-md-3">
+        <label class="form-label" for="id_document_number">{% trans "Document number" %}</label>
+        <input type="text" class="form-control" id="id_document_number"
+               name="document_number" value="WL-2026-000001" readonly>
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label" for="id_warehouse">{% trans "Warehouse" %}<span class="req">*</span></label>
+        <select class="form-select" id="id_warehouse" name="warehouse" required>
+          <option value="">{% trans "Select a warehouse" %}</option>
+          <option>{% trans "Main warehouse" %}</option>
+          <option>{% trans "Branch store" %}</option>
+        </select>
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label" for="id_date">{% trans "Date" %}<span class="req">*</span></label>
+        <input type="date" class="form-control" id="id_date" name="date" required>
+      </div>
+      <div class="col-6 col-md-3">
+        <label class="form-label" for="id_reason">{% trans "Reason" %}<span class="req">*</span></label>
+        <select class="form-select" id="id_reason" name="reason" required>
+          <option value="EXPIRED">{% trans "EXPIRED" %}</option>
+          <option value="DAMAGED">{% trans "DAMAGED" %}</option>
+          <option value="SPOILED">{% trans "SPOILED" %}</option>
+          <option value="BROKEN">{% trans "BROKEN" %}</option>
+          <option value="MISSING">{% trans "MISSING" %}</option>
+          <option value="OTHER">{% trans "OTHER" %}</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-soft mb-3">
+    <div class="card-head">
+      <h3>{% trans "Items to write off" %}</h3>
+      <div class="spacer"></div>
+      <button type="button" class="btn btn-soft btn-sm" data-add-row>
+        <i class="bi bi-plus-lg me-1"></i>{% trans "Add line" %}
+      </button>
+    </div>
+    <div class="table-wrap">
+      <table class="table-erp grid-table">
+        <thead>
+          <tr>
+            <th style="width:28%">{% trans "Product" %}</th>
+            <th style="width:20%">{% trans "Batch" %}</th>
+            <th style="width:13%">{% trans "Quantity" %}</th>
+            <th style="width:14%">{% trans "Unit cost" %}</th>
+            <th class="num" style="width:13%">{% trans "Total cost" %}</th>
+            <th style="width:44px"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <select class="form-select" name="items-0-product" data-f="product" aria-label="{% trans "Product" %}">
+                <option value="">{% trans "Select product" %}</option>
+                <option>{% trans "Fresh Milk 1L" %}</option>
+                <option>{% trans "Labneh 500g" %}</option>
+              </select>
+            </td>
+            <td>
+              <select class="form-select" name="items-0-batch" data-f="batch" aria-label="{% trans "Batch" %}">
+                <option value="">{% trans "Select batch" %}</option>
+                <option>B-2026-0142 · {% trans "expires" %} 2026-08-14</option>
+              </select>
+            </td>
+            <td><input type="number" step="0.001" min="0" class="form-control text-end" name="items-0-quantity" data-f="quantity" value="0" aria-label="{% trans "Quantity" %}"></td>
+            <td><input type="number" step="0.001" min="0" class="form-control text-end" name="items-0-unit_cost" data-f="unit_cost" value="0.000" aria-label="{% trans "Unit cost" %}"></td>
+            <td class="num cell-strong" data-f="line_total">0.000</td>
+            <td><button type="button" class="btn-icon danger" data-del-row aria-label="{% trans "Remove line" %}"><i class="bi bi-trash3"></i></button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <template data-row-template>
+      <tr>
+        <td>
+          <select class="form-select" name="items-__prefix__-product" data-f="product" aria-label="{% trans "Product" %}">
+            <option value="">{% trans "Select product" %}</option>
+            <option>{% trans "Fresh Milk 1L" %}</option>
+            <option>{% trans "Labneh 500g" %}</option>
+          </select>
+        </td>
+        <td>
+          <select class="form-select" name="items-__prefix__-batch" data-f="batch" aria-label="{% trans "Batch" %}">
+            <option value="">{% trans "Select batch" %}</option>
+          </select>
+        </td>
+        <td><input type="number" step="0.001" min="0" class="form-control text-end" name="items-__prefix__-quantity" data-f="quantity" value="0" aria-label="{% trans "Quantity" %}"></td>
+        <td><input type="number" step="0.001" min="0" class="form-control text-end" name="items-__prefix__-unit_cost" data-f="unit_cost" value="0.000" aria-label="{% trans "Unit cost" %}"></td>
+        <td class="num cell-strong" data-f="line_total">0.000</td>
+        <td><button type="button" class="btn-icon danger" data-del-row aria-label="{% trans "Remove line" %}"><i class="bi bi-trash3"></i></button></td>
+      </tr>
+    </template>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-12 col-lg-7">
+      <div class="card-soft card-pad h-100">
+        <label class="form-label" for="id_notes">{% trans "Notes" %}</label>
+        <textarea class="form-control" id="id_notes" name="notes" rows="4"
+                  placeholder="{% trans "Explain the circumstances of the loss" %}"></textarea>
+      </div>
+    </div>
+    <div class="col-12 col-lg-5">
+      <div class="card-soft card-pad">
+        <div class="total-line grand">
+          <span>{% trans "Total loss value" %}</span>
+          <span class="v"><span data-out="grand_total">0.000</span>
+            <small class="text-muted fs-6 fw-normal">{% trans "JOD" %}</small></span>
+        </div>
+        <div class="p-3 rounded-3 bg-lavender my-3">
+          <div class="fw-bold small mb-2">
+            <i class="bi bi-journal-text me-1 text-purple"></i>{% trans "Journal entry preview" %}
+          </div>
+          <table class="table-erp" style="font-size:.8rem">
+            <tr><td>{% trans "Waste & Loss Expense" %}</td><td class="num cell-strong">{% trans "Debit" %}</td><td class="num" data-out="grand_total">0.000</td></tr>
+            <tr><td>{% trans "Inventory" %}</td><td class="num cell-strong">{% trans "Credit" %}</td><td class="num" data-out="grand_total">0.000</td></tr>
+          </table>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="submit" name="action" value="draft" class="btn btn-ghost flex-fill">{% trans "Save draft" %}</button>
+          <button type="submit" name="action" value="confirm" class="btn btn-primary flex-fill"
+                  data-confirm="{% trans "This permanently removes the stock and posts a loss. Continue?" %}">
+            <i class="bi bi-check2-circle me-1"></i>{% trans "Confirm write-off" %}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>ERP.LineGrid('#wasteGrid');</script>
+{% endblock %}
