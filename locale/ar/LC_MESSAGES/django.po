@@ -964,3 +964,46 @@ msgstr "شطب الهالك للمستند %(document_number)s"
 #, python-format
 msgid "Inventory reduction due to waste %(document_number)s"
 msgstr "تخفيض المخزون بسبب الهالك %(document_number)s"
+
+#: inventory/services.py:112
+msgid "Only draft warehouse transfers can be confirmed."
+msgstr "فقط عمليات التحويل المخزني في حالة المسودة يمكن تأكيدها."
+
+#: inventory/services.py:116
+msgid "Source and destination warehouses cannot be the same."
+msgstr "لا يمكن أن يكون مخزن المصدر ومخزن الوجهة متطابقين."
+
+#: inventory/services.py:155
+msgid "Only draft waste and loss documents can be confirmed."
+msgstr "فقط مستندات الهالك والخسائر في حالة المسودة يمكن تأكيدها."
+#: pos/services.py:382
+msgid "Can only process returns for completed sales."
+msgstr "يمكن معالجة المرتجعات للمبيعات المكتملة فقط."
+
+#: pos/services.py:395
+msgid "Return quantity must be greater than zero."
+msgstr "يجب أن تكون كمية الإرجاع أكبر من الصفر."
+
+#: pos/services.py:400
+#, python-format
+msgid "Cannot return %(return_qty)s of %(product)s. Original sale quantity was %(orig_qty)s."
+msgstr "لا يمكن إرجاع %(return_qty)s من %(product)s. كانت كمية البيع الأصلية %(orig_qty)s."
+
+#: pos/services.py:448
+#, python-format
+msgid "Sales Return for POS Sale %(sale_number)s"
+msgstr "مرتجع مبيعات لعملية البيع %(sale_number)s"
+
+#: pos/services.py:458
+#, python-format
+msgid "Return reversal for sale %(sale_number)s"
+msgstr "عكس إيراد المبيعات للبيع %(sale_number)s"
+
+#: pos/services.py:467
+#, python-format
+msgid "Cash refund for return %(return_number)s"
+msgstr "الاسترداد النقدي للمرتجع %(return_number)s"
+
+#: finance/reports.py:34
+msgid "Selected account does not exist."
+msgstr "الحساب المحدد غير موجود."

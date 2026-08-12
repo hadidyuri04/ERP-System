@@ -136,3 +136,85 @@ def remove_stock(product, warehouse, quantity, reference_type, reference_id, use
     balance = StockBalance.objects.select_for_update().get(product=product, warehouse=warehouse)
     balance.quantity -= quantity
     balance.save()
+
+@transaction.atomic
+def confirm_warehouse_transfer(transfer_id, user):
+    """
+    Confirms a warehouse transfer:
+    1. Removes stock from the source warehouse.
+    2. Adds stock to the destination warehouse.
+    3. Total company stock remains unchanged.
+    """
+    from .models import WarehouseTransfer
+    transfer = WarehouseTransfer.objects.prefetch_related('items').select_for_update().get(pk=transfer_id)
+
+    if transfer.status != WarehouseTransfer.Status.DRAFT:
+        raise ValidationError(_("Only draft warehouse transfers can be confirmed."))
+
+    if transfer.from_warehouse == transfer.to_warehouse:
+        raise ValidationError(_("Source and destination warehouses cannot be the same."))
+
+    for item in transfer.items.all():
+        # Remove stock from source warehouse (using FEFO/batch tracking)
+        remove_stock(
+            product=item.product,
+            warehouse=transfer.from_warehouse,
+            quantity=item.quantity,
+            reference_type='WAREHOUSE_TRANSFER',
+            reference_id=transfer.id,
+            user=user,
+            movement_type='TRANSFER_OUT'
+        )
+
+        # Add stock to destination warehouse
+        add_stock(
+            product=item.product,
+            warehouse=transfer.to_warehouse,
+            quantity=item.quantity,
+            unit_cost=item.unit_cost,
+            reference_type='WAREHOUSE_TRANSFER',
+            reference_id=transfer.id,
+            user=user,
+            batch_number=item.batch.batch_number if item.batch else None,
+            expiration_date=item.batch.expiration_date if item.batch else None
+        )
+
+    transfer.status = WarehouseTransfer.Status.CONFIRMED
+    transfer.approved_by = user
+    transfer.save(update_fields=['status', 'approved_by'])
+    return transfer
+
+
+@transaction.atomic
+def confirm_waste_loss(waste_id, user):
+    """
+    Confirms a waste & loss document:
+    1. Removes expired or damaged stock from available inventory.
+    2. Triggers financial waste posting.
+    """
+    from .models import WasteLoss
+    from finance.services import post_waste_loss
+
+    waste = WasteLoss.objects.prefetch_related('items').select_for_update().get(pk=waste_id)
+
+    if waste.status != WasteLoss.Status.DRAFT:
+        raise ValidationError(_("Only draft waste and loss documents can be confirmed."))
+
+    for item in waste.items.all():
+        remove_stock(
+            product=item.product,
+            warehouse=waste.warehouse,
+            quantity=item.quantity,
+            reference_type='WASTE_LOSS',
+            reference_id=waste.id,
+            user=user,
+            movement_type='WASTE'
+        )
+
+    waste.status = WasteLoss.Status.CONFIRMED
+    waste.approved_by = user
+    waste.save(update_fields=['status', 'approved_by'])
+
+    # Post financial expense entry
+    post_waste_loss(waste.id, user)
+    return waste
