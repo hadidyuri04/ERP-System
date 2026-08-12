@@ -1,16 +1,16 @@
-# Arabic (Jordan) translation - Finance / Inventory / POS ERP
-# Merged: model strings (backend) + template strings (frontend).
-# On duplicate msgids the backend wording was kept for consistency.
-# Regenerate with: django-admin makemessages -l ar --ignore=preview*
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: ERP System 1.0\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-08-11 14:32+0300\n"
-"PO-Revision-Date: 2026-08-11 15:00+0300\n"
-"Last-Translator: Sphereka team\n"
-"Language-Team: Arabic\n"
+"PO-Revision-Date: 2026-08-11 23:30+0300\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: ar\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -1016,6 +1016,173 @@ msgstr "بند عرض السعر"
 #: .\quotations\models.py:49
 msgid "Quotation Items"
 msgstr "بنود عرض السعر"
+
+#: pos/services.py:15
+msgid "Cannot complete a sale with an empty cart."
+msgstr "لا يمكن إتمام عملية بيع باستخدام عربة تسوق فارغة."
+
+#: pos/services.py:31
+#, python-format
+msgid ""
+"Insufficient stock for product %(product_name)s. Available: %(available)s, "
+"Requested: %(quantity)s"
+msgstr ""
+"الكمية غير كافية للمنتج %(product_name)s. المتوفر: %(available)s، المطلوبة: "
+"%(quantity)s"
+
+#: finance/services.py:215
+msgid "Only confirmed purchase invoices can be posted to accounting."
+msgstr "فقط فواتير الشراء المؤكدة يمكن ترحيلها إلى الحسابات."
+
+#: finance/services.py:226
+#, python-format
+msgid "Purchase Invoice %(invoice_number)s from %(supplier_name)s"
+msgstr "فاتورة الشراء %(invoice_number)s من المورد %(supplier_name)s"
+
+#: finance/services.py:237
+#, python-format
+msgid "Stock purchase from %(supplier_name)s"
+msgstr "شراء مخزون من المورد %(supplier_name)s"
+
+#: finance/services.py:246
+#, python-format
+msgid "Payable for purchase invoice %(invoice_number)s"
+msgstr "المستحق لفاتورة الشراء %(invoice_number)s"
+
+#: finance/services.py:265
+msgid "Only completed POS sales can be posted."
+msgstr "فقط مبيعات نقاط البيع المكتملة يمكن ترحيلها."
+
+#: finance/services.py:279
+#, python-format
+msgid "POS Sale %(sale_number)s"
+msgstr "بيع نقطة بيع %(sale_number)s"
+
+#: finance/services.py:288
+#, python-format
+msgid "Cash received for sale %(sale_number)s"
+msgstr "النقد المستلم للبيع %(sale_number)s"
+
+#: finance/services.py:296
+#, python-format
+msgid "Sales revenue for %(sale_number)s"
+msgstr "إيرادات المبيعات لـ %(sale_number)s"
+
+#: finance/services.py:309
+#, python-format
+msgid "Cost of Goods Sold for POS Sale %(sale_number)s"
+msgstr "تكلفة البضاعة المباعة لعملية البيع %(sale_number)s"
+
+#: finance/services.py:318
+#, python-format
+msgid "COGS for sale %(sale_number)s"
+msgstr "تكلفة البضاعة المباعة للبيع %(sale_number)s"
+
+#: finance/services.py:326
+#, python-format
+msgid "Inventory reduction for sale %(sale_number)s"
+msgstr "تخفيض المخزون للبيع %(sale_number)s"
+
+#: finance/services.py:343
+msgid "Only confirmed waste and loss documents can be posted."
+msgstr "فقط مستندات الهالك والخسائر المؤكدة يمكن ترحيلها."
+
+#: finance/services.py:350
+msgid "Waste document total cost cannot be zero."
+msgstr "لا يمكن أن تكون التكلفة الإجمالية لمستند الهالك صفراً."
+
+#: finance/services.py:354
+#, python-format
+msgid "Waste & Loss document %(document_number)s"
+msgstr "مستند الهالك والخسائر %(document_number)s"
+
+#: finance/services.py:363
+#, python-format
+msgid "Waste write-off for document %(document_number)s"
+msgstr "شطب الهالك للمستند %(document_number)s"
+
+#: finance/services.py:371
+#, python-format
+msgid "Inventory reduction due to waste %(document_number)s"
+msgstr "تخفيض المخزون بسبب الهالك %(document_number)s"
+
+#: inventory/services.py:112
+msgid "Only draft warehouse transfers can be confirmed."
+msgstr "فقط عمليات التحويل المخزني في حالة المسودة يمكن تأكيدها."
+
+#: inventory/services.py:116
+msgid "Source and destination warehouses cannot be the same."
+msgstr "لا يمكن أن يكون مخزن المصدر ومخزن الوجهة متطابقين."
+
+#: inventory/services.py:155
+msgid "Only draft waste and loss documents can be confirmed."
+msgstr "فقط مستندات الهالك والخسائر في حالة المسودة يمكن تأكيدها."
+
+#: pos/services.py:382
+msgid "Can only process returns for completed sales."
+msgstr "يمكن معالجة المرتجعات للمبيعات المكتملة فقط."
+
+#: pos/services.py:395
+msgid "Return quantity must be greater than zero."
+msgstr "يجب أن تكون كمية الإرجاع أكبر من الصفر."
+
+#: pos/services.py:400
+#, python-format
+msgid ""
+"Cannot return %(return_qty)s of %(product)s. Original sale quantity was "
+"%(orig_qty)s."
+msgstr ""
+"لا يمكن إرجاع %(return_qty)s من %(product)s. كانت كمية البيع الأصلية "
+"%(orig_qty)s."
+
+#: pos/services.py:448
+#, python-format
+msgid "Sales Return for POS Sale %(sale_number)s"
+msgstr "مرتجع مبيعات لعملية البيع %(sale_number)s"
+
+#: pos/services.py:458
+#, python-format
+msgid "Return reversal for sale %(sale_number)s"
+msgstr "عكس إيراد المبيعات للبيع %(sale_number)s"
+
+#: pos/services.py:467
+#, python-format
+msgid "Cash refund for return %(return_number)s"
+msgstr "الاسترداد النقدي للمرتجع %(return_number)s"
+
+#: finance/reports.py:34
+msgid "Selected account does not exist."
+msgstr "الحساب المحدد غير موجود."
+
+#: core/views.py:23
+msgid "Database backup triggered successfully."
+msgstr "تم تشغيل النسخ الاحتياطي لقاعدة البيانات بنجاح."
+
+#: quotations/services.py:15
+msgid "Cannot create a quotation with no items."
+msgstr "لا يمكن إنشاء عرض سعر بدون أصناف."
+
+#: quotations/services.py:73
+msgid "Cannot convert a rejected or expired quotation."
+msgstr "لا يمكن تحويل عرض سعر مرفوض أو منتهي الصلاحية."
+
+#: quotations/services.py:78
+msgid "This quotation has expired and cannot be converted."
+msgstr "انتهت صلاحية عرض السعر هذا ولا يمكن تحويله."
+
+#: quotations/services.py:99
+#, python-format
+msgid "Converted from Quotation %(q_num)s"
+msgstr "تم التحويل من عرض السعر %(q_num)s"
+
+#: quotations/views.py:38
+msgid "Quotation created successfully."
+msgstr "تم إنشاء عرض السعر بنجاح."
+
+#: quotations/views.py:65
+#, python-format
+msgid "Quotation successfully converted to POS Sale %(sale_num)s"
+msgstr "تم تحويل عرض السعر بنجاح إلى عملية بيع %(sale_num)s"
 
 #: templates/core/base.html:8 templates/core/base.html:66
 #: templates/core/dashboard.html:4

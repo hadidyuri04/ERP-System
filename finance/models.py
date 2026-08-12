@@ -55,7 +55,7 @@ class JournalEntry(models.Model):
 
     class SourceType(models.TextChoices):
         MANUAL = "manual", _("Manual")
-        PURCHASE = "purchase", _("Purchase")
+        PURCHASE = "PURCHASE", _("Purchase")
         POS_SALE = "pos_sale", _("POS Sale")
         RECEIPT = "receipt", _("Receipt Voucher")
         PAYMENT = "payment", _("Payment Voucher")

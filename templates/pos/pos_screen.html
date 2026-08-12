@@ -287,7 +287,7 @@
     const paid = parseFloat(received.value) || 0;
     const method = document.querySelector('.pay-method.active').dataset.method;
 
-    if (method !== 'store_credit' && paid < t.total) {
+    if (method !== 'CREDIT' && paid < t.total) {
       ERP.toast.warning(
         "{% trans 'Insufficient payment' %}",
         "{% trans 'The amount received is less than the total due.' %}"
