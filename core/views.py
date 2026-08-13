@@ -1,9 +1,14 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from datetime import timedelta
+
+from core.models import CompanySettings
 from core.permissions import admin_required, accountant_required
 from finance.models import JournalEntry
+from inventory.models import StockBatch
 
 @login_required
 @admin_required
@@ -27,7 +32,7 @@ def trigger_database_backup(request):
 def dashboard_redirect_view(request):
     """
     Dynamically routes the user to their respective dashboard 
-    or primary workspace based on their assigned role[cite: 1, 2].
+    or primary workspace based on their assigned role.
     """
     user = request.user
     if user.is_superuser or user.role == "admin":
@@ -80,3 +85,27 @@ def accountant_dashboard_view(request):
         'payment_count': PaymentVoucher.objects.count(),
     }
     return render(request, 'core/accountant_dashboard.html', context)
+@login_required
+def main_dashboard_view(request):
+    """
+    Main business dashboard view rendering core metrics, expiring batches, and recent activity.
+    """
+    company = CompanySettings.load()
+    warning_days = company.expiration_warning_days
+    warning_threshold = timezone.now().date() + timedelta(days=warning_days)
+
+    expiring_batches = StockBatch.objects.filter(
+        status=StockBatch.BatchStatus.ACTIVE,
+        expiration_date__isnull=False,
+        expiration_date__lte=warning_threshold
+    ).order_by('expiration_date')[:5]
+
+    context = {
+        'nav_active': 'dashboard',
+        'company': company,
+        'expiring_batches': expiring_batches,
+        'recent_transactions': JournalEntry.objects.select_related(
+            'created_by'
+        ).order_by('-created_at')[:6],
+    }
+    return render(request, 'core/dashboard.html', context)

@@ -21,7 +21,6 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("auth/", include("django.contrib.auth.urls")),
     path("i18n/", include("django.conf.urls.i18n")),
-
     path("", include("core.urls")),
     path("customers/", include("customers.urls")),
     path("suppliers/", include("suppliers.urls")),

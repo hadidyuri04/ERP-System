@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "pos",
     "quotations",
     "notifications",
+    "core",
 ]
 
 MIDDLEWARE = [

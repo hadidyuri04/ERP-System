@@ -5,7 +5,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}{% trans "Dashboard" %}{% endblock %} · {{ company.company_name|default:_("Sphereka ERP") }}</title>
+  {% trans "Sphereka ERP" as fallback_company %}
+  <title>{% block title %}{% trans "Dashboard" %}{% endblock %} · {{ company.company_name|default:fallback_company }}</title>
 
   {# ---- Bootstrap 5.3: RTL stylesheet is swapped in automatically for Arabic ---- #}
   {% if LANGUAGE_BIDI %}
@@ -111,7 +112,8 @@
 
       <div class="topbar-greeting">
         {% block page_header %}
-          <h1>{% blocktrans with name=request.user.first_name|default:_("there") %}Hello, {{ name }}!{% endblocktrans %}</h1>
+          {% trans "there" as default_name %}
+          <h1>{% blocktrans with name=request.user.first_name|default:default_name %}Hello, {{ name }}!{% endblocktrans %}</h1>
           <p>{% trans "Explore information and activity across your business" %}</p>
         {% endblock %}
       </div>
@@ -151,10 +153,12 @@
           <div class="user-chip" data-bs-toggle="dropdown" role="button">
             <span class="avatar">{{ request.user.first_name|slice:":1"|upper|default:"A" }}</span>
             <div class="u-meta">
-              <div class="u-name">{{ request.user.get_full_name|default:_("Admin User") }}</div>
+              {% trans "Admin User" as fallback_full_name %}
+              <div class="u-name">{{ request.user.get_full_name|default:fallback_full_name }}</div>
               <div class="u-role">
                 {% comment %}Role choices from spec §4: ADMIN / ACCOUNTANT / CASHIER{% endcomment %}
-                {{ request.user.get_role_display|default:_("Administrator") }}
+                {% trans "Administrator" as fallback_role %}
+                {{ request.user.get_role_display|default:fallback_role }}
               </div>
             </div>
           </div>

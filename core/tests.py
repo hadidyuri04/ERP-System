@@ -18,6 +18,7 @@ class ConnectedViewsSmokeTests(TestCase):
         route_names = (
             "core:admin_dashboard",
             "core:accountant_dashboard",
+            "core:home_dashboard",
             "core:settings",
             "customers:list",
             "customers:create",
