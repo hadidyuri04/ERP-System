@@ -1187,6 +1187,21 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--purple-6
 .btn.is-loading::after { content: ""; position: absolute; width: 18px; height: 18px; inset: 50% auto auto 50%; margin: -9px; border: 2px solid rgba(255,255,255,.5); border-top-color: #fff; border-radius: 50%; animation: spin .65s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+.journal-lines-card .table-wrap { border-radius: 0 0 var(--r-lg) var(--r-lg); }
+.journal-lines-card .grid-table { min-width: 1050px; }
+.journal-lines-card .grid-table td { vertical-align: top; }
+.journal-lines-card .grid-table select { min-width: 155px; }
+.journal-lines-card .grid-table input[name$="-description"] { min-width: 180px; }
+.journal-lines-card .grid-table input[name$="-debit"],
+.journal-lines-card .grid-table input[name$="-credit"] { min-width: 105px; text-align: end; font-variant-numeric: tabular-nums; }
+.journal-delete-cell { width: 48px; text-align: center !important; }
+.journal-form-errors { padding: 12px 20px; color: var(--danger); background: var(--danger-bg); border-block-end: 1px solid #f7d7d9; }
+.journal-form-errors .errorlist { margin: 0; }
+.journal-balance-status { display: inline-flex; margin-inline-start: 10px; padding: 3px 9px; border-radius: var(--r-pill); font-size: .66rem; }
+.journal-balance-status.is-balanced { color: var(--success); background: var(--success-bg); }
+.journal-balance-status.is-unbalanced { color: var(--danger); background: var(--danger-bg); }
+.journal-form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+
 /* Authentication */
 .auth-body { overflow-x: hidden; background: #fff; }
 .auth-shell { min-height: 100vh; display: grid; grid-template-columns: minmax(440px, 1.08fr) minmax(420px, .92fr); }

@@ -214,6 +214,16 @@ class JournalEntryLine(models.Model):
                 "account": _("This account does not allow direct posting.")
             })
 
+        if not self.account.is_active:
+            raise ValidationError({
+                "account": _("This account is inactive.")
+            })
+
+        if self.customer_id and self.supplier_id:
+            raise ValidationError(
+                _("A journal line cannot reference both a customer and a supplier.")
+            )
+
     def __str__(self):
         return f"{self.journal_entry.entry_number} - {self.account}"
 

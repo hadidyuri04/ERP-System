@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.test import TestCase
+from django.urls import reverse
 
 from customers.models import Customer
 from inventory.models import (
@@ -32,6 +33,89 @@ from .services import (
     post_purchase_invoice,
     post_receipt_voucher,
 )
+
+
+class ManualJournalViewTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="manual-accountant",
+            password="test-password",
+            role="accountant",
+        )
+        self.cash = Account.objects.create(
+            code="M1100",
+            name="Manual cash",
+            account_type=Account.AccountType.ASSET,
+        )
+        self.revenue = Account.objects.create(
+            code="M4100",
+            name="Manual revenue",
+            account_type=Account.AccountType.REVENUE,
+        )
+        self.customer = Customer.objects.create(code="MC001", name="Manual customer")
+        self.supplier = Supplier.objects.create(code="MS001", name="Manual supplier")
+        self.client.force_login(self.user)
+
+    def journal_data(self, debit="100.000", credit="100.000"):
+        return {
+            "entry_number": "MJE-001",
+            "date": date.today().isoformat(),
+            "description": "Manual journal test",
+            "lines-TOTAL_FORMS": "2",
+            "lines-INITIAL_FORMS": "0",
+            "lines-MIN_NUM_FORMS": "0",
+            "lines-MAX_NUM_FORMS": "1000",
+            "lines-0-account": str(self.cash.pk),
+            "lines-0-customer": "",
+            "lines-0-supplier": "",
+            "lines-0-description": "Cash debit",
+            "lines-0-debit": debit,
+            "lines-0-credit": "0.000",
+            "lines-1-account": str(self.revenue.pk),
+            "lines-1-customer": "",
+            "lines-1-supplier": "",
+            "lines-1-description": "Revenue credit",
+            "lines-1-debit": "0.000",
+            "lines-1-credit": credit,
+        }
+
+    def test_balanced_manual_journal_is_saved_as_draft(self):
+        response = self.client.post(reverse("finance:journal_create"), self.journal_data())
+
+        journal = JournalEntry.objects.get(entry_number="MJE-001")
+        self.assertRedirects(response, reverse("finance:journal_detail", args=[journal.pk]))
+        self.assertEqual(journal.status, JournalEntry.Status.DRAFT)
+        self.assertEqual(journal.source_type, JournalEntry.SourceType.MANUAL)
+        self.assertEqual(journal.created_by, self.user)
+        self.assertEqual(journal.lines.count(), 2)
+
+    def test_unbalanced_manual_journal_is_rejected(self):
+        response = self.client.post(
+            reverse("finance:journal_create"),
+            self.journal_data(credit="90.000"),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Journal is not balanced")
+        self.assertFalse(JournalEntry.objects.filter(entry_number="MJE-001").exists())
+
+    def test_line_cannot_reference_customer_and_supplier(self):
+        data = self.journal_data()
+        data["lines-0-customer"] = str(self.customer.pk)
+        data["lines-0-supplier"] = str(self.supplier.pk)
+
+        response = self.client.post(reverse("finance:journal_create"), data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "cannot reference both a customer and a supplier")
+        self.assertFalse(JournalEntry.objects.filter(entry_number="MJE-001").exists())
+
+    def test_create_page_contains_dynamic_line_controls(self):
+        response = self.client.get(reverse("finance:journal_create"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'id="add-journal-line"')
+        self.assertContains(response, 'id="journal-empty-line"')
 
 
 class FinancePostingTests(TestCase):

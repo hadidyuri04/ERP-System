@@ -1,0 +1,104 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "New journal entry" %}{% endblock %}
+
+{% block page_header %}
+<span class="eyebrow">{% trans "Finance" %}</span>
+<h1>{% trans "New journal entry" %}</h1>
+<p>{% trans "Enter at least two lines with equal debit and credit totals." %}</p>
+{% endblock %}
+
+{% block content %}
+<form method="post" id="journal-form">
+  {% csrf_token %}
+  <div class="card-soft card-pad mb-3">
+    <div class="form-section-title">{% trans "Journal details" %}</div>
+    {{ form.non_field_errors }}
+    {{ form.as_p }}
+  </div>
+
+  <div class="card-soft journal-lines-card">
+    <div class="card-head">
+      <div><span class="section-kicker">{% trans "Double-entry accounting" %}</span><h3>{% trans "Journal lines" %}</h3></div>
+      <div class="spacer"></div>
+      <button type="button" class="btn btn-soft btn-sm" id="add-journal-line"><i class="bi bi-plus-lg me-1"></i>{% trans "Add line" %}</button>
+    </div>
+
+    {{ formset.management_form }}
+    {% if formset.non_form_errors %}<div class="journal-form-errors">{{ formset.non_form_errors }}</div>{% endif %}
+
+    <div class="table-wrap">
+      <table class="table-erp grid-table" id="journal-lines-table">
+        <thead><tr><th>{% trans "Account" %}</th><th>{% trans "Customer" %}</th><th>{% trans "Supplier" %}</th><th>{% trans "Description" %}</th><th>{% trans "Debit" %}</th><th>{% trans "Credit" %}</th><th></th></tr></thead>
+        <tbody id="journal-lines-body">
+        {% for line_form in formset %}
+          <tr data-journal-line>
+            {% for hidden in line_form.hidden_fields %}{{ hidden }}{% endfor %}
+            <td>{{ line_form.account.errors }}{{ line_form.account }}</td>
+            <td>{{ line_form.customer.errors }}{{ line_form.customer }}</td>
+            <td>{{ line_form.supplier.errors }}{{ line_form.supplier }}</td>
+            <td>{{ line_form.description.errors }}{{ line_form.description }}</td>
+            <td>{{ line_form.debit.errors }}{{ line_form.debit }}</td>
+            <td>{{ line_form.credit.errors }}{{ line_form.credit }}</td>
+            <td class="journal-delete-cell"><span class="d-none">{{ line_form.DELETE }}</span><button type="button" class="btn-icon danger" data-remove-line aria-label="{% trans 'Remove line' %}"><i class="bi bi-trash3"></i></button>{{ line_form.non_field_errors }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+        <tfoot><tr><td colspan="4">{% trans "Totals" %}<span id="journal-balance-status" class="journal-balance-status"></span></td><td id="journal-debit-total" class="num">0.000</td><td id="journal-credit-total" class="num">0.000</td><td></td></tr></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <template id="journal-empty-line">
+    <tr data-journal-line>
+      {% with line_form=formset.empty_form %}
+      {% for hidden in line_form.hidden_fields %}{{ hidden }}{% endfor %}
+      <td>{{ line_form.account }}</td><td>{{ line_form.customer }}</td><td>{{ line_form.supplier }}</td><td>{{ line_form.description }}</td><td>{{ line_form.debit }}</td><td>{{ line_form.credit }}</td>
+      <td class="journal-delete-cell"><span class="d-none">{{ line_form.DELETE }}</span><button type="button" class="btn-icon danger" data-remove-line aria-label="{% trans 'Remove line' %}"><i class="bi bi-trash3"></i></button></td>
+      {% endwith %}
+    </tr>
+  </template>
+
+  <div class="journal-form-actions">
+    <a href="{% url 'finance:journal_list' %}" class="btn btn-ghost">{% trans "Cancel" %}</a>
+    <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>{% trans "Save draft" %}</button>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(() => {
+  const body = document.getElementById('journal-lines-body');
+  const totalForms = document.getElementById('id_lines-TOTAL_FORMS');
+  const template = document.getElementById('journal-empty-line');
+  const debitTotal = document.getElementById('journal-debit-total');
+  const creditTotal = document.getElementById('journal-credit-total');
+  const status = document.getElementById('journal-balance-status');
+
+  function visibleRows() { return [...body.querySelectorAll('[data-journal-line]')].filter(row => !row.hidden); }
+  function amount(row, suffix) { return Number(row.querySelector(`[name$="-${suffix}"]`)?.value) || 0; }
+  function recalculate() {
+    let debit = 0, credit = 0;
+    visibleRows().forEach(row => { debit += amount(row, 'debit'); credit += amount(row, 'credit'); });
+    debitTotal.textContent = debit.toFixed(3); creditTotal.textContent = credit.toFixed(3);
+    const balanced = debit > 0 && Math.abs(debit - credit) < 0.0005;
+    status.textContent = balanced ? '{% trans "Balanced" %}' : '{% trans "Not balanced" %}';
+    status.classList.toggle('is-balanced', balanced); status.classList.toggle('is-unbalanced', !balanced);
+  }
+  function bindRow(row) {
+    const debit = row.querySelector('[name$="-debit"]'); const credit = row.querySelector('[name$="-credit"]');
+    debit?.addEventListener('input', () => { if (Number(debit.value) > 0 && credit) credit.value = '0'; recalculate(); });
+    credit?.addEventListener('input', () => { if (Number(credit.value) > 0 && debit) debit.value = '0'; recalculate(); });
+    row.querySelector('[data-remove-line]')?.addEventListener('click', () => { const deletion = row.querySelector('[name$="-DELETE"]'); if (deletion) deletion.checked = true; row.hidden = true; recalculate(); });
+  }
+  body.querySelectorAll('[data-journal-line]').forEach(bindRow);
+  document.getElementById('add-journal-line').addEventListener('click', () => {
+    const index = Number(totalForms.value); const fragment = template.content.cloneNode(true); const row = fragment.querySelector('tr');
+    row.innerHTML = row.innerHTML.replaceAll('__prefix__', index); totalForms.value = index + 1; body.appendChild(row); bindRow(row); row.querySelector('select, input')?.focus(); recalculate();
+  });
+  recalculate();
+})();
+</script>
+{% endblock %}

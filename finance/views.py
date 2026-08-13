@@ -1,14 +1,19 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
-from django.db.models import Q
+from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 
 from core.permissions import accountant_required
 
-from .forms import PaymentVoucherForm, ReceiptVoucherForm
+from .forms import (
+    JournalEntryForm,
+    JournalEntryLineFormSet,
+    PaymentVoucherForm,
+    ReceiptVoucherForm,
+)
 from .models import Account, JournalEntry, PaymentVoucher, ReceiptVoucher
 from .reports import generate_general_ledger, generate_trial_balance
 from .services import post_journal_entry, post_payment_voucher, post_receipt_voucher
@@ -174,3 +179,50 @@ def trial_balance_view(request):
     end_date = request.GET.get("end_date") or None
     tb_data = generate_trial_balance(start_date, end_date)
     return render(request, "reports/trial_balance.html", {"tb_data": tb_data, "start_date": start_date, "end_date": end_date})
+
+
+@login_required
+@accountant_required
+@transaction.atomic
+def journal_create_view(request):
+    journal = JournalEntry(
+        created_by=request.user,
+        source_type=JournalEntry.SourceType.MANUAL,
+    )
+
+    form = JournalEntryForm(
+        request.POST or None,
+        instance=journal,
+    )
+
+    formset = JournalEntryLineFormSet(
+        request.POST or None,
+        instance=journal,
+        prefix="lines",
+    )
+
+    if request.method == "POST" and form.is_valid() and formset.is_valid():
+        journal = form.save(commit=False)
+        journal.created_by = request.user
+        journal.source_type = JournalEntry.SourceType.MANUAL
+        journal.status = JournalEntry.Status.DRAFT
+        journal.save()
+
+        formset.instance = journal
+        formset.save()
+
+        messages.success(request, _("Journal entry saved as draft."))
+
+        return redirect(
+            "finance:journal_detail",
+            pk=journal.pk,
+        )
+
+    return render(
+        request,
+        "finance/journal_form.html",
+        {
+            "form": form,
+            "formset": formset,
+        },
+    )

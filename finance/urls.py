@@ -8,6 +8,7 @@ urlpatterns = [
     path("accounts/", views.account_list_view, name="account_list"),
 
     path("journals/", views.journal_list_view, name="journal_list"),
+    path("journals/create/", views.journal_create_view, name="journal_create"),
     path("journals/<int:pk>/", views.journal_detail_view, name="journal_detail"),
     path("journals/<int:pk>/post/", views.post_journal_view, name="journal_post"),
 
