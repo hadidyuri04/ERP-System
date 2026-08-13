@@ -9,7 +9,10 @@ def get_account_balance(account, start_date=None, end_date=None):
     """
     lines = JournalEntryLine.objects.filter(
         account=account,
-        journal_entry__status=JournalEntry.Status.POSTED
+        journal_entry__status__in=[
+            JournalEntry.Status.POSTED,
+            JournalEntry.Status.REVERSED,
+        ]
     )
     
     if start_date:
@@ -43,7 +46,10 @@ def generate_general_ledger(account_id, start_date=None, end_date=None):
 
     lines = JournalEntryLine.objects.filter(
         account=account,
-        journal_entry__status=JournalEntry.Status.POSTED
+        journal_entry__status__in=[
+            JournalEntry.Status.POSTED,
+            JournalEntry.Status.REVERSED,
+        ]
     ).select_related('journal_entry', 'customer', 'supplier').order_by('journal_entry__date', 'journal_entry__id')
 
     if start_date:
@@ -91,7 +97,10 @@ def generate_trial_balance(start_date=None, end_date=None):
     for account in accounts:
         lines = JournalEntryLine.objects.filter(
             account=account,
-            journal_entry__status=JournalEntry.Status.POSTED
+            journal_entry__status__in=[
+                JournalEntry.Status.POSTED,
+                JournalEntry.Status.REVERSED,
+            ]
         )
         
         if start_date:

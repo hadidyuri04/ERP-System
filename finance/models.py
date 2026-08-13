@@ -62,6 +62,7 @@ class JournalEntry(models.Model):
         PAYMENT = "payment", _("Payment Voucher")
         WASTE = "waste", _("Waste & Loss")
         SALES_RETURN = "sales_return", _("Sales Return")
+        REVERSAL = "reversal", _("Journal Reversal")
 
     entry_number = models.CharField(
         _("Entry Number"),
@@ -105,6 +106,34 @@ class JournalEntry(models.Model):
         verbose_name=_("Approved By"),
         on_delete=models.PROTECT,
         related_name="approved_journal_entries",
+        null=True,
+        blank=True,
+    )
+    reversal_of = models.OneToOneField(
+        "self",
+        verbose_name=_("Reversal Of"),
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="reversal_entry",
+    )
+
+    reversal_reason = models.TextField(
+        _("Reversal Reason"),
+        blank=True,
+    )
+
+    reversed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("Reversed By"),
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="reversed_journal_entries",
+    )
+
+    reversed_at = models.DateTimeField(
+        _("Reversed At"),
         null=True,
         blank=True,
     )

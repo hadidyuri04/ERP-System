@@ -5,18 +5,24 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: ERP System\n"
 "Report-Msgid-Bugs-To: \n"
+<<<<<<< HEAD
 "POT-Creation-Date: 2026-08-13 13:16+0300\n"
 "PO-Revision-Date: 2026-08-11 23:30+0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+=======
+"POT-Creation-Date: 2026-08-13 13:38+0300\n"
+"PO-Revision-Date: 2026-08-13 13:30+0300\n"
+"Last-Translator: ERP Team\n"
+"Language-Team: Arabic\n"
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 "Language: ar\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
-"&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
 
 #: .\accounts\models.py:8 .\templates\core\base.html:163
 msgid "Administrator"
@@ -35,8 +41,13 @@ msgid "Role"
 msgstr "الدور"
 
 #: .\accounts\models.py:19 .\customers\models.py:64 .\finance\models.py:40
+<<<<<<< HEAD
 #: .\finance\models.py:112 .\finance\models.py:183 .\finance\models.py:309
 #: .\finance\models.py:404 .\inventory\models.py:150 .\inventory\models.py:214
+=======
+#: .\finance\models.py:141 .\finance\models.py:212 .\finance\models.py:338
+#: .\finance\models.py:433 .\inventory\models.py:150 .\inventory\models.py:214
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 #: .\inventory\models.py:298 .\notifications\models.py:20
 #: .\purchasing\models.py:122 .\purchasing\models.py:201
 #: .\quotations\models.py:28
@@ -44,7 +55,11 @@ msgid "Created At"
 msgstr "تاريخ الإنشاء"
 
 #: .\accounts\models.py:20 .\customers\models.py:69 .\finance\models.py:41
+<<<<<<< HEAD
 #: .\finance\models.py:113 .\finance\models.py:314 .\finance\models.py:409
+=======
+#: .\finance\models.py:142 .\finance\models.py:343 .\finance\models.py:438
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 #: .\inventory\models.py:167 .\purchasing\models.py:127
 msgid "Updated At"
 msgstr "تاريخ التحديث"
@@ -63,7 +78,7 @@ msgstr "الإنجليزية"
 
 #: .\config\settings.py:94
 msgid "العربية"
-msgstr ""
+msgstr "العربية"
 
 #: .\core\models.py:6
 msgid "Company Name"
@@ -147,7 +162,11 @@ msgstr "ملاحظات"
 msgid "Is Active"
 msgstr "نشط"
 
+<<<<<<< HEAD
 #: .\customers\models.py:74 .\finance\models.py:147 .\finance\models.py:252
+=======
+#: .\customers\models.py:74 .\finance\models.py:176 .\finance\models.py:281
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 #: .\pos\models.py:18 .\quotations\models.py:16
 #: .\templates\finance\journal_form.html:33
 #: .\templates\finance\receipt_list.html:1 .\templates\pos\pos_screen.html:17
@@ -177,6 +196,7 @@ msgstr "تم التعديل على العميل بنجاح"
 msgid "Edit customer"
 msgstr "تعديل العميل"
 
+<<<<<<< HEAD
 #: .\finance\forms.py:85 .\finance\models.py:224
 #, fuzzy
 #| msgid "A journal line cannot contain both debit and credit."
@@ -199,6 +219,32 @@ msgstr "لا يمكن أن تكون التكلفة الإجمالية لمستن
 #, python-format
 msgid "Journal is not balanced. Debit: %(debit)s, Credit: %(credit)s."
 msgstr ""
+=======
+#: .\finance\forms.py:34 .\finance\services.py:181
+msgid "A customer is required for an accounts receivable receipt."
+msgstr "يجب تحديد عميل عند تسجيل قبض على حساب الذمم المدينة."
+
+#: .\finance\forms.py:52 .\finance\services.py:261
+msgid "A supplier is required for an accounts payable payment."
+msgstr "يجب تحديد مورد عند تسجيل دفعة على حساب الذمم الدائنة."
+
+#: .\finance\forms.py:89 .\finance\models.py:253
+msgid "A journal line cannot reference both a customer and a supplier."
+msgstr "لا يمكن أن يشير سطر القيد إلى عميل ومورد معًا."
+
+#: .\finance\forms.py:123 .\finance\services.py:104
+msgid "A journal entry must contain at least two lines."
+msgstr "يجب أن يحتوي قيد اليومية على سطرين على الأقل."
+
+#: .\finance\forms.py:128 .\finance\services.py:141
+msgid "Journal entry total cannot be zero."
+msgstr "لا يمكن أن يكون إجمالي قيد اليومية صفرًا."
+
+#: .\finance\forms.py:134
+#, python-format
+msgid "Journal is not balanced. Debit: %(debit)s, Credit: %(credit)s."
+msgstr "قيد اليومية غير متوازن. المدين: %(debit)s، الدائن: %(credit)s."
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 
 #: .\finance\models.py:13
 msgid "Asset"
@@ -232,8 +278,13 @@ msgstr "الحساب الرئيسي"
 msgid "Allow Posting"
 msgstr "السماح بالنشر"
 
+<<<<<<< HEAD
 #: .\finance\models.py:44 .\finance\models.py:140 .\finance\models.py:266
 #: .\finance\models.py:361 .\templates\finance\journal_detail.html:1
+=======
+#: .\finance\models.py:44 .\finance\models.py:169 .\finance\models.py:295
+#: .\finance\models.py:390 .\templates\finance\journal_detail.html:40
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 #: .\templates\finance\journal_form.html:33
 #: .\templates\finance\voucher_detail.html:1
 #: .\templates\reports\trial_balance.html:3
@@ -244,7 +295,11 @@ msgstr "حساب"
 msgid "Accounts"
 msgstr "الحسابات"
 
+<<<<<<< HEAD
 #: .\finance\models.py:53 .\finance\models.py:233 .\finance\models.py:328
+=======
+#: .\finance\models.py:53 .\finance\models.py:262 .\finance\models.py:357
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 #: .\inventory\models.py:181 .\inventory\models.py:259 .\pos\models.py:9
 #: .\purchasing\models.py:11 .\quotations\models.py:9
 msgid "Draft"
@@ -270,11 +325,19 @@ msgstr "شراء"
 msgid "POS Sale"
 msgstr "مبيعات نقطة البيع"
 
+<<<<<<< HEAD
 #: .\finance\models.py:61 .\finance\models.py:319
 msgid "Receipt Voucher"
 msgstr "سند قبض"
 
 #: .\finance\models.py:62 .\finance\models.py:414
+=======
+#: .\finance\models.py:61 .\finance\models.py:348
+msgid "Receipt Voucher"
+msgstr "سند قبض"
+
+#: .\finance\models.py:62 .\finance\models.py:443
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 msgid "Payment Voucher"
 msgstr "سند صرف"
 
@@ -287,11 +350,19 @@ msgstr "الهدر والفقد"
 msgid "Sales Return"
 msgstr "استرجاع المبيعات"
 
-#: .\finance\models.py:67
+#: .\finance\models.py:65
+msgid "Journal Reversal"
+msgstr "عكس قيد يومية"
+
+#: .\finance\models.py:68
 msgid "Entry Number"
 msgstr "رقم القيد"
 
+<<<<<<< HEAD
 #: .\finance\models.py:72 .\finance\models.py:248 .\finance\models.py:343
+=======
+#: .\finance\models.py:73 .\finance\models.py:277 .\finance\models.py:372
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 #: .\inventory\models.py:199 .\inventory\models.py:278 .\pos\models.py:39
 #: .\quotations\models.py:17 .\templates\core\accountant_dashboard.html:7
 #: .\templates\core\admin_dashboard.html:14
@@ -306,25 +377,36 @@ msgstr "رقم القيد"
 msgid "Date"
 msgstr "التاريخ"
 
+<<<<<<< HEAD
 #: .\finance\models.py:74 .\finance\models.py:164 .\finance\models.py:290
 #: .\finance\models.py:385 .\inventory\models.py:17 .\inventory\models.py:45
 #: .\inventory\models.py:79 .\templates\core\accountant_dashboard.html:7
 #: .\templates\finance\journal_detail.html:1
+=======
+#: .\finance\models.py:75 .\finance\models.py:193 .\finance\models.py:319
+#: .\finance\models.py:414 .\inventory\models.py:17 .\inventory\models.py:45
+#: .\inventory\models.py:79 .\templates\core\accountant_dashboard.html:7
+#: .\templates\finance\journal_detail.html:41
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 #: .\templates\finance\journal_form.html:33
 #: .\templates\finance\journal_list.html:31
 #: .\templates\reports\general_ledger.html:3
 msgid "Description"
 msgstr "الوصف"
 
-#: .\finance\models.py:77
+#: .\finance\models.py:78
 msgid "Source Type"
 msgstr "نوع المصدر"
 
-#: .\finance\models.py:84
+#: .\finance\models.py:85
 msgid "Source ID"
 msgstr "معرف المصدر"
 
+<<<<<<< HEAD
 #: .\finance\models.py:90 .\finance\models.py:295 .\finance\models.py:390
+=======
+#: .\finance\models.py:91 .\finance\models.py:324 .\finance\models.py:419
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 #: .\inventory\models.py:112 .\inventory\models.py:201
 #: .\inventory\models.py:285 .\pos\models.py:41 .\purchasing\models.py:61
 #: .\quotations\models.py:19 .\templates\core\admin_dashboard.html:14
@@ -339,75 +421,109 @@ msgstr "معرف المصدر"
 msgid "Status"
 msgstr "الحالة"
 
+<<<<<<< HEAD
 #: .\finance\models.py:98 .\finance\models.py:303 .\finance\models.py:398
+=======
+#: .\finance\models.py:99 .\finance\models.py:332 .\finance\models.py:427
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 #: .\inventory\models.py:149 .\inventory\models.py:210
 #: .\inventory\models.py:294 .\pos\models.py:133 .\purchasing\models.py:116
 #: .\quotations\models.py:27
 msgid "Created By"
 msgstr "أنشئ بواسطة"
 
-#: .\finance\models.py:105
+#: .\finance\models.py:106
 msgid "Approved By"
 msgstr "معتمد بواسطة"
 
-#: .\finance\models.py:116 .\finance\models.py:133
+#: .\finance\models.py:114
+msgid "Reversal Of"
+msgstr "عكس للقيد"
+
+#: .\finance\models.py:122
+msgid "Reversal Reason"
+msgstr "سبب العكس"
+
+#: .\finance\models.py:128
+msgid "Reversed By"
+msgstr "عُكس بواسطة"
+
+#: .\finance\models.py:136
+msgid "Reversed At"
+msgstr "تاريخ العكس"
+
+#: .\finance\models.py:145 .\finance\models.py:162
 msgid "Journal Entry"
 msgstr "قيد يومية"
 
-#: .\finance\models.py:117
+#: .\finance\models.py:146
 msgid "Journal Entries"
 msgstr "قيود اليومية"
 
+<<<<<<< HEAD
 #: .\finance\models.py:156 .\finance\models.py:347 .\inventory\models.py:109
+=======
+#: .\finance\models.py:185 .\finance\models.py:376 .\inventory\models.py:109
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 #: .\purchasing\models.py:27 .\templates\finance\journal_form.html:33
 #: .\templates\finance\payment_list.html:1
 #: .\templates\purchasing\purchase_invoice_list.html:4
 msgid "Supplier"
 msgstr "المورد"
 
+<<<<<<< HEAD
 #: .\finance\models.py:170 .\templates\finance\journal_detail.html:1
+=======
+#: .\finance\models.py:199 .\templates\finance\journal_detail.html:42
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 #: .\templates\finance\journal_form.html:33
 #: .\templates\reports\general_ledger.html:3
 #: .\templates\reports\trial_balance.html:3
 msgid "Debit"
 msgstr "مدين"
 
+<<<<<<< HEAD
 #: .\finance\models.py:177 .\purchasing\models.py:17
 #: .\templates\finance\journal_detail.html:1
+=======
+#: .\finance\models.py:206 .\purchasing\models.py:17
+#: .\templates\finance\journal_detail.html:43
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 #: .\templates\finance\journal_form.html:33
 #: .\templates\reports\general_ledger.html:3
 #: .\templates\reports\trial_balance.html:3
 msgid "Credit"
 msgstr "دائن"
 
-#: .\finance\models.py:186
+#: .\finance\models.py:215
 msgid "Journal Entry Line"
 msgstr "بند قيد اليومية"
 
-#: .\finance\models.py:187
+#: .\finance\models.py:216
 msgid "Journal Entry Lines"
 msgstr "بنود قيد اليومية"
 
-#: .\finance\models.py:194
+#: .\finance\models.py:223
 msgid "Debit cannot be negative."
 msgstr "المدين لا يمكن أن يكون سالباً."
 
-#: .\finance\models.py:199
+#: .\finance\models.py:228
 msgid "Credit cannot be negative."
 msgstr "الدائن لا يمكن أن يكون سالباً."
 
-#: .\finance\models.py:204
+#: .\finance\models.py:233
 msgid "A journal line cannot contain both debit and credit."
 msgstr "لا يمكن أن يحتوي بند القيد على جانب المدين والدائن معاً."
 
-#: .\finance\models.py:209
+#: .\finance\models.py:238
 msgid "A journal line must contain a debit or credit amount."
 msgstr "يجب أن يحتوي سطر القيد على مبلغ مدين أو دائن."
 
-#: .\finance\models.py:214
+#: .\finance\models.py:243
 msgid "This account does not allow direct posting."
 msgstr "هذا الحساب لا يسمح له بالنشر المياشر ."
 
+<<<<<<< HEAD
 #: .\finance\models.py:219
 #, fuzzy
 #| msgid "Accounting account %(code)s is inactive."
@@ -415,25 +531,45 @@ msgid "This account is inactive."
 msgstr "الحساب المحاسبي %(code)s غير نشط."
 
 #: .\finance\models.py:234 .\finance\models.py:329 .\inventory\models.py:260
+=======
+#: .\finance\models.py:248
+msgid "This account is inactive."
+msgstr "هذا الحساب غير نشط."
+
+#: .\finance\models.py:263 .\finance\models.py:358 .\inventory\models.py:260
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 #: .\purchasing\models.py:12
 msgid "Confirmed"
 msgstr "مؤكد"
 
+<<<<<<< HEAD
 #: .\finance\models.py:235 .\finance\models.py:330 .\inventory\models.py:183
+=======
+#: .\finance\models.py:264 .\finance\models.py:359 .\inventory\models.py:183
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 #: .\inventory\models.py:261 .\pos\models.py:11 .\purchasing\models.py:13
 msgid "Cancelled"
 msgstr "ملغي"
 
+<<<<<<< HEAD
 #: .\finance\models.py:238 .\finance\models.py:333 .\pos\models.py:109
+=======
+#: .\finance\models.py:267 .\finance\models.py:362 .\pos\models.py:109
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 #: .\purchasing\models.py:16 .\templates\pos\pos_screen.html:20
 msgid "Cash"
 msgstr "نقدي"
 
+<<<<<<< HEAD
 #: .\finance\models.py:239 .\finance\models.py:334 .\pos\models.py:110
+=======
+#: .\finance\models.py:268 .\finance\models.py:363 .\pos\models.py:110
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 #: .\templates\pos\pos_screen.html:20
 msgid "Card"
 msgstr "بطاقة"
 
+<<<<<<< HEAD
 #: .\finance\models.py:240 .\finance\models.py:335
 msgid "Bank"
 msgstr "بنك"
@@ -447,21 +583,45 @@ msgid "Received From"
 msgstr "مستلم من"
 
 #: .\finance\models.py:272 .\finance\models.py:367 .\pos\models.py:127
+=======
+#: .\finance\models.py:269 .\finance\models.py:364
+msgid "Bank"
+msgstr "بنك"
+
+#: .\finance\models.py:272 .\finance\models.py:367
+msgid "Voucher Number"
+msgstr "رقم السند"
+
+#: .\finance\models.py:289
+msgid "Received From"
+msgstr "مستلم من"
+
+#: .\finance\models.py:301 .\finance\models.py:396 .\pos\models.py:127
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 #: .\templates\finance\payment_list.html:1
 #: .\templates\finance\receipt_list.html:1
 #: .\templates\finance\voucher_detail.html:1
 msgid "Amount"
 msgstr "المبلغ"
 
+<<<<<<< HEAD
 #: .\finance\models.py:278 .\finance\models.py:373 .\pos\models.py:122
 msgid "Payment Method"
 msgstr "طريقة الدفع"
 
 #: .\finance\models.py:284 .\finance\models.py:379
+=======
+#: .\finance\models.py:307 .\finance\models.py:402 .\pos\models.py:122
+msgid "Payment Method"
+msgstr "طريقة الدفع"
+
+#: .\finance\models.py:313 .\finance\models.py:408
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 #: .\templates\quotations\quotation_detail.html:4
 msgid "Reference"
 msgstr "المرجع"
 
+<<<<<<< HEAD
 #: .\finance\models.py:320
 msgid "Receipt Vouchers"
 msgstr "سندات القبض"
@@ -471,34 +631,50 @@ msgid "Paid To"
 msgstr "مدفوع إلى"
 
 #: .\finance\models.py:415
+=======
+#: .\finance\models.py:349
+msgid "Receipt Vouchers"
+msgstr "سندات القبض"
+
+#: .\finance\models.py:384
+msgid "Paid To"
+msgstr "مدفوع إلى"
+
+#: .\finance\models.py:444
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 msgid "Payment Vouchers"
 msgstr "سندات الصرف"
 
-#: .\finance\reports.py:42
+#: .\finance\reports.py:45
 msgid "Selected account does not exist."
 msgstr "الحساب المحدد غير موجود."
 
+<<<<<<< HEAD
 #: .\finance\services.py:21
+=======
+#: .\finance\services.py:24
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 msgid "This document has already been posted to accounting."
 msgstr "تم ترحيل هذا المستند إلى الحسابات مسبقًا."
 
-#: .\finance\services.py:31
+#: .\finance\services.py:34
 #, python-format
 msgid "Required accounting account %(code)s does not exist."
 msgstr "الحساب المحاسبي المطلوب %(code)s غير موجود."
 
-#: .\finance\services.py:38
+#: .\finance\services.py:41
 #, python-format
 msgid "Accounting account %(code)s is inactive."
 msgstr "الحساب المحاسبي %(code)s غير نشط."
 
-#: .\finance\services.py:45
+#: .\finance\services.py:48
 #, python-format
 msgid "Accounting account %(code)s does not allow posting."
 msgstr "الحساب المحاسبي %(code)s لا يسمح بالترحيل."
 
-#: .\finance\services.py:53
+#: .\finance\services.py:56
 #, python-format
+<<<<<<< HEAD
 msgid ""
 "Accounting account %(code)s has the wrong type. Expected %(expected)s but "
 "found %(actual)s."
@@ -515,156 +691,219 @@ msgid "The selected cash or bank account is inactive."
 msgstr "حساب الصندوق أو البنك المحدد غير نشط."
 
 #: .\finance\services.py:78
+=======
+msgid "Accounting account %(code)s has the wrong type. Expected %(expected)s but found %(actual)s."
+msgstr "نوع الحساب المحاسبي %(code)s غير صحيح. النوع المتوقع: %(expected)s، والنوع الموجود: %(actual)s."
+
+#: .\finance\services.py:71
+msgid "The selected cash or bank account must be an asset account."
+msgstr "يجب أن يكون حساب الصندوق أو البنك المحدد من نوع الأصول."
+
+#: .\finance\services.py:76
+msgid "The selected cash or bank account is inactive."
+msgstr "حساب الصندوق أو البنك المحدد غير نشط."
+
+#: .\finance\services.py:81
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 msgid "The selected cash or bank account does not allow posting."
 msgstr "حساب الصندوق أو البنك المحدد لا يسمح بالترحيل."
 
-#: .\finance\services.py:175
-msgid "A customer is required for an accounts receivable receipt."
-msgstr "يجب تحديد عميل عند تسجيل قبض على حساب الذمم المدينة."
+#: .\finance\services.py:93
+msgid "Only draft journal entries can be posted."
+msgstr "يمكن ترحيل قيود اليومية المسودة فقط."
 
-#: .\finance\services.py:255
-msgid "A supplier is required for an accounts payable payment."
-msgstr "يجب تحديد مورد عند تسجيل دفعة على حساب الذمم الدائنة."
+#: .\finance\services.py:116
+#, python-format
+msgid "Account %(code)s is inactive."
+msgstr "الحساب %(code)s غير نشط."
 
-#: .\finance\services.py:326
+#: .\finance\services.py:121
+#, python-format
+msgid "Account %(code)s does not allow posting."
+msgstr "الحساب %(code)s لا يسمح بالترحيل."
+
+#: .\finance\services.py:133
+#, python-format
+msgid "Journal entry is not balanced. Debit = %(debit)s, Credit = %(credit)s."
+msgstr "قيد اليومية غير متوازن. المدين = %(debit)s، الدائن = %(credit)s."
+
+#: .\finance\services.py:170
+msgid "Only draft receipt vouchers can be posted."
+msgstr "يمكن ترحيل سندات القبض المسودة فقط."
+
+#: .\finance\services.py:176
+msgid "Receipt voucher amount must be greater than zero."
+msgstr "يجب أن يكون مبلغ سند القبض أكبر من صفر."
+
+#: .\finance\services.py:250
+msgid "Only draft payment vouchers can be posted."
+msgstr "يمكن ترحيل سندات الصرف المسودة فقط."
+
+#: .\finance\services.py:256
+msgid "Payment voucher amount must be greater than zero."
+msgstr "يجب أن يكون مبلغ سند الصرف أكبر من صفر."
+
+#: .\finance\services.py:332
 msgid "Only confirmed purchase invoices can be posted to accounting."
 msgstr "فقط فواتير الشراء المؤكدة يمكن ترحيلها إلى الحسابات."
 
+<<<<<<< HEAD
 #: .\finance\services.py:346
 msgid "Purchase inventory value must be greater than zero."
 msgstr "يجب أن تكون قيمة مخزون المشتريات أكبر من صفر."
 
 #: .\finance\services.py:385
+=======
+#: .\finance\services.py:352
+msgid "Purchase inventory value must be greater than zero."
+msgstr "يجب أن تكون قيمة مخزون المشتريات أكبر من صفر."
+
+#: .\finance\services.py:391
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 msgid "Purchase accounting total must be greater than zero."
 msgstr "يجب أن يكون الإجمالي المحاسبي للمشتريات أكبر من صفر."
 
-#: .\finance\services.py:390
+#: .\finance\services.py:396
 #, python-format
+<<<<<<< HEAD
 msgid ""
 "Purchase accounting total does not match invoice total. Calculated: "
 "%(calculated)s, Invoice total: %(invoice_total)s"
 msgstr ""
 "الإجمالي المحاسبي للمشتريات لا يطابق إجمالي الفاتورة. المحسوب: "
 "%(calculated)s، إجمالي الفاتورة: %(invoice_total)s"
+=======
+msgid "Purchase accounting total does not match invoice total. Calculated: %(calculated)s, Invoice total: %(invoice_total)s"
+msgstr "الإجمالي المحاسبي للمشتريات لا يطابق إجمالي الفاتورة. المحسوب: %(calculated)s، إجمالي الفاتورة: %(invoice_total)s"
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 
-#: .\finance\services.py:403
+#: .\finance\services.py:409
 #, python-format
 msgid "Purchase Invoice %(invoice_number)s from %(supplier_name)s"
 msgstr "فاتورة الشراء %(invoice_number)s من المورد %(supplier_name)s"
 
-#: .\finance\services.py:419
-#, fuzzy, python-format
-#| msgid "Stock purchase from %(supplier_name)s"
+#: .\finance\services.py:425
+#, python-format
 msgid "Inventory purchase from %(supplier_name)s"
 msgstr "شراء مخزون من المورد %(supplier_name)s"
 
-#: .\finance\services.py:433
+#: .\finance\services.py:439
 #, python-format
 msgid "Purchase tax for invoice %(invoice_number)s"
 msgstr "ضريبة المشتريات للفاتورة %(invoice_number)s"
 
-#: .\finance\services.py:447
+#: .\finance\services.py:453
 #, python-format
 msgid "Additional purchase expenses for %(invoice_number)s"
 msgstr "مصاريف شراء إضافية للفاتورة %(invoice_number)s"
 
-#: .\finance\services.py:461
+#: .\finance\services.py:467
 #, python-format
 msgid "Purchase discount for %(invoice_number)s"
 msgstr "خصم المشتريات للفاتورة %(invoice_number)s"
 
-#: .\finance\services.py:479
+#: .\finance\services.py:485
 #, python-format
 msgid "Purchase invoice %(invoice_number)s settlement"
 msgstr "تسوية فاتورة الشراء %(invoice_number)s"
 
-#: .\finance\services.py:506
+#: .\finance\services.py:512
 msgid "Only completed POS sales can be posted."
 msgstr "فقط مبيعات نقاط البيع المكتملة يمكن ترحيلها."
 
+<<<<<<< HEAD
 #: .\finance\services.py:529
+=======
+#: .\finance\services.py:535
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 msgid "A completed POS sale must contain at least one payment."
 msgstr "يجب أن تتضمن عملية البيع المكتملة في نقطة البيع دفعة واحدة على الأقل."
 
-#: .\finance\services.py:548
+#: .\finance\services.py:554
 msgid "POS sale tax cannot exceed the sale total."
 msgstr "لا يمكن أن تتجاوز ضريبة عملية نقطة البيع إجمالي عملية البيع."
 
-#: .\finance\services.py:555
+#: .\finance\services.py:561
 #, python-format
 msgid "POS Sale %(sale_number)s"
 msgstr "بيع نقطة بيع %(sale_number)s"
 
-#: .\finance\services.py:613
+#: .\finance\services.py:619
 msgid "Credit sales require a customer."
 msgstr "تتطلب المبيعات الآجلة تحديد عميل."
 
-#: .\finance\services.py:625
+#: .\finance\services.py:631
 #, python-format
 msgid "Unsupported payment method: %(method)s"
 msgstr "طريقة دفع غير مدعومة: %(method)s"
 
-#: .\finance\services.py:643
+#: .\finance\services.py:649
 #, python-format
 msgid "%(method)s payment for POS sale %(sale)s"
 msgstr "دفعة بطريقة %(method)s لعملية نقطة البيع %(sale)s"
 
-#: .\finance\services.py:655
+#: .\finance\services.py:661
 msgid "Sale change exceeds the available cash payment."
 msgstr "مبلغ الباقي يتجاوز مبلغ الدفع النقدي المتاح."
 
-#: .\finance\services.py:663
+#: .\finance\services.py:669
 #, python-format
+<<<<<<< HEAD
 msgid ""
 "POS payment total does not match sale total. Payments: %(payments)s, Sale "
 "total: %(total)s"
 msgstr ""
 "إجمالي دفعات نقطة البيع لا يطابق إجمالي عملية البيع. الدفعات: %(payments)s، "
 "إجمالي البيع: %(total)s"
+=======
+msgid "POS payment total does not match sale total. Payments: %(payments)s, Sale total: %(total)s"
+msgstr "إجمالي دفعات نقطة البيع لا يطابق إجمالي عملية البيع. الدفعات: %(payments)s، إجمالي البيع: %(total)s"
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 
-#: .\finance\services.py:676
+#: .\finance\services.py:682
 #, python-format
 msgid "Sales revenue for %(sale)s"
 msgstr "إيرادات المبيعات للعملية %(sale)s"
 
-#: .\finance\services.py:692
+#: .\finance\services.py:698
 #, python-format
 msgid "Sales tax for %(sale)s"
 msgstr "ضريبة المبيعات للعملية %(sale)s"
 
-#: .\finance\services.py:705
+#: .\finance\services.py:711
 #, python-format
 msgid "COGS for %(sale)s"
 msgstr "تكلفة البضاعة المباعة للعملية %(sale)s"
 
-#: .\finance\services.py:718
+#: .\finance\services.py:724
 #, python-format
 msgid "Inventory reduction for %(sale)s"
 msgstr "تخفيض المخزون للعملية %(sale)s"
 
-#: .\finance\services.py:746
+#: .\finance\services.py:752
 msgid "Only confirmed waste and loss documents can be posted."
 msgstr "فقط مستندات الهالك والخسائر المؤكدة يمكن ترحيلها."
 
-#: .\finance\services.py:762
+#: .\finance\services.py:768
 msgid "Waste document total cost cannot be zero."
 msgstr "لا يمكن أن تكون التكلفة الإجمالية لمستند الهالك صفراً."
 
-#: .\finance\services.py:767
+#: .\finance\services.py:773
 #, python-format
 msgid "Waste & Loss document %(document_number)s"
 msgstr "مستند الهالك والخسائر %(document_number)s"
 
-#: .\finance\services.py:777
+#: .\finance\services.py:783
 #, python-format
 msgid "Waste write-off for document %(document_number)s"
 msgstr "شطب الهالك للمستند %(document_number)s"
 
-#: .\finance\services.py:785
+#: .\finance\services.py:791
 #, python-format
 msgid "Inventory reduction due to waste %(document_number)s"
 msgstr "تخفيض المخزون بسبب الهالك %(document_number)s"
 
+<<<<<<< HEAD
 #: .\finance\views.py:59
 msgid "Journal entry posted successfully."
 msgstr "تم ترحيل قيد اليومية بنجاح."
@@ -698,6 +937,64 @@ msgstr "تم ترحيل سند الصرف بنجاح."
 #| msgid "Waste document saved as draft."
 msgid "Journal entry saved as draft."
 msgstr "تم حفظ مستند الهالك والفاقد كمسودة."
+=======
+#: .\finance\services.py:810
+msgid "This journal entry has already been reversed."
+msgstr "تم عكس قيد اليومية هذا مسبقًا."
+
+#: .\finance\services.py:815
+msgid "Only posted journal entries can be reversed."
+msgstr "يمكن عكس قيود اليومية المُرحّلة فقط."
+
+#: .\finance\services.py:820
+msgid "A reversal journal entry cannot be reversed."
+msgstr "لا يمكن عكس قيد يومية عكسي."
+
+#: .\finance\services.py:826
+msgid "A reversal reason is required."
+msgstr "سبب العكس مطلوب."
+
+#: .\finance\services.py:832
+#, python-format
+msgid "Reversal of journal entry %(number)s"
+msgstr "عكس قيد اليومية %(number)s"
+
+#: .\finance\views.py:64
+msgid "Journal entry posted successfully."
+msgstr "تم ترحيل قيد اليومية بنجاح."
+
+#: .\finance\views.py:91
+msgid "Receipt voucher saved successfully."
+msgstr "تم حفظ سند القبض بنجاح."
+
+#: .\finance\views.py:100 .\templates\finance\receipt_voucher_form.html:2
+msgid "Receipt voucher"
+msgstr "سند قبض"
+
+#: .\finance\views.py:109
+msgid "Receipt voucher posted successfully."
+msgstr "تم ترحيل سند القبض بنجاح."
+
+#: .\finance\views.py:136
+msgid "Payment voucher saved successfully."
+msgstr "تم حفظ سند الصرف بنجاح."
+
+#: .\finance\views.py:145 .\templates\finance\payment_voucher_form.html:2
+msgid "Payment voucher"
+msgstr "سند صرف"
+
+#: .\finance\views.py:154
+msgid "Payment voucher posted successfully."
+msgstr "تم ترحيل سند الصرف بنجاح."
+
+#: .\finance\views.py:219
+msgid "Journal entry saved as draft."
+msgstr "تم حفظ قيد اليومية كمسودة."
+
+#: .\finance\views.py:249
+msgid "Journal entry reversed successfully."
+msgstr "تم عكس قيد اليومية بنجاح."
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 
 #: .\inventory\models.py:11
 msgid "Parent Category"
@@ -1000,10 +1297,15 @@ msgstr "بنود الهالك والفاقد"
 
 #: .\inventory\services.py:45
 #, python-format
+<<<<<<< HEAD
 msgid ""
 "Insufficient unexpired stock for product %(product)s. Short by %(short)s."
 msgstr ""
 "المخزون غير منتهي الصلاحية غير كافٍ للصنف %(product)s. مقدار العجز: %(short)s."
+=======
+msgid "Insufficient unexpired stock for product %(product)s. Short by %(short)s."
+msgstr "المخزون غير منتهي الصلاحية غير كافٍ للصنف %(product)s. مقدار العجز: %(short)s."
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 
 #: .\inventory\services.py:56
 msgid "Stock addition quantity must be greater than zero."
@@ -1015,12 +1317,8 @@ msgstr "يجب أن تكون كمية إزالة المخزون أكبر من ا
 
 #: .\inventory\services.py:107
 #, python-format
-msgid ""
-"Negative stock rule enforced: Cannot remove %(qty)s of %(product)s. "
-"Available: %(available)s."
-msgstr ""
-"قاعدة منع المخزون السالب مفعلة: لا يمكن إزالة %(qty)s من %(product)s. "
-"المتاح: %(available)s."
+msgid "Negative stock rule enforced: Cannot remove %(qty)s of %(product)s. Available: %(available)s."
+msgstr "قاعدة منع المخزون السالب مفعلة: لا يمكن إزالة %(qty)s من %(product)s. المتاح: %(available)s."
 
 #: .\inventory\services.py:157
 msgid "Only draft waste and loss documents can be confirmed."
@@ -1208,12 +1506,8 @@ msgstr "لا يمكن إتمام عملية بيع باستخدام عربة ت�
 
 #: .\pos\services.py:37
 #, python-format
-msgid ""
-"Insufficient stock for product %(product_name)s. Available: %(available)s, "
-"Requested: %(quantity)s"
-msgstr ""
-"الكمية غير كافية للمنتج %(product_name)s. المتوفر: %(available)s، المطلوبة: "
-"%(quantity)s"
+msgid "Insufficient stock for product %(product_name)s. Available: %(available)s, Requested: %(quantity)s"
+msgstr "الكمية غير كافية للمنتج %(product_name)s. المتوفر: %(available)s، المطلوبة: %(quantity)s"
 
 #: .\purchasing\models.py:20
 msgid "Invoice Number"
@@ -1255,23 +1549,35 @@ msgstr "بند فاتورة الشراء"
 msgid "Purchase Invoice Items"
 msgstr "بنود فاتورة الشراء"
 
+#: .\purchasing\services.py:24
+msgid "Only draft purchase invoices can be confirmed."
+msgstr "يمكن تأكيد فواتير الشراء المسودة فقط."
+
+#: .\purchasing\services.py:34
+msgid "Purchase invoice must contain at least one item."
+msgstr "يجب أن تحتوي فاتورة الشراء على صنف واحد على الأقل."
+
+#: .\purchasing\services.py:42
+#, python-format
+msgid "Quantity for %(product)s must be greater than zero."
+msgstr "يجب أن تكون كمية المنتج %(product)s أكبر من صفر."
+
+#: .\purchasing\services.py:49
+#, python-format
+msgid "Unit cost for %(product)s cannot be negative."
+msgstr "لا يمكن أن تكون تكلفة وحدة المنتج %(product)s سالبة."
+
 #: .\purchasing\views.py:51
-#, fuzzy
-#| msgid "A journal line must contain a debit or credit amount."
 msgid "Purchase invoice must contain at least one positive item."
-msgstr "يجب أن يحتوي سطر القيد على مبلغ مدين أو دائن."
+msgstr "يجب أن تحتوي فاتورة الشراء على صنف واحد موجب على الأقل."
 
 #: .\purchasing\views.py:70
-#, fuzzy
-#| msgid "Purchase invoice"
 msgid "Purchase invoice saved as draft."
-msgstr "فاتورة شراء"
+msgstr "تم حفظ فاتورة الشراء كمسودة."
 
 #: .\purchasing\views.py:91
-#, fuzzy
-#| msgid "This purchase invoice is already confirmed."
 msgid "Purchase invoice confirmed and posted."
-msgstr "فاتورة الشراء هذه مؤكدة مسبقاً."
+msgstr "تم تأكيد فاتورة الشراء وترحيلها."
 
 #: .\quotations\models.py:10
 msgid "Sent"
@@ -1458,8 +1764,7 @@ msgid "One clear view of your operation."
 msgstr "رؤية موحدة وواضحة لعملياتك."
 
 #: .\templates\core\admin_dashboard.html:6
-msgid ""
-"Manage sales, stock, purchases, and finance from one connected workspace."
+msgid "Manage sales, stock, purchases, and finance from one connected workspace."
 msgstr "أدر المبيعات والمخزون والمشتريات والمالية من مساحة عمل مترابطة واحدة."
 
 #: .\templates\core\admin_dashboard.html:8 .\templates\core\dashboard.html:37
@@ -1479,48 +1784,36 @@ msgid "Active users"
 msgstr "المستخدمون النشطون"
 
 #: .\templates\core\admin_dashboard.html:14
-#, fuzzy
-#| msgid "Recent transactions"
 msgid "Recent journal activity"
-msgstr "أحدث الحركات"
+msgstr "أحدث حركات قيود اليومية"
 
 #: .\templates\core\admin_dashboard.html:14
-#, fuzzy
-#| msgid "View batches"
 msgid "View all"
-msgstr "عرض الدفعات"
+msgstr "عرض الكل"
 
 #: .\templates\core\admin_dashboard.html:14
 msgid "No journal activity yet."
-msgstr ""
+msgstr "لا توجد حركات قيود يومية حتى الآن."
 
 #: .\templates\core\admin_dashboard.html:15
 msgid "Shortcuts"
-msgstr ""
+msgstr "اختصارات"
 
 #: .\templates\core\admin_dashboard.html:15
-#, fuzzy
-#| msgid "Quotations"
 msgid "Quick actions"
-msgstr "عروض الأسعار"
+msgstr "إجراءات سريعة"
 
 #: .\templates\core\admin_dashboard.html:15
-#, fuzzy
-#| msgid "New purchase invoice"
 msgid "New purchase"
-msgstr "فاتورة شراء جديدة"
+msgstr "عملية شراء جديدة"
 
 #: .\templates\core\admin_dashboard.html:15
-#, fuzzy
-#| msgid "Supplier invoice no."
 msgid "Receive supplier inventory"
-msgstr "رقم فاتورة المورد"
+msgstr "استلام مخزون من المورد"
 
 #: .\templates\core\admin_dashboard.html:15
-#, fuzzy
-#| msgid "Select a supplier"
 msgid "Record a supplier payment"
-msgstr "اختر موردًا"
+msgstr "تسجيل دفعة للمورد"
 
 #: .\templates\core\admin_dashboard.html:15
 #: .\templates\quotations\quotation_form.html:2
@@ -1530,20 +1823,16 @@ msgid "New quotation"
 msgstr "عرض سعر جديد"
 
 #: .\templates\core\admin_dashboard.html:15
-#, fuzzy
-#| msgid "Select a customer"
 msgid "Prepare a customer offer"
-msgstr "اختر عميلًا"
+msgstr "إعداد عرض للعميل"
 
 #: .\templates\core\base.html:55
 msgid "Main navigation"
 msgstr "التنقل الرئيسي"
 
 #: .\templates\core\base.html:57
-#, fuzzy
-#| msgid "Backspace"
 msgid "Workspace"
-msgstr "مسح"
+msgstr "مساحة العمل"
 
 #: .\templates\core\base.html:62 .\templates\suppliers\supplier_list.html:2
 msgid "Suppliers"
@@ -1558,10 +1847,8 @@ msgid "Items"
 msgstr "الأصناف"
 
 #: .\templates\core\base.html:70
-#, fuzzy
-#| msgid "Optional"
 msgid "Operations"
-msgstr "اختياري"
+msgstr "العمليات"
 
 #: .\templates\core\base.html:72
 #: .\templates\purchasing\purchase_invoice_list.html:2
@@ -1573,10 +1860,8 @@ msgid "Point of Sale"
 msgstr "نقاط البيع"
 
 #: .\templates\core\base.html:80
-#, fuzzy
-#| msgid "Account"
 msgid "Accounting"
-msgstr "حساب"
+msgstr "المحاسبة"
 
 #: .\templates\core\base.html:84
 msgid "Reports"
@@ -1616,21 +1901,17 @@ msgstr "تغيير اللغة"
 
 #: .\templates\core\base.html:149
 msgid "You are all caught up"
-msgstr ""
+msgstr "لا توجد إشعارات جديدة"
 
 #: .\templates\core\base.html:158
 msgid "Admin User"
 msgstr "مستخدم النظام"
 
 #: .\templates\core\base.html:180
-#, fuzzy
-#| msgid "Main navigation"
 msgid "Finance navigation"
-msgstr "التنقل الرئيسي"
+msgstr "التنقل في المالية"
 
 #: .\templates\core\base.html:180
-#, fuzzy
-#| msgid "Journal Entries"
 msgid "Journals"
 msgstr "قيود اليومية"
 
@@ -1639,10 +1920,8 @@ msgid "General ledger"
 msgstr "دفتر الأستاذ"
 
 #: .\templates\core\base.html:182
-#, fuzzy
-#| msgid "Main navigation"
 msgid "Inventory navigation"
-msgstr "التنقل الرئيسي"
+msgstr "التنقل في المخزون"
 
 #: .\templates\core\base.html:205 .\templates\customers\customer_form.html:3
 #: .\templates\finance\journal_form.html:64
@@ -1806,10 +2085,9 @@ msgid "Total received"
 msgstr "إجمالي المقبوضات"
 
 #: .\templates\core\dashboard.html:147
-#, fuzzy, python-format
-#| msgid "34% more than last month"
+#, python-format
 msgid "34%% more than last month"
-msgstr "أعلى بنسبة ٣٤٪ عن الشهر الماضي"
+msgstr "أعلى بنسبة ٣٤٪ من الشهر الماضي"
 
 #: .\templates\core\dashboard.html:151
 msgid "Collection rate"
@@ -1842,12 +2120,8 @@ msgstr "دفعات قاربت على انتهاء الصلاحية"
 
 #: .\templates\core\dashboard.html:202
 #, python-format
-msgid ""
-"Items reaching their expiration date within %(days)s days. Expired stock is "
-"blocked from sale and must be written off through Waste &amp; Loss."
-msgstr ""
-"أصناف تنتهي صلاحيتها خلال %(days)s أيام. المخزون منتهي الصلاحية ممنوع من "
-"البيع ويجب إخراجه عبر الهالك والخسائر."
+msgid "Items reaching their expiration date within %(days)s days. Expired stock is blocked from sale and must be written off through Waste &amp; Loss."
+msgstr "أصناف تنتهي صلاحيتها خلال %(days)s أيام. المخزون منتهي الصلاحية ممنوع من البيع ويجب إخراجه عبر الهالك والخسائر."
 
 #: .\templates\core\dashboard.html:205
 msgid "Review batches"
@@ -1960,6 +2234,7 @@ msgstr "النوع"
 msgid "Posting"
 msgstr "الترحيل"
 
+<<<<<<< HEAD
 #: .\templates\finance\journal_detail.html:1
 msgid "Post entry"
 msgstr "ترحيل القيد"
@@ -1992,6 +2267,49 @@ msgstr "الحساب المدين"
 #| msgid "Journal Entries"
 msgid "Journal lines"
 msgstr "قيود اليومية"
+=======
+#: .\templates\finance\journal_detail.html:17
+msgid "Reversal of"
+msgstr "عكس للقيد"
+
+#: .\templates\finance\journal_detail.html:26
+#: .\templates\finance\journal_detail.html:67
+msgid "Reversal reason"
+msgstr "سبب العكس"
+
+#: .\templates\finance\journal_detail.html:30
+msgid "View reversal entry"
+msgstr "عرض قيد العكس"
+
+#: .\templates\finance\journal_detail.html:62
+msgid "Post entry"
+msgstr "ترحيل القيد"
+
+#: .\templates\finance\journal_detail.html:69
+msgid "Reverse entry"
+msgstr "عكس القيد"
+
+#: .\templates\finance\journal_form.html:4
+#: .\templates\finance\journal_form.html:8
+msgid "New journal entry"
+msgstr "قيد يومية جديد"
+
+#: .\templates\finance\journal_form.html:9
+msgid "Enter at least two lines with equal debit and credit totals."
+msgstr "أدخل سطرين على الأقل مع تساوي إجمالي المدين والدائن."
+
+#: .\templates\finance\journal_form.html:16
+msgid "Journal details"
+msgstr "تفاصيل قيد اليومية"
+
+#: .\templates\finance\journal_form.html:23
+msgid "Double-entry accounting"
+msgstr "محاسبة القيد المزدوج"
+
+#: .\templates\finance\journal_form.html:23
+msgid "Journal lines"
+msgstr "سطور قيد اليومية"
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 
 #: .\templates\finance\journal_form.html:25
 msgid "Add line"
@@ -2021,6 +2339,7 @@ msgid "Balanced"
 msgstr "متوازن"
 
 #: .\templates\finance\journal_form.html:87
+<<<<<<< HEAD
 #, fuzzy
 #| msgid "Balanced"
 msgid "Not balanced"
@@ -2030,11 +2349,19 @@ msgstr "متوازن"
 #: .\templates\finance\journal_list.html:8
 #, fuzzy
 #| msgid "Journal Entries"
+=======
+msgid "Not balanced"
+msgstr "غير متوازن"
+
+#: .\templates\finance\journal_list.html:4
+#: .\templates\finance\journal_list.html:8
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 msgid "Journal entries"
 msgstr "قيود اليومية"
 
 #: .\templates\finance\journal_list.html:9
 msgid "Review manual and automatically generated accounting entries."
+<<<<<<< HEAD
 msgstr ""
 
 #: .\templates\finance\journal_list.html:14
@@ -2052,6 +2379,21 @@ msgstr "جميع المخازن"
 #: .\templates\finance\journal_list.html:27
 msgid "Filter"
 msgstr ""
+=======
+msgstr "راجع القيود المحاسبية اليدوية والمنشأة تلقائيًا."
+
+#: .\templates\finance\journal_list.html:14
+msgid "New journal"
+msgstr "قيد جديد"
+
+#: .\templates\finance\journal_list.html:22
+msgid "All statuses"
+msgstr "جميع الحالات"
+
+#: .\templates\finance\journal_list.html:27
+msgid "Filter"
+msgstr "تصفية"
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 
 #: .\templates\finance\journal_list.html:31
 #: .\templates\finance\payment_list.html:1
@@ -2123,8 +2465,6 @@ msgid "New waste document"
 msgstr "مستند هالك وفاقد جديد"
 
 #: .\templates\inventory\waste_loss_list.html:2
-#, fuzzy
-#| msgid "Waste & Loss"
 msgid "Waste & loss"
 msgstr "الهالك والفاقد"
 
@@ -2145,52 +2485,40 @@ msgid "Select products, review the order, and complete payment."
 msgstr "اختر الأصناف، وراجع الطلب، ثم أكمل عملية الدفع."
 
 #: .\templates\pos\pos_screen.html:4
-#, fuzzy
-#| msgid "Sales today"
 msgid "Sales history"
-msgstr "مبيعات اليوم"
+msgstr "سجل المبيعات"
 
 #: .\templates\pos\pos_screen.html:8
-#, fuzzy
-#| msgid "Scan barcode or search product name / code..."
 msgid "Search products by name or code..."
-msgstr "امسح الباركود أو ابحث بالاسم أو الرمز..."
+msgstr "ابحث عن المنتجات بالاسم أو الرمز..."
 
 #: .\templates\pos\pos_screen.html:8 .\templates\pos\pos_screen.html:45
 msgid "items"
 msgstr "صنف"
 
 #: .\templates\pos\pos_screen.html:11
-#, fuzzy
-#| msgid "In stock"
 msgid "in stock"
-msgstr "متوفر"
+msgstr "في المخزون"
 
 #: .\templates\pos\pos_screen.html:12
 msgid "No active products are available."
-msgstr ""
+msgstr "لا توجد منتجات نشطة متاحة."
 
 #: .\templates\pos\pos_screen.html:16
-#, fuzzy
-#| msgid "Current sale"
 msgid "Current order"
-msgstr "عملية البيع الحالية"
+msgstr "الطلب الحالي"
 
 #: .\templates\pos\pos_screen.html:16
 msgid "Cart"
-msgstr ""
+msgstr "السلة"
 
 #: .\templates\pos\pos_screen.html:16
-#, fuzzy
-#| msgid "Clear form"
 msgid "Clear"
-msgstr "مسح النموذج"
+msgstr "مسح"
 
 #: .\templates\pos\pos_screen.html:17
-#, fuzzy
-#| msgid "Select a warehouse"
 msgid "Select warehouse"
-msgstr "اختر مخزنًا"
+msgstr "اختر المخزن"
 
 #: .\templates\pos\pos_screen.html:17
 msgid "Walk-in customer"
@@ -2198,13 +2526,11 @@ msgstr "عميل نقدي"
 
 #: .\templates\pos\pos_screen.html:18
 msgid "Your cart is empty"
-msgstr ""
+msgstr "سلتك فارغة"
 
 #: .\templates\pos\pos_screen.html:18
-#, fuzzy
-#| msgid "Scan or search an item to start a sale"
 msgid "Choose a product to start a sale."
-msgstr "امسح الباركود أو ابحث عن صنف لبدء عملية بيع"
+msgstr "اختر منتجًا لبدء عملية البيع."
 
 #: .\templates\pos\pos_screen.html:20
 #: .\templates\quotations\quotation_detail.html:4
@@ -2216,10 +2542,8 @@ msgid "Bank transfer"
 msgstr "حوالة بنكية"
 
 #: .\templates\pos\pos_screen.html:20
-#, fuzzy
-#| msgid "Customer code"
 msgid "Customer credit"
-msgstr "رمز العميل"
+msgstr "آجل على العميل"
 
 #: .\templates\pos\pos_screen.html:21
 msgid "Complete sale"
@@ -2227,47 +2551,39 @@ msgstr "إتمام البيع"
 
 #: .\templates\pos\pos_screen.html:46
 msgid "Select a warehouse before completing the sale."
-msgstr ""
+msgstr "اختر مخزنًا قبل إتمام عملية البيع."
 
 #: .\templates\pos\pos_screen.html:46
-#, fuzzy
-#| msgid "Complete sale"
 msgid "Could not complete the sale."
-msgstr "إتمام البيع"
+msgstr "تعذر إتمام عملية البيع."
 
 #: .\templates\pos\pos_screen.html:46
 msgid "Could not connect to the server."
-msgstr ""
+msgstr "تعذر الاتصال بالخادم."
 
 #: .\templates\pos\sale_detail.html:1 .\templates\pos\sale_list.html:1
-#, fuzzy
-#| msgid "Walk-in customer"
 msgid "Walk-in"
 msgstr "عميل نقدي"
 
 #: .\templates\pos\sale_list.html:1
 msgid "No sales."
-msgstr ""
+msgstr "لا توجد مبيعات."
 
 #: .\templates\purchasing\purchase_invoice_detail.html:3
-#, fuzzy
-#| msgid "Invoice details"
 msgid "Invoice total"
-msgstr "بيانات الفاتورة"
+msgstr "إجمالي الفاتورة"
 
 #: .\templates\purchasing\purchase_invoice_form.html:2
 msgid "New purchase invoice"
 msgstr "فاتورة شراء جديدة"
 
 #: .\templates\purchasing\purchase_invoice_list.html:3
-#, fuzzy
-#| msgid "New purchase invoice"
 msgid "New invoice"
-msgstr "فاتورة شراء جديدة"
+msgstr "فاتورة جديدة"
 
 #: .\templates\purchasing\purchase_invoice_list.html:4
 msgid "No invoices found."
-msgstr ""
+msgstr "لم يتم العثور على فواتير."
 
 #: .\templates\quotations\quotation_detail.html:3
 #: .\templates\quotations\quotation_form.html:8
@@ -2293,13 +2609,8 @@ msgid "Convert"
 msgstr "تحويل"
 
 #: .\templates\quotations\quotation_form.html:3
-#, fuzzy
-#| msgid ""
-#| "A quotation does not affect stock or accounting balances until it is "
-#| "converted into a sale."
 msgid "Quotations do not affect stock or accounting until converted."
-msgstr ""
-"عرض السعر لا يؤثر على المخزون أو الأرصدة المحاسبية حتى يتحوّل إلى عملية بيع."
+msgstr "عروض الأسعار لا تؤثر على المخزون أو المحاسبة حتى يتم تحويلها."
 
 #: .\templates\quotations\quotation_form.html:6
 msgid "Quotation details"
@@ -2334,12 +2645,17 @@ msgid "Clarity across every transaction."
 msgstr "وضوح في كل معاملة."
 
 #: .\templates\registration\login.html:1
+<<<<<<< HEAD
 msgid ""
 "Finance, inventory, sales, and purchasing—all working together in one secure "
 "workspace."
 msgstr ""
 "المالية والمخزون والمبيعات والمشتريات، جميعها تعمل معًا ضمن مساحة عمل آمنة "
 "واحدة."
+=======
+msgid "Finance, inventory, sales, and purchasing—all working together in one secure workspace."
+msgstr "المالية والمخزون والمبيعات والمشتريات، جميعها تعمل معًا ضمن مساحة عمل آمنة واحدة."
+>>>>>>> 6af71e96b2e498630dd216f12fcb96ce6721d9af
 
 #: .\templates\registration\login.html:1
 msgid "Welcome back"
@@ -2366,10 +2682,8 @@ msgid "Secure access to your company workspace"
 msgstr "وصول آمن إلى مساحة عمل شركتك"
 
 #: .\templates\reports\general_ledger.html:3
-#, fuzzy
-#| msgid "Select an account"
 msgid "Select account"
-msgstr "اختر حسابًا"
+msgstr "اختر الحساب"
 
 #: .\templates\reports\general_ledger.html:3
 #: .\templates\reports\trial_balance.html:3

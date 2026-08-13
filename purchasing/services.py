@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.utils.translation import gettext_lazy as _
 
 from finance.services import post_purchase_invoice
 from inventory.models import StockBatch, StockBalance, StockMovement
@@ -20,7 +21,7 @@ def confirm_purchase(purchase_id, user):
     # 1. Only draft purchases can be confirmed
     if purchase.status != PurchaseInvoice.Status.DRAFT:
         raise ValidationError(
-            "Only draft purchase invoices can be confirmed."
+            _("Only draft purchase invoices can be confirmed.")
         )
 
     items = list(
@@ -30,7 +31,7 @@ def confirm_purchase(purchase_id, user):
     # 2. Invoice must contain at least one item
     if not items:
         raise ValidationError(
-            "Purchase invoice must contain at least one item."
+            _("Purchase invoice must contain at least one item.")
         )
 
     # 3. Process every purchased item
@@ -38,12 +39,16 @@ def confirm_purchase(purchase_id, user):
 
         if item.quantity <= 0:
             raise ValidationError(
-                f"Quantity for {item.product.name} must be greater than zero."
+                _("Quantity for %(product)s must be greater than zero.") % {
+                    "product": item.product.name,
+                }
             )
 
         if item.unit_cost < 0:
             raise ValidationError(
-                f"Unit cost for {item.product.name} cannot be negative."
+                _("Unit cost for %(product)s cannot be negative.") % {
+                    "product": item.product.name,
+                }
             )
 
         # 4. Create the stock batch

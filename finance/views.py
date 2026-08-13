@@ -16,7 +16,12 @@ from .forms import (
 )
 from .models import Account, JournalEntry, PaymentVoucher, ReceiptVoucher
 from .reports import generate_general_ledger, generate_trial_balance
-from .services import post_journal_entry, post_payment_voucher, post_receipt_voucher
+from .services import (
+    post_journal_entry,
+    post_payment_voucher,
+    post_receipt_voucher,
+    reverse_journal_entry,
+)
 
 
 def _message_validation_error(request, exc):
@@ -226,3 +231,24 @@ def journal_create_view(request):
             "formset": formset,
         },
     )
+
+
+@login_required
+@accountant_required
+@require_POST
+def reverse_journal_view(request, pk):
+    get_object_or_404(JournalEntry, pk=pk)
+    try:
+        reversal = reverse_journal_entry(
+            pk,
+            request.user,
+            request.POST.get("reason", ""),
+        )
+        messages.success(
+            request,
+            _("Journal entry reversed successfully."),
+        )
+        return redirect("finance:journal_detail", pk=reversal.pk)
+    except ValidationError as exc:
+        _message_validation_error(request, exc)
+        return redirect("finance:journal_detail", pk=pk)

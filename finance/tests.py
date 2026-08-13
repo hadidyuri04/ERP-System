@@ -25,6 +25,7 @@ from purchasing.models import PurchaseInvoice, PurchaseInvoiceItem
 from suppliers.models import Supplier
 
 from .models import Account, JournalEntry, JournalEntryLine, PaymentVoucher, ReceiptVoucher
+from .reports import get_account_balance
 from .services import (
     get_posting_account,
     post_journal_entry,
@@ -32,6 +33,7 @@ from .services import (
     post_pos_sale,
     post_purchase_invoice,
     post_receipt_voucher,
+    reverse_journal_entry,
 )
 
 
@@ -479,3 +481,162 @@ class FinancePostingTests(TestCase):
                 source_id=waste.id,
             ).exists()
         )
+
+
+class JournalReversalTests(TestCase):
+    def setUp(self):
+        self.accountant = get_user_model().objects.create_user(
+            username="reversal-accountant",
+            password="test-password",
+            role="accountant",
+        )
+        self.cash = Account.objects.create(
+            code="REV1100",
+            name="Reversal cash",
+            account_type=Account.AccountType.ASSET,
+        )
+        self.revenue = Account.objects.create(
+            code="REV4100",
+            name="Reversal revenue",
+            account_type=Account.AccountType.REVENUE,
+        )
+
+    def create_journal(self, *, status=JournalEntry.Status.POSTED, source_type=None):
+        journal = JournalEntry.objects.create(
+            entry_number=f"REV-TEST-{JournalEntry.objects.count() + 1}",
+            date=date.today(),
+            description="Journal to reverse",
+            source_type=source_type or JournalEntry.SourceType.MANUAL,
+            status=status,
+            created_by=self.accountant,
+            approved_by=(
+                self.accountant if status == JournalEntry.Status.POSTED else None
+            ),
+        )
+        JournalEntryLine.objects.create(
+            journal_entry=journal,
+            account=self.cash,
+            description="Cash debit",
+            debit=Decimal("75.000"),
+        )
+        JournalEntryLine.objects.create(
+            journal_entry=journal,
+            account=self.revenue,
+            description="Revenue credit",
+            credit=Decimal("75.000"),
+        )
+        return journal
+
+    def test_reversal_posts_opposite_lines_and_marks_original_reversed(self):
+        original = self.create_journal()
+
+        reversal = reverse_journal_entry(
+            original.pk,
+            self.accountant,
+            "Incorrect customer",
+        )
+
+        original.refresh_from_db()
+        self.assertEqual(original.status, JournalEntry.Status.REVERSED)
+        self.assertEqual(original.reversal_reason, "Incorrect customer")
+        self.assertEqual(original.reversed_by, self.accountant)
+        self.assertIsNotNone(original.reversed_at)
+
+        self.assertEqual(reversal.status, JournalEntry.Status.POSTED)
+        self.assertEqual(reversal.source_type, JournalEntry.SourceType.REVERSAL)
+        self.assertEqual(reversal.source_id, original.pk)
+        self.assertEqual(reversal.reversal_of, original)
+        self.assertEqual(reversal.approved_by, self.accountant)
+        self.assertEqual(
+            reversal.lines.get(account=self.cash).credit,
+            Decimal("75.000"),
+        )
+        self.assertEqual(
+            reversal.lines.get(account=self.revenue).debit,
+            Decimal("75.000"),
+        )
+        self.assertEqual(get_account_balance(self.cash), Decimal("0.000"))
+        self.assertEqual(get_account_balance(self.revenue), Decimal("0.000"))
+
+    def test_journal_cannot_be_reversed_twice(self):
+        original = self.create_journal()
+        reverse_journal_entry(original.pk, self.accountant, "First reversal")
+
+        with self.assertRaisesMessage(
+            ValidationError,
+            "This journal entry has already been reversed.",
+        ):
+            reverse_journal_entry(original.pk, self.accountant, "Again")
+
+        self.assertEqual(
+            JournalEntry.objects.filter(
+                source_type=JournalEntry.SourceType.REVERSAL,
+                source_id=original.pk,
+            ).count(),
+            1,
+        )
+
+    def test_reversal_requires_posted_entry_and_reason(self):
+        draft = self.create_journal(status=JournalEntry.Status.DRAFT)
+        with self.assertRaisesMessage(
+            ValidationError,
+            "Only posted journal entries can be reversed.",
+        ):
+            reverse_journal_entry(draft.pk, self.accountant, "Correction")
+
+        posted = self.create_journal()
+        with self.assertRaisesMessage(
+            ValidationError,
+            "A reversal reason is required.",
+        ):
+            reverse_journal_entry(posted.pk, self.accountant, None)
+
+    def test_reversal_entry_cannot_be_reversed(self):
+        reversal = self.create_journal(
+            source_type=JournalEntry.SourceType.REVERSAL,
+        )
+
+        with self.assertRaisesMessage(
+            ValidationError,
+            "A reversal journal entry cannot be reversed.",
+        ):
+            reverse_journal_entry(reversal.pk, self.accountant, "Undo")
+
+    def test_reversal_view_requires_post_and_accountant_permission(self):
+        original = self.create_journal()
+        url = reverse("finance:journal_reverse", args=[original.pk])
+        self.client.force_login(self.accountant)
+        self.assertEqual(self.client.get(url).status_code, 405)
+
+        cashier = get_user_model().objects.create_user(
+            username="reversal-cashier",
+            password="test-password",
+            role="cashier",
+        )
+        self.client.force_login(cashier)
+        self.assertEqual(
+            self.client.post(url, {"reason": "Not allowed"}).status_code,
+            403,
+        )
+        original.refresh_from_db()
+        self.assertEqual(original.status, JournalEntry.Status.POSTED)
+
+    def test_reversal_view_redirects_to_created_reversal(self):
+        original = self.create_journal()
+        self.client.force_login(self.accountant)
+
+        response = self.client.post(
+            reverse("finance:journal_reverse", args=[original.pk]),
+            {"reason": "Entered twice"},
+        )
+
+        reversal = JournalEntry.objects.get(reversal_of=original)
+        self.assertRedirects(
+            response,
+            reverse("finance:journal_detail", args=[reversal.pk]),
+        )
+        original_response = self.client.get(
+            reverse("finance:journal_detail", args=[original.pk])
+        )
+        self.assertContains(original_response, "Entered twice")
+        self.assertContains(original_response, reversal.entry_number)

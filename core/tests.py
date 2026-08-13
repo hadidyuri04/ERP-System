@@ -1,10 +1,41 @@
 from django.contrib.auth import get_user_model
+from django.conf import settings
 from django.test import TestCase
 from django.urls import reverse
 
 
 class ConnectedViewsSmokeTests(TestCase):
     """Keep the main navigation and create pages renderable as they evolve."""
+
+    route_names = (
+        "core:admin_dashboard",
+        "core:accountant_dashboard",
+        "core:home_dashboard",
+        "core:settings",
+        "customers:list",
+        "customers:create",
+        "suppliers:list",
+        "suppliers:create",
+        "inventory:product_list",
+        "inventory:product_create",
+        "inventory:warehouse_list",
+        "inventory:waste_list",
+        "inventory:waste_create",
+        "purchasing:list",
+        "purchasing:create",
+        "finance:account_list",
+        "finance:journal_list",
+        "finance:receipt_list",
+        "finance:receipt_create",
+        "finance:payment_list",
+        "finance:payment_create",
+        "finance:general_ledger",
+        "finance:trial_balance",
+        "pos:terminal",
+        "pos:sale_list",
+        "quotations:list",
+        "quotations:create",
+    )
 
     def setUp(self):
         self.user = get_user_model().objects.create_superuser(
@@ -15,37 +46,7 @@ class ConnectedViewsSmokeTests(TestCase):
         self.client.force_login(self.user)
 
     def test_main_pages_render(self):
-        route_names = (
-            "core:admin_dashboard",
-            "core:accountant_dashboard",
-            "core:home_dashboard",
-            "core:settings",
-            "customers:list",
-            "customers:create",
-            "suppliers:list",
-            "suppliers:create",
-            "inventory:product_list",
-            "inventory:product_create",
-            "inventory:warehouse_list",
-            "inventory:waste_list",
-            "inventory:waste_create",
-            "purchasing:list",
-            "purchasing:create",
-            "finance:account_list",
-            "finance:journal_list",
-            "finance:receipt_list",
-            "finance:receipt_create",
-            "finance:payment_list",
-            "finance:payment_create",
-            "finance:general_ledger",
-            "finance:trial_balance",
-            "pos:terminal",
-            "pos:sale_list",
-            "quotations:list",
-            "quotations:create",
-        )
-
-        for route_name in route_names:
+        for route_name in self.route_names:
             with self.subTest(route_name=route_name):
                 response = self.client.get(reverse(route_name))
                 self.assertEqual(response.status_code, 200)
@@ -72,3 +73,18 @@ class ConnectedViewsSmokeTests(TestCase):
         for route_name in ("pos:terminal", "pos:sale_list", "quotations:list"):
             with self.subTest(route_name=route_name):
                 self.assertEqual(self.client.get(reverse(route_name)).status_code, 200)
+
+    def test_arabic_pages_render_translated_rtl_interface(self):
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "ar"
+
+        for route_name in self.route_names:
+            with self.subTest(route_name=route_name):
+                response = self.client.get(reverse(route_name))
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, 'lang="ar"')
+                self.assertContains(response, 'dir="rtl"')
+
+        response = self.client.get(reverse("finance:journal_list"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "\u0642\u064a\u0648\u062f \u0627\u0644\u064a\u0648\u0645\u064a\u0629")
+        self.assertContains(response, "\u0642\u064a\u062f \u062c\u062f\u064a\u062f")
