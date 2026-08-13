@@ -1141,7 +1141,7 @@ main.page-enter { width: min(100%, var(--page-max)); margin: 0 auto; }
 .empty-inline i { color: var(--purple-400); font-size: 1.2rem; }
 
 /* Generic Django forms now match handcrafted pages. */
-.card-soft form > p { display: grid; grid-template-columns: minmax(130px, .34fr) minmax(220px, 1fr); align-items: start; gap: 8px 18px; margin: 0; padding: 11px 0; border-block-end: 1px solid var(--border); }
+.card-soft form > p { display: grid; align-items: start; gap: 8px 18px; margin: 0; padding: 11px 0; border-block-end: 1px solid var(--border); }
 .card-soft form > p:last-of-type { border-block-end: 0; }
 .card-soft form > p > label { padding-top: 10px; color: var(--ink-soft); font-size: .77rem; font-weight: 700; }
 input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]), select, textarea {
@@ -1267,4 +1267,23 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--purple-6
   .sidebar { display: none !important; }
   .main-col { padding: 0; }
   body { background: #fff; }
+}
+[dir="rtl"] .auth-wrapper {
+  flex-direction: row-reverse;
+}
+/* Base layout setup */
+.auth-wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Make both sides take up half the screen (50% each) */
+.auth-brand,
+.auth-form {
+  flex: 1;
+}
+
+/* Flips the side order in Arabic RTL */
+[dir="rtl"] .auth-wrapper {
+  flex-direction: row-reverse;
 }
