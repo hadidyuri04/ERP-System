@@ -1,1 +1,73 @@
-{% extends "core/base.html" %}{% load i18n %}{% block title %}{{ entry.entry_number }}{% endblock %}{% block page_header %}<h1>{{ entry.entry_number }}</h1><p>{{ entry.get_status_display }}</p>{% endblock %}{% block content %}<div class="card-soft card-pad"><p>{{ entry.date }} · {{ entry.description }}</p><table class="table-erp"><thead><tr><th>{% trans "Account" %}</th><th>{% trans "Description" %}</th><th>{% trans "Debit" %}</th><th>{% trans "Credit" %}</th></tr></thead><tbody>{% for line in entry.lines.all %}<tr><td>{{ line.account }}</td><td>{{ line.description }}</td><td>{{ line.debit }}</td><td>{{ line.credit }}</td></tr>{% endfor %}</tbody></table>{% if entry.status == 'draft' %}<form method="post" action="{% url 'finance:journal_post' entry.pk %}" class="mt-3">{% csrf_token %}<button class="btn btn-primary">{% trans "Post entry" %}</button></form>{% endif %}</div>{% endblock %}
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{{ entry.entry_number }}{% endblock %}
+
+{% block page_header %}
+<h1>{{ entry.entry_number }}</h1>
+<p>{{ entry.get_status_display }}</p>
+{% endblock %}
+
+{% block content %}
+<div class="card-soft card-pad">
+  <p>{{ entry.date }} · {{ entry.description }}</p>
+
+  {% if entry.reversal_of %}
+    <p>
+      {% trans "Reversal of" %}:
+      <a class="record-link" href="{% url 'finance:journal_detail' entry.reversal_of.pk %}">
+        {{ entry.reversal_of.entry_number }}
+      </a>
+    </p>
+  {% endif %}
+
+  {% if entry.status == "reversed" %}
+    <div class="alert alert-warning">
+      <strong>{% trans "Reversal reason" %}:</strong>
+      {{ entry.reversal_reason }}
+      {% if entry.reversal_entry %}
+        <a class="ms-2" href="{% url 'finance:journal_detail' entry.reversal_entry.pk %}">
+          {% trans "View reversal entry" %} — {{ entry.reversal_entry.entry_number }}
+        </a>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <div class="table-wrap">
+    <table class="table-erp">
+      <thead>
+        <tr>
+          <th>{% trans "Account" %}</th>
+          <th>{% trans "Description" %}</th>
+          <th>{% trans "Debit" %}</th>
+          <th>{% trans "Credit" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for line in entry.lines.all %}
+          <tr>
+            <td>{{ line.account }}</td>
+            <td>{{ line.description }}</td>
+            <td>{{ line.debit }}</td>
+            <td>{{ line.credit }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if entry.status == "draft" %}
+    <form method="post" action="{% url 'finance:journal_post' entry.pk %}" class="mt-3">
+      {% csrf_token %}
+      <button class="btn btn-primary" type="submit">{% trans "Post entry" %}</button>
+    </form>
+  {% elif entry.status == "posted" and entry.source_type != "reversal" %}
+    <form method="post" action="{% url 'finance:journal_reverse' entry.pk %}" class="mt-3">
+      {% csrf_token %}
+      <label for="reversal-reason" class="form-label">{% trans "Reversal reason" %}</label>
+      <textarea id="reversal-reason" name="reason" class="form-control" required></textarea>
+      <button type="submit" class="btn btn-danger mt-2">{% trans "Reverse entry" %}</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

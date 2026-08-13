@@ -32,4 +32,9 @@ urlpatterns = [
         views.trial_balance_view,
         name="trial_balance",
     ),
+    path(
+        "journals/<int:pk>/reverse/",
+        views.reverse_journal_view,
+        name="journal_reverse",
+    ),
 ]

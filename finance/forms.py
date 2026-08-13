@@ -30,7 +30,9 @@ class ReceiptVoucherForm(CashAccountMixin, forms.ModelForm):
     def clean_customer(self):
         customer = self.cleaned_data.get("customer")
         if customer is None:
-            raise forms.ValidationError("A customer is required for an accounts receivable receipt.")
+            raise forms.ValidationError(
+                _("A customer is required for an accounts receivable receipt.")
+            )
         return customer
 
 
@@ -46,7 +48,9 @@ class PaymentVoucherForm(CashAccountMixin, forms.ModelForm):
     def clean_supplier(self):
         supplier = self.cleaned_data.get("supplier")
         if supplier is None:
-            raise forms.ValidationError("A supplier is required for an accounts payable payment.")
+            raise forms.ValidationError(
+                _("A supplier is required for an accounts payable payment.")
+            )
         return supplier
 
 
