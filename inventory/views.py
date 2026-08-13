@@ -1,3 +1,116 @@
-from django.shortcuts import render
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
+from django.db import transaction
+from django.db.models import Q, Sum
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.translation import gettext_lazy as _
+from django.views.decorators.http import require_POST
 
-# Create your views here.
+from core.permissions import accountant_required
+
+from .forms import ProductForm, WarehouseForm, WasteLossForm, WasteLossItemFormSet
+from .models import Category, Product, StockBalance, Warehouse, WasteLoss
+from .services import confirm_waste_loss
+
+
+@login_required
+@accountant_required
+def product_list_view(request):
+    products = Product.objects.select_related("category", "unit").annotate(
+        stock_quantity=Sum("balances__quantity")
+    ).order_by("code")
+    query = request.GET.get("q", "").strip()
+    if query:
+        products = products.filter(
+            Q(code__icontains=query) | Q(barcode__icontains=query) | Q(name__icontains=query)
+        )
+    return render(request, "inventory/product_list.html", {
+        "products": products,
+        "categories": Category.objects.filter(is_active=True).order_by("name"),
+        "query": query,
+    })
+
+
+@login_required
+@accountant_required
+def product_create_view(request):
+    form = ProductForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, _("Product created successfully."))
+        return redirect("inventory:product_list")
+    return render(request, "inventory/product_form.html", {"form": form, "title": _("New product")})
+
+
+@login_required
+@accountant_required
+def product_update_view(request, pk):
+    product = get_object_or_404(Product, pk=pk)
+    form = ProductForm(request.POST or None, instance=product)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, _("Product updated successfully."))
+        return redirect("inventory:product_list")
+    return render(request, "inventory/product_form.html", {"form": form, "title": _("Edit product")})
+
+
+@login_required
+@accountant_required
+def warehouse_list_view(request):
+    warehouses = Warehouse.objects.order_by("code")
+    form = WarehouseForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, _("Warehouse created successfully."))
+        return redirect("inventory:warehouse_list")
+    return render(request, "inventory/warehouse_list.html", {"warehouses": warehouses, "form": form})
+
+
+@login_required
+@accountant_required
+def waste_list_view(request):
+    documents = WasteLoss.objects.select_related("warehouse", "created_by").order_by("-date", "-id")
+    return render(request, "inventory/waste_loss_list.html", {"documents": documents})
+
+
+@login_required
+@accountant_required
+@transaction.atomic
+def waste_create_view(request):
+    waste = WasteLoss(created_by=request.user)
+    form = WasteLossForm(request.POST or None, instance=waste)
+    formset = WasteLossItemFormSet(request.POST or None, instance=waste, prefix="items")
+    if request.method == "POST" and form.is_valid() and formset.is_valid():
+        waste = form.save(commit=False)
+        waste.created_by = request.user
+        waste.save()
+        items = formset.save(commit=False)
+        for deleted in formset.deleted_objects:
+            deleted.delete()
+        for item in items:
+            item.waste_loss = waste
+            item.total_cost = item.quantity * item.unit_cost
+            item.save()
+        messages.success(request, _("Waste document saved as draft."))
+        return redirect("inventory:waste_detail", pk=waste.pk)
+    return render(request, "inventory/waste_loss_form.html", {"form": form, "formset": formset})
+
+
+@login_required
+@accountant_required
+def waste_detail_view(request, pk):
+    waste = get_object_or_404(WasteLoss.objects.select_related("warehouse", "created_by").prefetch_related("items__product"), pk=pk)
+    return render(request, "inventory/waste_loss_detail.html", {"waste": waste})
+
+
+@login_required
+@accountant_required
+@require_POST
+def waste_confirm_view(request, pk):
+    try:
+        confirm_waste_loss(pk, request.user)
+        messages.success(request, _("Waste document confirmed and posted."))
+    except ValidationError as exc:
+        messages.error(request, "; ".join(exc.messages))
+    return redirect("inventory:waste_detail", pk=pk)

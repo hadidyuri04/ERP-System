@@ -1,0 +1,4 @@
+{% extends "core/base.html" %}{% load i18n %}
+{% block title %}{% trans "Settings" %}{% endblock %}
+{% block page_header %}<h1>{% trans "Settings" %}</h1>{% endblock %}
+{% block content %}<div class="card-soft card-pad"><form method="post" action="{% url 'core:backup' %}">{% csrf_token %}<button class="btn btn-primary" type="submit">{% trans "Run database backup" %}</button></form></div>{% endblock %}

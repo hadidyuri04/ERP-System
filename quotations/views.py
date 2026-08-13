@@ -1,73 +1,93 @@
-from django.db import transaction
-from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required, permission_required
-from django.utils import timezone
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext_lazy as _
-from .models import Quotation
+from django.views.decorators.http import require_POST
+
+from core.permissions import cashier_required
+from inventory.models import Warehouse
+from pos.models import POSPayment
+
 from .forms import QuotationForm, QuotationItemFormSet
-from .services import convert_quotation_to_pos_sale
+from .models import Quotation
+from .services import create_quotation, convert_quotation_to_pos_sale
+
 
 @login_required
+@cashier_required
 def quotation_list(request):
-    quotations = Quotation.objects.select_related('customer', 'created_by').order_by('-created_at')
-    return render(request, 'quotations/quotation_list.html', {'quotations': quotations})
+    quotations = Quotation.objects.select_related("customer", "created_by").order_by("-created_at")
+    return render(request, "quotations/quotation_list.html", {"quotations": quotations})
+
 
 @login_required
+@cashier_required
 def quotation_detail(request, pk):
-    quotation = get_object_or_404(Quotation.objects.prefetch_related('items__product'), pk=pk)
-    return render(request, 'quotations/quotation_detail.html', {'quotation': quotation})
+    quotation = get_object_or_404(Quotation.objects.select_related("customer").prefetch_related("items__product"), pk=pk)
+    return render(request, "quotations/quotation_detail.html", {
+        "quotation": quotation,
+        "warehouses": Warehouse.objects.filter(is_active=True).order_by("name"),
+        "payment_methods": POSPayment.PaymentMethod.choices,
+    })
+
 
 @login_required
-@transaction.atomic
+@cashier_required
 def quotation_create(request):
-    if request.method == 'POST':
-        form = QuotationForm(request.POST)
-        formset = QuotationItemFormSet(request.POST)
-        if form.is_valid() and formset.is_valid():
-            quotation = form.save(commit=False)
-            quotation.created_by = request.user
-            quotation.quotation_number = f"QT-{timezone.now().strftime('%Y%m%d%H%M%S')}"
-            quotation.save()
-            
-            formset.instance = quotation
-            formset.save()
-            
+    form = QuotationForm(request.POST or None)
+    formset = QuotationItemFormSet(request.POST or None, prefix="items")
+    if request.method == "POST" and form.is_valid() and formset.is_valid():
+        items_data = []
+        for item_form in formset.forms:
+            data = item_form.cleaned_data
+            if not data or data.get("DELETE"):
+                continue
+            items_data.append({
+                "product": data["product"],
+                "quantity": data["quantity"],
+                "unit_price": data["unit_price"],
+                "discount_amount": data.get("discount_amount") or 0,
+                "tax_amount": data.get("tax_amount") or 0,
+            })
+        try:
+            quotation = create_quotation(
+                customer=form.cleaned_data["customer"],
+                date=form.cleaned_data["date"],
+                expiry_date=form.cleaned_data["expiry_date"],
+                items_data=items_data,
+                user=request.user,
+                discount_amount=form.cleaned_data.get("discount_amount") or 0,
+                tax_amount=form.cleaned_data.get("tax_amount") or 0,
+                notes=form.cleaned_data.get("notes") or "",
+            )
             messages.success(request, _("Quotation created successfully."))
-            return redirect('quotation_detail', pk=quotation.pk)
-    else:
-        form = QuotationForm()
-        formset = QuotationItemFormSet()
+            return redirect("quotations:detail", pk=quotation.pk)
+        except ValidationError as exc:
+            form.add_error(None, exc)
+    return render(request, "quotations/quotation_form.html", {"form": form, "formset": formset})
 
-    return render(request, 'quotations/quotation_form.html', {'form': form, 'formset': formset})
 
 @login_required
+@cashier_required
+@require_POST
 def convert_to_sale_view(request, pk):
     quotation = get_object_or_404(Quotation, pk=pk)
-    if request.method == 'POST':
-        warehouse_id = request.POST.get('warehouse')
-        payment_method = request.POST.get('payment_method', 'CASH')
-        
-        # Construct single payment block from POST
-        payments_data = [{
-            'payment_method': payment_method,
-            'amount': quotation.total,
-            'reference_number': request.POST.get('reference_number', '')
-        }]
-
-        try:
-            from inventory.models import Warehouse
-            warehouse = Warehouse.objects.get(pk=warehouse_id)
-            sale = convert_quotation_to_pos_sale(
-                quotation_id=quotation.id,
-                warehouse=warehouse,
-                cashier=request.user,
-                payments_data=payments_data
-            )
-            messages.success(request, _("Quotation successfully converted to POS Sale %(sale_num)s") % {'sale_num': sale.sale_number})
-            return redirect('pos_sale_detail', pk=sale.pk)
-        except Exception as e:
-            messages.error(request, str(e))
-            return redirect('quotation_detail', pk=pk)
-
-    return redirect('quotation_detail', pk=pk)
+    try:
+        warehouse = Warehouse.objects.get(pk=request.POST.get("warehouse"), is_active=True)
+        sale = convert_quotation_to_pos_sale(
+            quotation_id=quotation.id,
+            warehouse=warehouse,
+            cashier=request.user,
+            payments_data=[{
+                "payment_method": request.POST.get("payment_method", POSPayment.PaymentMethod.CASH),
+                "amount": quotation.total,
+                "reference_number": request.POST.get("reference_number", ""),
+            }],
+        )
+        messages.success(request, _("Quotation converted to sale successfully."))
+        return redirect("pos:sale_detail", pk=sale.pk)
+    except (ValidationError, Warehouse.DoesNotExist) as exc:
+        message = "; ".join(exc.messages) if hasattr(exc, "messages") else str(exc)
+        messages.error(request, message)
+        return redirect("quotations:detail", pk=pk)

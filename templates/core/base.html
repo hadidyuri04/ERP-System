@@ -26,10 +26,10 @@
 </head>
 <body>
 
-{# ==========================================================================
+{% comment %}
    Language switcher — posts to Django's built-in set_language view.
    Add to urls.py:  path('i18n/', include('django.conf.urls.i18n')),
-   ========================================================================== #}
+{% endcomment %}
 <form id="langForm" action="{% url 'set_language' %}" method="post" class="d-none">
   {% csrf_token %}
   <input name="next" type="hidden" value="{{ request.get_full_path }}">
@@ -47,91 +47,62 @@
 
 <div class="app-shell">
 
-  {# ======================================================================
+  {% comment %}
      SIDEBAR — core modules from the requirements doc (§3)
-     ====================================================================== #}
+  {% endcomment %}
   <aside class="sidebar">
-    <a href="/" class="sidebar-brand" data-smooth aria-label="{% trans "Home" %}">
-      <i class="bi bi-hexagon-fill"></i>
-    </a>
-
     <nav class="sidebar-nav" aria-label="{% trans "Main navigation" %}">
-      {% comment %}
-        Replace href="#" with {% url '<app>:<name>' %} once the backend
-        team adds urls.py for each app. Keep the data-nav value — the
-        active state is driven by {% block nav_active %} in each page.
-      {% endcomment %}
+      <details class="nav-group" {% if request.resolver_match.namespace == 'core' or request.resolver_match.namespace == 'customers' or request.resolver_match.namespace == 'suppliers' or request.resolver_match.namespace == 'inventory' and 'waste' not in request.resolver_match.url_name %}open{% endif %}>
+        <summary><span><i class="bi bi-grid"></i>{% trans "Workspace" %}</span><i class="bi bi-chevron-down nav-chevron"></i></summary>
+        <div class="nav-group-links">
+          <a href="{% url 'core:dashboard' %}" data-smooth class="nav-icon {% if request.resolver_match.namespace == 'core' and 'dashboard' in request.resolver_match.url_name %}active{% endif %}"><i class="bi bi-grid-1x2-fill"></i><span class="nav-label">{% trans "Dashboard" %}</span></a>
+          {% if request.user.is_superuser or request.user.role != 'cashier' %}
+          <a href="{% url 'customers:list' %}" data-smooth class="nav-icon {% if request.resolver_match.namespace == 'customers' %}active{% endif %}"><i class="bi bi-people-fill"></i><span class="nav-label">{% trans "Customers" %}</span></a>
+          <a href="{% url 'suppliers:list' %}" data-smooth class="nav-icon {% if request.resolver_match.namespace == 'suppliers' %}active{% endif %}"><i class="bi bi-truck"></i><span class="nav-label">{% trans "Suppliers" %}</span></a>
+          <a href="{% url 'inventory:product_list' %}" data-smooth class="nav-icon {% if request.resolver_match.namespace == 'inventory' and 'product' in request.resolver_match.url_name %}active{% endif %}"><i class="bi bi-box-seam-fill"></i><span class="nav-label">{% trans "Items" %}</span></a>
+          <a href="{% url 'inventory:warehouse_list' %}" data-smooth class="nav-icon {% if request.resolver_match.url_name == 'warehouse_list' %}active{% endif %}"><i class="bi bi-building-fill"></i><span class="nav-label">{% trans "Warehouses" %}</span></a>
+          {% endif %}
+        </div>
+      </details>
 
-      <a href="#" data-nav="dashboard" data-smooth class="nav-icon {% if nav_active == 'dashboard' %}active{% endif %}">
-        <i class="bi bi-grid-1x2-fill"></i>
-        <span class="nav-label">{% trans "Dashboard" %}</span>
-      </a>
+      <details class="nav-group" {% if request.resolver_match.namespace == 'purchasing' or request.resolver_match.namespace == 'pos' or request.resolver_match.namespace == 'quotations' %}open{% endif %}>
+        <summary><span><i class="bi bi-lightning-charge"></i>{% trans "Operations" %}</span><i class="bi bi-chevron-down nav-chevron"></i></summary>
+        <div class="nav-group-links">
+          {% if request.user.is_superuser or request.user.role != 'cashier' %}<a href="{% url 'purchasing:list' %}" data-smooth class="nav-icon {% if request.resolver_match.namespace == 'purchasing' %}active{% endif %}"><i class="bi bi-bag-plus-fill"></i><span class="nav-label">{% trans "Purchases" %}</span></a>{% endif %}
+          <a href="{% url 'pos:terminal' %}" data-smooth class="nav-icon {% if request.resolver_match.namespace == 'pos' %}active{% endif %}"><i class="bi bi-upc-scan"></i><span class="nav-label">{% trans "Point of Sale" %}</span></a>
+          <a href="{% url 'quotations:list' %}" data-smooth class="nav-icon {% if request.resolver_match.namespace == 'quotations' %}active{% endif %}"><i class="bi bi-file-earmark-text-fill"></i><span class="nav-label">{% trans "Quotations" %}</span></a>
+        </div>
+      </details>
 
-      <a href="#" data-nav="customers" data-smooth class="nav-icon {% if nav_active == 'customers' %}active{% endif %}">
-        <i class="bi bi-people-fill"></i>
-        <span class="nav-label">{% trans "Customers" %}</span>
-      </a>
-
-      <a href="#" data-nav="suppliers" data-smooth class="nav-icon {% if nav_active == 'suppliers' %}active{% endif %}">
-        <i class="bi bi-truck"></i>
-        <span class="nav-label">{% trans "Suppliers" %}</span>
-      </a>
-
-      <a href="#" data-nav="items" data-smooth class="nav-icon {% if nav_active == 'items' %}active{% endif %}">
-        <i class="bi bi-box-seam-fill"></i>
-        <span class="nav-label">{% trans "Items" %}</span>
-      </a>
-
-      <a href="#" data-nav="warehouses" data-smooth class="nav-icon {% if nav_active == 'warehouses' %}active{% endif %}">
-        <i class="bi bi-building-fill"></i>
-        <span class="nav-label">{% trans "Warehouses" %}</span>
-      </a>
-
-      <a href="#" data-nav="purchases" data-smooth class="nav-icon {% if nav_active == 'purchases' %}active{% endif %}">
-        <i class="bi bi-bag-plus-fill"></i>
-        <span class="nav-label">{% trans "Purchases" %}</span>
-      </a>
-
-      <a href="#" data-nav="pos" data-smooth class="nav-icon {% if nav_active == 'pos' %}active{% endif %}">
-        <i class="bi bi-upc-scan"></i>
-        <span class="nav-label">{% trans "Point of Sale" %}</span>
-      </a>
-
-      <a href="#" data-nav="quotations" data-smooth class="nav-icon {% if nav_active == 'quotations' %}active{% endif %}">
-        <i class="bi bi-file-earmark-text-fill"></i>
-        <span class="nav-label">{% trans "Quotations" %}</span>
-      </a>
-
-      <a href="#" data-nav="finance" data-smooth class="nav-icon {% if nav_active == 'finance' %}active{% endif %}">
-        <i class="bi bi-journal-bookmark-fill"></i>
-        <span class="nav-label">{% trans "Finance" %}</span>
-      </a>
-
-      <a href="#" data-nav="waste" data-smooth class="nav-icon {% if nav_active == 'waste' %}active{% endif %}">
-        <i class="bi bi-trash3-fill"></i>
-        <span class="nav-label">{% trans "Waste & Loss" %}</span>
-      </a>
-
-      <a href="#" data-nav="reports" data-smooth class="nav-icon {% if nav_active == 'reports' %}active{% endif %}">
-        <i class="bi bi-bar-chart-line-fill"></i>
-        <span class="nav-label">{% trans "Reports" %}</span>
-      </a>
+      {% if request.user.is_superuser or request.user.role != 'cashier' %}
+      <details class="nav-group" {% if request.resolver_match.namespace == 'finance' or request.resolver_match.namespace == 'inventory' and 'waste' in request.resolver_match.url_name %}open{% endif %}>
+        <summary><span><i class="bi bi-wallet2"></i>{% trans "Accounting" %}</span><i class="bi bi-chevron-down nav-chevron"></i></summary>
+        <div class="nav-group-links">
+          <a href="{% url 'finance:journal_list' %}" data-smooth class="nav-icon {% if request.resolver_match.namespace == 'finance' and 'reports' not in request.path %}active{% endif %}"><i class="bi bi-journal-bookmark-fill"></i><span class="nav-label">{% trans "Finance" %}</span></a>
+          <a href="{% url 'inventory:waste_list' %}" data-smooth class="nav-icon {% if request.resolver_match.namespace == 'inventory' and 'waste' in request.resolver_match.url_name %}active{% endif %}"><i class="bi bi-trash3-fill"></i><span class="nav-label">{% trans "Waste & Loss" %}</span></a>
+          <a href="{% url 'finance:trial_balance' %}" data-smooth class="nav-icon {% if 'reports' in request.path %}active{% endif %}"><i class="bi bi-bar-chart-line-fill"></i><span class="nav-label">{% trans "Reports" %}</span></a>
+        </div>
+      </details>
+      {% endif %}
     </nav>
 
     <div class="sidebar-footer">
-      <a href="#" class="nav-icon" data-bs-toggle="tooltip" title="{% trans "Settings" %}">
-        <i class="bi bi-gear-fill"></i>
+      {% if request.user.is_superuser or request.user.role == 'admin' %}
+      <a href="{% url 'core:settings' %}" class="nav-icon {% if request.resolver_match.url_name == 'settings' %}active{% endif %}" title="{% trans "Settings" %}">
+        <i class="bi bi-gear-fill"></i><span class="nav-label">{% trans "Settings" %}</span>
       </a>
-      <a href="#" class="nav-icon" data-confirm="{% trans "Sign out of the system?" %}">
-        <i class="bi bi-box-arrow-right"></i>
-        <span class="nav-label">{% trans "Sign out" %}</span>
-      </a>
+      {% endif %}
+      <form method="post" action="{% url 'logout' %}">{% csrf_token %}
+        <button type="submit" class="nav-icon border-0" style="background:transparent" title="{% trans 'Sign out' %}">
+          <i class="bi bi-box-arrow-right"></i><span class="nav-label">{% trans "Sign out" %}</span>
+        </button>
+      </form>
     </div>
   </aside>
 
-  {# ======================================================================
+  {% comment %}
      MAIN COLUMN
-     ====================================================================== #}
+  {% endcomment %}
   <div class="main-col" data-page-root>
 
     <header class="topbar">
@@ -149,12 +120,7 @@
 
       <div class="topbar-actions">
         {% block topbar_actions %}
-          <div class="search-pill">
-            <input type="search"
-                   placeholder="{% trans "Search products, invoices, customers..." %}"
-                   aria-label="{% trans "Global search" %}">
-            <button type="button" aria-label="{% trans "Search" %}"><i class="bi bi-search"></i></button>
-          </div>
+          <a class="btn btn-soft quick-pos" href="{% url 'pos:terminal' %}"><i class="bi bi-upc-scan me-1"></i>{% trans "Open POS" %}</a>
         {% endblock %}
 
         {# ---- Language switcher ---- #}
@@ -170,27 +136,15 @@
           </ul>
         </div>
 
-        {# ---- Notifications (spec §9.2) ---- #}
+        {# ---- Notifications ---- #}
         <div class="dropdown">
           <button class="icon-btn" data-bs-toggle="dropdown" aria-label="{% trans "Notifications" %}">
             <i class="bi bi-bell"></i>
-            {% if unread_count %}<span class="dot pulse"></span>{% else %}<span class="dot pulse"></span>{% endif %}
+            {% if unread_count %}<span class="dot pulse"></span>{% endif %}
           </button>
-          <ul class="dropdown-menu dropdown-menu-end" style="min-width:290px">
-            <li class="px-2 pt-1 pb-2 d-flex align-items-center">
-              <strong class="small">{% trans "Notifications" %}</strong>
-              <a href="#" class="ms-auto small">{% trans "Mark all read" %}</a>
-            </li>
-            {# TODO: {% for n in notifications %} ... {% endfor %} #}
-            <li><a class="dropdown-item" href="#">
-              <i class="bi bi-exclamation-triangle text-warning me-2"></i>
-              {% trans "3 items expiring within 7 days" %}</a></li>
-            <li><a class="dropdown-item" href="#">
-              <i class="bi bi-box text-purple me-2"></i>
-              {% trans "Low stock: 5 products below minimum" %}</a></li>
-            <li><a class="dropdown-item" href="#">
-              <i class="bi bi-cash-coin text-purple me-2"></i>
-              {% trans "Supplier payment due tomorrow" %}</a></li>
+          <ul class="dropdown-menu dropdown-menu-end notification-menu">
+            <li class="notification-title"><strong>{% trans "Notifications" %}</strong></li>
+            <li class="notification-empty"><i class="bi bi-bell"></i><span>{% trans "You are all caught up" %}</span></li>
           </ul>
         </div>
 
@@ -209,15 +163,21 @@
             </div>
           </div>
           <ul class="dropdown-menu dropdown-menu-end">
-            <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>{% trans "My profile" %}</a></li>
-            <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i>{% trans "Settings" %}</a></li>
+            {% if request.user.is_superuser or request.user.role == 'admin' %}
+            <li><a class="dropdown-item" href="{% url 'core:settings' %}"><i class="bi bi-gear me-2"></i>{% trans "Settings" %}</a></li>
             <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="#" data-confirm="{% trans "Sign out of the system?" %}">
-              <i class="bi bi-box-arrow-right me-2"></i>{% trans "Sign out" %}</a></li>
+            {% endif %}
+            <li><form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right me-2"></i>{% trans "Sign out" %}</button></form></li>
           </ul>
         </div>
       </div>
     </header>
+
+    {% if request.resolver_match.namespace == 'finance' %}
+    <nav class="module-bar" aria-label="{% trans 'Finance navigation' %}"><a href="{% url 'finance:account_list' %}" class="{% if request.resolver_match.url_name == 'account_list' %}active{% endif %}">{% trans "Accounts" %}</a><a href="{% url 'finance:journal_list' %}" class="{% if 'journal' in request.resolver_match.url_name %}active{% endif %}">{% trans "Journals" %}</a><a href="{% url 'finance:receipt_list' %}" class="{% if 'receipt' in request.resolver_match.url_name %}active{% endif %}">{% trans "Receipts" %}</a><a href="{% url 'finance:payment_list' %}" class="{% if 'payment' in request.resolver_match.url_name %}active{% endif %}">{% trans "Payments" %}</a><a href="{% url 'finance:general_ledger' %}" class="{% if request.resolver_match.url_name == 'general_ledger' %}active{% endif %}">{% trans "General ledger" %}</a><a href="{% url 'finance:trial_balance' %}" class="{% if request.resolver_match.url_name == 'trial_balance' %}active{% endif %}">{% trans "Trial balance" %}</a></nav>
+    {% elif request.resolver_match.namespace == 'inventory' %}
+    <nav class="module-bar" aria-label="{% trans 'Inventory navigation' %}"><a href="{% url 'inventory:product_list' %}" class="{% if 'product' in request.resolver_match.url_name %}active{% endif %}">{% trans "Products" %}</a><a href="{% url 'inventory:warehouse_list' %}" class="{% if request.resolver_match.url_name == 'warehouse_list' %}active{% endif %}">{% trans "Warehouses" %}</a><a href="{% url 'inventory:waste_list' %}" class="{% if 'waste' in request.resolver_match.url_name %}active{% endif %}">{% trans "Waste & Loss" %}</a></nav>
+    {% endif %}
 
     <main class="page-enter">
       {% block content %}{% endblock %}
@@ -248,10 +208,10 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-{# ==========================================================================
+{% comment %}
    Strings that erp.js generates at runtime. Keeping them here means the
    JS file stays translation-free and everything flows through the .po file.
-   ========================================================================== #}
+{% endcomment %}
 <script>
   window.ERP_I18N = {
     "close":         "{% trans 'Close' %}",
