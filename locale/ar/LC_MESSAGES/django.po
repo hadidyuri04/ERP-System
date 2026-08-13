@@ -41,13 +41,13 @@ msgstr "الدور"
 #: .\purchasing\models.py:122 .\purchasing\models.py:201
 #: .\quotations\models.py:28
 msgid "Created At"
-msgstr "أنشئ في"
+msgstr "تاريخ الإنشاء"
 
 #: .\accounts\models.py:20 .\customers\models.py:69 .\finance\models.py:41
 #: .\finance\models.py:113 .\finance\models.py:304 .\finance\models.py:399
 #: .\inventory\models.py:167 .\purchasing\models.py:127
 msgid "Updated At"
-msgstr "تم التحديث في"
+msgstr "تاريخ التحديث"
 
 #: .\accounts\models.py:23 .\notifications\models.py:13
 msgid "User"
@@ -162,7 +162,7 @@ msgstr "العملاء"
 
 #: .\customers\views.py:33
 msgid "Customer created successfully."
-msgstr "تم إنشاء عرض السعر بنجاح."
+msgstr "تم إنشاء العميل بنجاح."
 
 #: .\customers\views.py:35 .\templates\customers\customer_list.html:3
 msgid "New customer"
@@ -190,7 +190,7 @@ msgstr "حقوق ملكية"
 
 #: .\finance\models.py:16
 msgid "Revenue"
-msgstr "الربح"
+msgstr "الإيرادات"
 
 #: .\finance\models.py:17
 msgid "Expense"
@@ -227,7 +227,7 @@ msgstr "مسودة"
 
 #: .\finance\models.py:54
 msgid "Posted"
-msgstr "تم النشر"
+msgstr "مُرحّل"
 
 #: .\finance\models.py:55
 msgid "Reversed"
@@ -251,7 +251,7 @@ msgstr "سند قبض"
 
 #: .\finance\models.py:62 .\finance\models.py:404
 msgid "Payment Voucher"
-msgstr "سند دفع"
+msgstr "سند صرف"
 
 #: .\finance\models.py:63 .\templates\core\base.html:83
 #: .\templates\core\base.html:182
@@ -443,83 +443,77 @@ msgid "Selected account does not exist."
 msgstr "الحساب المحدد غير موجود."
 
 #: .\finance\services.py:21
-#, fuzzy
 #| msgid "Only confirmed purchase invoices can be posted to accounting."
 msgid "This document has already been posted to accounting."
-msgstr "فقط فواتير الشراء المؤكدة يمكن ترحيلها إلى الحسابات."
+msgstr "تم ترحيل هذا المستند إلى الحسابات مسبقًا."
 
 #: .\finance\services.py:31
-#, fuzzy, python-format
+#, python-format
 #| msgid "Selected account does not exist."
 msgid "Required accounting account %(code)s does not exist."
-msgstr "الحساب المحدد غير موجود."
+msgstr "الحساب المحاسبي المطلوب %(code)s غير موجود."
 
 #: .\finance\services.py:38
 #, python-format
 msgid "Accounting account %(code)s is inactive."
-msgstr ""
+msgstr "الحساب المحاسبي %(code)s غير نشط."
 
 #: .\finance\services.py:45
-#, fuzzy, python-format
+#, python-format
 #| msgid "This account does not allow direct posting."
 msgid "Accounting account %(code)s does not allow posting."
-msgstr "هذا الحساب لا يسمح بالترحيل المباشر إليه."
+msgstr "الحساب المحاسبي %(code)s لا يسمح بالترحيل."
 
 #: .\finance\services.py:53
 #, python-format
 msgid ""
 "Accounting account %(code)s has the wrong type. Expected %(expected)s but "
 "found %(actual)s."
-msgstr ""
+msgstr "نوع الحساب المحاسبي %(code)s غير صحيح. النوع المتوقع: %(expected)s، والنوع الموجود: %(actual)s."
 
 #: .\finance\services.py:68
-#, fuzzy
 #| msgid "The cash or bank account the money leaves from."
 msgid "The selected cash or bank account must be an asset account."
-msgstr "حساب الصندوق أو البنك الذي يُصرف منه المبلغ."
+msgstr "يجب أن يكون حساب الصندوق أو البنك المحدد من نوع الأصول."
 
 #: .\finance\services.py:73
-#, fuzzy
 #| msgid "The cash or bank account receiving the money."
 msgid "The selected cash or bank account is inactive."
-msgstr "حساب الصندوق أو البنك المستلم للمبلغ."
+msgstr "حساب الصندوق أو البنك المحدد غير نشط."
 
 #: .\finance\services.py:78
-#, fuzzy
 #| msgid "This account does not allow direct posting."
 msgid "The selected cash or bank account does not allow posting."
-msgstr "هذا الحساب لا يسمح بالترحيل المباشر إليه."
+msgstr "حساب الصندوق أو البنك المحدد لا يسمح بالترحيل."
 
 #: .\finance\services.py:175
 msgid "A customer is required for an accounts receivable receipt."
-msgstr ""
+msgstr "يجب تحديد عميل عند تسجيل قبض على حساب الذمم المدينة."
 
 #: .\finance\services.py:255
 msgid "A supplier is required for an accounts payable payment."
-msgstr ""
+msgstr "يجب تحديد مورد عند تسجيل دفعة على حساب الذمم الدائنة."
 
 #: .\finance\services.py:326
 msgid "Only confirmed purchase invoices can be posted to accounting."
 msgstr "فقط فواتير الشراء المؤكدة يمكن ترحيلها إلى الحسابات."
 
 #: .\finance\services.py:346
-#, fuzzy
 #| msgid "Return quantity must be greater than zero."
 msgid "Purchase inventory value must be greater than zero."
-msgstr "يجب أن تكون كمية الإرجاع أكبر من الصفر."
+msgstr "يجب أن تكون قيمة مخزون المشتريات أكبر من صفر."
 
 #: .\finance\services.py:385
-#, fuzzy
 #| msgid "Return quantity must be greater than zero."
 msgid "Purchase accounting total must be greater than zero."
-msgstr "يجب أن تكون كمية الإرجاع أكبر من الصفر."
+msgstr "يجب أن يكون الإجمالي المحاسبي للمشتريات أكبر من صفر."
 
 #: .\finance\services.py:390
 #, python-format
 msgid ""
 "Purchase accounting total does not match invoice total. Calculated: "
 "%(calculated)s, Invoice total: %(invoice_total)s"
-msgstr ""
+msgstr "الإجمالي المحاسبي للمشتريات لا يطابق إجمالي الفاتورة. المحسوب: %(calculated)s، إجمالي الفاتورة: %(invoice_total)s"
 
 #: .\finance\services.py:403
 #, python-format
@@ -533,42 +527,41 @@ msgid "Inventory purchase from %(supplier_name)s"
 msgstr "شراء مخزون من المورد %(supplier_name)s"
 
 #: .\finance\services.py:433
-#, fuzzy, python-format
+#, python-format
 #| msgid "Payable for purchase invoice %(invoice_number)s"
 msgid "Purchase tax for invoice %(invoice_number)s"
-msgstr "المستحق لفاتورة الشراء %(invoice_number)s"
+msgstr "ضريبة المشتريات للفاتورة %(invoice_number)s"
 
 #: .\finance\services.py:447
-#, fuzzy, python-format
+#, python-format
 #| msgid "Payable for purchase invoice %(invoice_number)s"
 msgid "Additional purchase expenses for %(invoice_number)s"
-msgstr "المستحق لفاتورة الشراء %(invoice_number)s"
+msgstr "مصاريف شراء إضافية للفاتورة %(invoice_number)s"
 
 #: .\finance\services.py:461
-#, fuzzy, python-format
+#, python-format
 #| msgid "Payable for purchase invoice %(invoice_number)s"
 msgid "Purchase discount for %(invoice_number)s"
-msgstr "المستحق لفاتورة الشراء %(invoice_number)s"
+msgstr "خصم المشتريات للفاتورة %(invoice_number)s"
 
 #: .\finance\services.py:479
-#, fuzzy, python-format
+#, python-format
 #| msgid "Purchase Invoice %(invoice_number)s from %(supplier_name)s"
 msgid "Purchase invoice %(invoice_number)s settlement"
-msgstr "فاتورة الشراء %(invoice_number)s من المورد %(supplier_name)s"
+msgstr "تسوية فاتورة الشراء %(invoice_number)s"
 
 #: .\finance\services.py:506
 msgid "Only completed POS sales can be posted."
 msgstr "فقط مبيعات نقاط البيع المكتملة يمكن ترحيلها."
 
 #: .\finance\services.py:529
-#, fuzzy
 #| msgid "Only completed POS sales can be posted."
 msgid "A completed POS sale must contain at least one payment."
-msgstr "فقط مبيعات نقاط البيع المكتملة يمكن ترحيلها."
+msgstr "يجب أن تتضمن عملية البيع المكتملة في نقطة البيع دفعة واحدة على الأقل."
 
 #: .\finance\services.py:548
 msgid "POS sale tax cannot exceed the sale total."
-msgstr ""
+msgstr "لا يمكن أن تتجاوز ضريبة عملية نقطة البيع إجمالي عملية البيع."
 
 #: .\finance\services.py:555
 #, python-format
@@ -577,53 +570,53 @@ msgstr "بيع نقطة بيع %(sale_number)s"
 
 #: .\finance\services.py:613
 msgid "Credit sales require a customer."
-msgstr ""
+msgstr "تتطلب المبيعات الآجلة تحديد عميل."
 
 #: .\finance\services.py:625
 #, python-format
 msgid "Unsupported payment method: %(method)s"
-msgstr ""
+msgstr "طريقة دفع غير مدعومة: %(method)s"
 
 #: .\finance\services.py:643
-#, fuzzy, python-format
+#, python-format
 #| msgid "Sales Return for POS Sale %(sale_number)s"
 msgid "%(method)s payment for POS sale %(sale)s"
-msgstr "مرتجع مبيعات لعملية البيع %(sale_number)s"
+msgstr "دفعة بطريقة %(method)s لعملية نقطة البيع %(sale)s"
 
 #: .\finance\services.py:655
 msgid "Sale change exceeds the available cash payment."
-msgstr ""
+msgstr "مبلغ الباقي يتجاوز مبلغ الدفع النقدي المتاح."
 
 #: .\finance\services.py:663
 #, python-format
 msgid ""
 "POS payment total does not match sale total. Payments: %(payments)s, Sale "
 "total: %(total)s"
-msgstr ""
+msgstr "إجمالي دفعات نقطة البيع لا يطابق إجمالي عملية البيع. الدفعات: %(payments)s، إجمالي البيع: %(total)s"
 
 #: .\finance\services.py:676
-#, fuzzy, python-format
+#, python-format
 #| msgid "Sales revenue for %(sale_number)s"
 msgid "Sales revenue for %(sale)s"
-msgstr "إيرادات المبيعات لـ %(sale_number)s"
+msgstr "إيرادات المبيعات للعملية %(sale)s"
 
 #: .\finance\services.py:692
-#, fuzzy, python-format
+#, python-format
 #| msgid "Sales revenue for %(sale_number)s"
 msgid "Sales tax for %(sale)s"
-msgstr "إيرادات المبيعات لـ %(sale_number)s"
+msgstr "ضريبة المبيعات للعملية %(sale)s"
 
 #: .\finance\services.py:705
-#, fuzzy, python-format
+#, python-format
 #| msgid "COGS for sale %(sale_number)s"
 msgid "COGS for %(sale)s"
-msgstr "تكلفة البضاعة المباعة للبيع %(sale_number)s"
+msgstr "تكلفة البضاعة المباعة للعملية %(sale)s"
 
 #: .\finance\services.py:718
-#, fuzzy, python-format
+#, python-format
 #| msgid "Inventory reduction for sale %(sale_number)s"
 msgid "Inventory reduction for %(sale)s"
-msgstr "تخفيض المخزون للبيع %(sale_number)s"
+msgstr "تخفيض المخزون للعملية %(sale)s"
 
 #: .\finance\services.py:746
 msgid "Only confirmed waste and loss documents can be posted."
@@ -649,42 +642,37 @@ msgid "Inventory reduction due to waste %(document_number)s"
 msgstr "تخفيض المخزون بسبب الهالك %(document_number)s"
 
 #: .\finance\views.py:54
-#, fuzzy
 #| msgid "Quotation created successfully."
 msgid "Journal entry posted successfully."
-msgstr "تم إنشاء عرض السعر بنجاح."
+msgstr "تم ترحيل قيد اليومية بنجاح."
 
 #: .\finance\views.py:81
-#, fuzzy
 #| msgid "Quotation created successfully."
 msgid "Receipt voucher saved successfully."
-msgstr "تم إنشاء عرض السعر بنجاح."
+msgstr "تم حفظ سند القبض بنجاح."
 
 #: .\finance\views.py:90 .\templates\finance\receipt_voucher_form.html:2
 msgid "Receipt voucher"
 msgstr "سند قبض"
 
 #: .\finance\views.py:99
-#, fuzzy
 #| msgid "Quotation created successfully."
 msgid "Receipt voucher posted successfully."
-msgstr "تم إنشاء عرض السعر بنجاح."
+msgstr "تم ترحيل سند القبض بنجاح."
 
 #: .\finance\views.py:126
-#, fuzzy
 #| msgid "Quotation created successfully."
 msgid "Payment voucher saved successfully."
-msgstr "تم إنشاء عرض السعر بنجاح."
+msgstr "تم حفظ سند الصرف بنجاح."
 
 #: .\finance\views.py:135 .\templates\finance\payment_voucher_form.html:2
 msgid "Payment voucher"
 msgstr "سند صرف"
 
 #: .\finance\views.py:144
-#, fuzzy
 #| msgid "Quotation created successfully."
 msgid "Payment voucher posted successfully."
-msgstr "تم إنشاء عرض السعر بنجاح."
+msgstr "تم ترحيل سند الصرف بنجاح."
 
 #: .\inventory\models.py:11
 msgid "Parent Category"
@@ -803,7 +791,7 @@ msgstr "تكلفة الوحدة"
 
 #: .\inventory\models.py:106
 msgid "Quantity Received"
-msgstr "الالكمية المستلمة"
+msgstr "الكمية المستلمة"
 
 #: .\inventory\models.py:107
 msgid "Quantity Remaining"
@@ -923,7 +911,7 @@ msgstr "تحويل بين المستودعات"
 
 #: .\inventory\models.py:218
 msgid "Warehouse Transfers"
-msgstr "الالتحويلات بين المستودعات"
+msgstr "تحويلات المستودعات"
 
 #: .\inventory\models.py:228
 msgid "Transfer"
@@ -986,16 +974,14 @@ msgid "Waste Loss Items"
 msgstr "بنود الهالك والفاقد"
 
 #: .\inventory\services.py:45
-#, fuzzy, python-format
+#, python-format
 #| msgid ""
 #| "Insufficient unexpired stock for product %(product)s. Short by %(short)s."
 #| msgid_plural ""
 #| "Insufficient unexpired stock for product %(product)s. Short by %(short)s."
 msgid ""
 "Insufficient unexpired stock for product %(product)s. Short by %(short)s."
-msgstr ""
-"الرصيد غير الصالح أو غير الساري كافٍ للمنتج %(product)s. العجز بمقدار "
-"%(short)s."
+msgstr "المخزون غير منتهي الصلاحية غير كافٍ للصنف %(product)s. مقدار العجز: %(short)s."
 
 #: .\inventory\services.py:56
 msgid "Stock addition quantity must be greater than zero."
@@ -1019,66 +1005,57 @@ msgid "Only draft waste and loss documents can be confirmed."
 msgstr "فقط مستندات الهالك والخسائر في حالة المسودة يمكن تأكيدها."
 
 #: .\inventory\services.py:163
-#, fuzzy
 #| msgid "Only draft waste and loss documents can be confirmed."
 msgid "A waste and loss document must contain at least one item."
-msgstr "فقط مستندات الهالك والخسائر في حالة المسودة يمكن تأكيدها."
+msgstr "يجب أن يحتوي مستند الهالك والفاقد على بند واحد على الأقل."
 
 #: .\inventory\services.py:169
-#, fuzzy
 #| msgid "Return quantity must be greater than zero."
 msgid "Waste quantity must be greater than zero."
-msgstr "يجب أن تكون كمية الإرجاع أكبر من الصفر."
+msgstr "يجب أن تكون كمية الهالك أكبر من صفر."
 
 #: .\inventory\services.py:173
-#, fuzzy
 #| msgid "Debit cannot be negative."
 msgid "Waste unit cost cannot be negative."
-msgstr "المدين لا يمكن أن يكون سالباً."
+msgstr "لا يمكن أن تكون تكلفة وحدة الهالك سالبة."
 
 #: .\inventory\services.py:180
 msgid "Waste item total does not match quantity multiplied by unit cost."
-msgstr ""
+msgstr "إجمالي بند الهالك لا يطابق حاصل ضرب الكمية في تكلفة الوحدة."
 
 #: .\inventory\views.py:41
-#, fuzzy
 #| msgid "Quotation created successfully."
 msgid "Product created successfully."
-msgstr "تم إنشاء عرض السعر بنجاح."
+msgstr "تم إنشاء الصنف بنجاح."
 
 #: .\inventory\views.py:43 .\templates\inventory\product_list.html:3
 msgid "New product"
 msgstr "صنف جديد"
 
 #: .\inventory\views.py:53
-#, fuzzy
 #| msgid "Quotation created successfully."
 msgid "Product updated successfully."
-msgstr "تم إنشاء عرض السعر بنجاح."
+msgstr "تم تحديث الصنف بنجاح."
 
 #: .\inventory\views.py:55
-#, fuzzy
 #| msgid "New product"
 msgid "Edit product"
-msgstr "صنف جديد"
+msgstr "تعديل الصنف"
 
 #: .\inventory\views.py:65
-#, fuzzy
 #| msgid "Quotation created successfully."
 msgid "Warehouse created successfully."
-msgstr "تم إنشاء عرض السعر بنجاح."
+msgstr "تم إنشاء المستودع بنجاح."
 
 #: .\inventory\views.py:95
-#, fuzzy
 #| msgid "Waste document total cost cannot be zero."
 msgid "Waste document saved as draft."
-msgstr "لا يمكن أن تكون التكلفة الإجمالية لمستند الهالك صفراً."
+msgstr "تم حفظ مستند الهالك والفاقد كمسودة."
 
 #: .\inventory\views.py:113
-#, fuzzy
 #| msgid "Waste document total cost cannot be zero."
 msgid "Waste document confirmed and posted."
-msgstr "لا يمكن أن تكون التكلفة الإجمالية لمستند الهالك صفراً."
+msgstr "تم تأكيد مستند الهالك والفاقد وترحيله بنجاح."
 
 #: .\notifications\models.py:7
 msgid "Low Stock"
@@ -1342,38 +1319,33 @@ msgid "Quotation created successfully."
 msgstr "تم إنشاء عرض السعر بنجاح."
 
 #: .\quotations\views.py:88
-#, fuzzy
 #| msgid "Quotation created successfully."
 msgid "Quotation converted to sale successfully."
-msgstr "تم إنشاء عرض السعر بنجاح."
+msgstr "تم تحويل عرض السعر إلى عملية بيع بنجاح."
 
 #: .\suppliers\views.py:33
-#, fuzzy
 #| msgid "Quotation created successfully."
 msgid "Supplier created successfully."
-msgstr "تم إنشاء عرض السعر بنجاح."
+msgstr "تم إنشاء المورد بنجاح."
 
 #: .\suppliers\views.py:35 .\templates\suppliers\supplier_list.html:3
 msgid "New supplier"
 msgstr "مورد جديد"
 
 #: .\suppliers\views.py:45
-#, fuzzy
 #| msgid "Quotation created successfully."
 msgid "Supplier updated successfully."
-msgstr "تم إنشاء عرض السعر بنجاح."
+msgstr "تم تحديث بيانات المورد بنجاح."
 
 #: .\suppliers\views.py:47
-#, fuzzy
 #| msgid "New supplier"
 msgid "Edit supplier"
-msgstr "مورد جديد"
+msgstr "تعديل المورد"
 
 #: .\templates\core\accountant_dashboard.html:2
-#, fuzzy
 #| msgid "Dashboard"
 msgid "Finance dashboard"
-msgstr "لوحة التحكم"
+msgstr "لوحة المالية"
 
 #: .\templates\core\accountant_dashboard.html:3
 #: .\templates\core\admin_dashboard.html:14 .\templates\core\base.html:82
@@ -1382,59 +1354,54 @@ msgstr "المالية"
 
 #: .\templates\core\accountant_dashboard.html:3
 msgid "Accounting overview"
-msgstr ""
+msgstr "نظرة عامة على الحسابات"
 
 #: .\templates\core\accountant_dashboard.html:3
 msgid "Review posting activity and keep the ledger up to date."
-msgstr ""
+msgstr "راجع عمليات الترحيل وحافظ على تحديث دفتر الأستاذ."
 
 #: .\templates\core\accountant_dashboard.html:4
 #: .\templates\core\admin_dashboard.html:15
 #: .\templates\finance\payment_list.html:1
-#, fuzzy
 #| msgid "Payment"
 msgid "New payment"
-msgstr "صرف"
+msgstr "سند صرف جديد"
 
 #: .\templates\core\accountant_dashboard.html:4
 #: .\templates\core\admin_dashboard.html:4
 #: .\templates\finance\receipt_list.html:1
-#, fuzzy
 #| msgid "Receipt"
 msgid "New receipt"
-msgstr "قبض"
+msgstr "سند قبض جديد"
 
 #: .\templates\core\accountant_dashboard.html:6
 msgid "Draft journals"
-msgstr ""
+msgstr "قيود مسودة"
 
 #: .\templates\core\accountant_dashboard.html:6
 msgid "Posted journals"
-msgstr ""
+msgstr "قيود مُرحّلة"
 
 #: .\templates\core\accountant_dashboard.html:6 .\templates\core\base.html:180
 #: .\templates\finance\receipt_list.html:1
-#, fuzzy
 #| msgid "Receipt"
 msgid "Receipts"
-msgstr "قبض"
+msgstr "سندات القبض"
 
 #: .\templates\core\accountant_dashboard.html:6 .\templates\core\base.html:180
 #: .\templates\finance\payment_list.html:1
-#, fuzzy
 #| msgid "Payment"
 msgid "Payments"
-msgstr "صرف"
+msgstr "سندات الصرف"
 
 #: .\templates\core\accountant_dashboard.html:7
 msgid "Needs attention"
-msgstr ""
+msgstr "يتطلب المراجعة"
 
 #: .\templates\core\accountant_dashboard.html:7
-#, fuzzy
 #| msgid "Journal Entries"
 msgid "Draft journal entries"
-msgstr "قيود اليومية"
+msgstr "قيود يومية مسودة"
 
 #: .\templates\core\accountant_dashboard.html:7 .\templates\core\base.html:180
 #: .\templates\reports\trial_balance.html:2
@@ -1444,20 +1411,18 @@ msgstr "ميزان المراجعة"
 #: .\templates\core\accountant_dashboard.html:7
 #: .\templates\core\admin_dashboard.html:14
 #: .\templates\reports\general_ledger.html:3
-#, fuzzy
 #| msgid "Entry no."
 msgid "Entry"
-msgstr "رقم القيد"
+msgstr "القيد"
 
 #: .\templates\core\accountant_dashboard.html:7
-#, fuzzy
 #| msgid "Review batches"
 msgid "Review"
-msgstr "مراجعة الدفعات"
+msgstr "مراجعة"
 
 #: .\templates\core\accountant_dashboard.html:7
 msgid "Everything is posted. No drafts need attention."
-msgstr ""
+msgstr "تم ترحيل جميع القيود، ولا توجد مسودات تتطلب المراجعة."
 
 #: .\templates\core\admin_dashboard.html:2 .\templates\core\base.html:9
 #: .\templates\core\base.html:59 .\templates\core\dashboard.html:4
@@ -1466,23 +1431,22 @@ msgstr "لوحة التحكم"
 
 #: .\templates\core\admin_dashboard.html:3
 msgid "Overview"
-msgstr ""
+msgstr "نظرة عامة"
 
 #: .\templates\core\admin_dashboard.html:3
-#, fuzzy, python-format
+#, python-format
 #| msgid "Hello, %(name)s!"
 msgid "Welcome back, %(name)s"
-msgstr "مرحبًا، %(name)s!"
+msgstr "مرحبًا بعودتك، %(name)s"
 
 #: .\templates\core\admin_dashboard.html:3
-#, fuzzy
 #| msgid "Explore information and activity across your business"
 msgid "Here is what is happening across your business today."
-msgstr "استعرض معلومات ونشاط منشأتك"
+msgstr "إليك ملخص ما يجري في أعمالك اليوم."
 
 #: .\templates\core\admin_dashboard.html:4 .\templates\core\base.html:125
 msgid "Open POS"
-msgstr ""
+msgstr "فتح نقطة البيع"
 
 #: .\templates\core\admin_dashboard.html:6 .\templates\core\base.html:8
 msgid "Sphereka ERP"
@@ -1490,34 +1454,31 @@ msgstr "نظام سفيريكا"
 
 #: .\templates\core\admin_dashboard.html:6
 msgid "One clear view of your operation."
-msgstr ""
+msgstr "رؤية موحدة وواضحة لعملياتك."
 
 #: .\templates\core\admin_dashboard.html:6
 msgid ""
 "Manage sales, stock, purchases, and finance from one connected workspace."
-msgstr ""
+msgstr "أدر المبيعات والمخزون والمشتريات والمالية من مساحة عمل مترابطة واحدة."
 
 #: .\templates\core\admin_dashboard.html:8 .\templates\core\dashboard.html:37
 msgid "Active customers"
 msgstr "العملاء النشطون"
 
 #: .\templates\core\admin_dashboard.html:9
-#, fuzzy
 #| msgid "Save product"
 msgid "Active products"
-msgstr "حفظ الصنف"
+msgstr "الأصناف النشطة"
 
 #: .\templates\core\admin_dashboard.html:10
-#, fuzzy
 #| msgid "New supplier"
 msgid "Active suppliers"
-msgstr "مورد جديد"
+msgstr "الموردون النشطون"
 
 #: .\templates\core\admin_dashboard.html:11
-#, fuzzy
 #| msgid "Active customers"
 msgid "Active users"
-msgstr "العملاء النشطون"
+msgstr "المستخدمون النشطون"
 
 #: .\templates\core\admin_dashboard.html:14
 #, fuzzy
@@ -1954,16 +1915,15 @@ msgstr "فتح ميزان المراجعة"
 
 #: .\templates\core\settings.html:4
 msgid "Run database backup"
-msgstr ""
+msgstr "تشغيل النسخ الاحتياطي لقاعدة البيانات"
 
 #: .\templates\customers\customer_form.html:3
 #: .\templates\inventory\product_form.html:3
 #: .\templates\inventory\warehouse_list.html:3
 #: .\templates\suppliers\supplier_form.html:3
-#, fuzzy
 #| msgid "Saved"
 msgid "Save"
-msgstr "تم الحفظ"
+msgstr "حفظ"
 
 #: .\templates\customers\customer_list.html:4
 #: .\templates\inventory\product_list.html:4
@@ -1986,16 +1946,14 @@ msgid "Edit"
 msgstr "تعديل"
 
 #: .\templates\customers\customer_list.html:4
-#, fuzzy
 #| msgid "New customer"
 msgid "No customers found."
-msgstr "عميل جديد"
+msgstr "لم يتم العثور على عملاء."
 
 #: .\templates\finance\account_list.html:1
-#, fuzzy
 #| msgid "Credit account"
 msgid "Chart of accounts"
-msgstr "الحساب الدائن"
+msgstr "دليل الحسابات"
 
 #: .\templates\finance\account_list.html:1
 #: .\templates\reports\trial_balance.html:3
@@ -2003,16 +1961,14 @@ msgid "Type"
 msgstr "النوع"
 
 #: .\templates\finance\account_list.html:1
-#, fuzzy
 #| msgid "Allow Posting"
 msgid "Posting"
-msgstr "السماح بالترحيل"
+msgstr "الترحيل"
 
 #: .\templates\finance\journal_detail.html:1
-#, fuzzy
 #| msgid "Posted"
 msgid "Post entry"
-msgstr "مرحل"
+msgstr "ترحيل القيد"
 
 #: .\templates\finance\journal_list.html:1
 #, fuzzy
@@ -2027,26 +1983,23 @@ msgstr "قيود اليومية"
 #: .\templates\pos\sale_list.html:1
 #: .\templates\purchasing\purchase_invoice_list.html:4
 #: .\templates\quotations\quotation_list.html:4
-#, fuzzy
 #| msgid "Tax Number"
 msgid "Number"
-msgstr "الرقم الضريبي"
+msgstr "الرقم"
 
 #: .\templates\finance\journal_list.html:1
 msgid "Source"
 msgstr "المصدر"
 
 #: .\templates\finance\journal_list.html:1
-#, fuzzy
 #| msgid "Journal Entries"
 msgid "No journal entries."
-msgstr "قيود اليومية"
+msgstr "لا توجد قيود يومية."
 
 #: .\templates\finance\payment_list.html:1
-#, fuzzy
 #| msgid "POS Payments"
 msgid "No payments."
-msgstr "دفعات نقاط البيع"
+msgstr "لا توجد سندات صرف."
 
 #: .\templates\finance\payment_voucher_form.html:3
 #: .\templates\finance\receipt_voucher_form.html:3
@@ -2057,46 +2010,39 @@ msgstr "حفظ كمسودة"
 
 #: .\templates\finance\payment_voucher_form.html:3
 #: .\templates\finance\receipt_voucher_form.html:3
-#, fuzzy
 #| msgid "Save product"
 msgid "Save and post"
-msgstr "حفظ الصنف"
+msgstr "حفظ وترحيل"
 
 #: .\templates\finance\receipt_list.html:1
-#, fuzzy
 #| msgid "Receipt"
 msgid "No receipts."
-msgstr "قبض"
+msgstr "لا توجد سندات قبض."
 
 #: .\templates\finance\voucher_detail.html:1
-#, fuzzy
 #| msgid "Payment voucher"
 msgid "Post voucher"
-msgstr "سند صرف"
+msgstr "ترحيل السند"
 
 #: .\templates\inventory\product_list.html:4 .\templates\pos\sale_detail.html:1
-#, fuzzy
 #| msgid "Unit Price"
 msgid "Price"
-msgstr "سعر الوحدة"
+msgstr "السعر"
 
 #: .\templates\inventory\product_list.html:4
-#, fuzzy
 #| msgid "Stock in"
 msgid "Stock"
-msgstr "الوارد"
+msgstr "المخزون"
 
 #: .\templates\inventory\product_list.html:4
-#, fuzzy
 #| msgid "Product not found"
 msgid "No products found."
-msgstr "الصنف غير موجود"
+msgstr "لم يتم العثور على أصناف."
 
 #: .\templates\inventory\warehouse_list.html:3
-#, fuzzy
 #| msgid "New warehouse"
 msgid "No warehouses found."
-msgstr "مخزن جديد"
+msgstr "لم يتم العثور على مستودعات."
 
 #: .\templates\inventory\warehouse_list.html:3
 msgid "New warehouse"
@@ -2109,16 +2055,14 @@ msgstr "تكلفة الوحدة"
 
 #: .\templates\inventory\waste_loss_detail.html:3
 #: .\templates\purchasing\purchase_invoice_detail.html:3
-#, fuzzy
 #| msgid "Confirm invoice"
 msgid "Confirm and post"
-msgstr "تأكيد الفاتورة"
+msgstr "تأكيد وترحيل"
 
 #: .\templates\inventory\waste_loss_form.html:2
-#, fuzzy
 #| msgid "New warehouse"
 msgid "New waste document"
-msgstr "مخزن جديد"
+msgstr "مستند هالك وفاقد جديد"
 
 #: .\templates\inventory\waste_loss_list.html:2
 #, fuzzy
@@ -2127,26 +2071,23 @@ msgid "Waste & loss"
 msgstr "الهالك والفاقد"
 
 #: .\templates\inventory\waste_loss_list.html:3
-#, fuzzy
 #| msgid "New customer"
 msgid "New document"
-msgstr "عميل جديد"
+msgstr "مستند جديد"
 
 #: .\templates\inventory\waste_loss_list.html:4
-#, fuzzy
 #| msgid "Product not found"
 msgid "No documents found."
-msgstr "الصنف غير موجود"
+msgstr "لم يتم العثور على مستندات."
 
 #: .\templates\pos\pos_screen.html:2 .\templates\pos\pos_screen.html:3
-#, fuzzy
 #| msgid "Point of Sale"
 msgid "Point of sale"
-msgstr "نقاط البيع"
+msgstr "نقطة البيع"
 
 #: .\templates\pos\pos_screen.html:3
 msgid "Select products, review the order, and complete payment."
-msgstr ""
+msgstr "اختر الأصناف، وراجع الطلب، ثم أكمل عملية الدفع."
 
 #: .\templates\pos\pos_screen.html:4
 #, fuzzy
@@ -2289,14 +2230,13 @@ msgid "Tax"
 msgstr "الضريبة"
 
 #: .\templates\quotations\quotation_detail.html:4
-#, fuzzy
 #| msgid "Complete sale"
 msgid "Convert to sale"
-msgstr "إتمام البيع"
+msgstr "تحويل إلى عملية بيع"
 
 #: .\templates\quotations\quotation_detail.html:4
 msgid "Convert"
-msgstr ""
+msgstr "تحويل"
 
 #: .\templates\quotations\quotation_form.html:3
 #, fuzzy
@@ -2312,74 +2252,68 @@ msgid "Quotation details"
 msgstr "بيانات عرض السعر"
 
 #: .\templates\quotations\quotation_form.html:8
-#, fuzzy
 #| msgid "Depleted"
 msgid "Delete"
-msgstr "منتهي"
+msgstr "حذف"
 
 #: .\templates\quotations\quotation_form.html:12
-#, fuzzy
 #| msgid "New quotation"
 msgid "Create quotation"
-msgstr "عرض سعر جديد"
+msgstr "إنشاء عرض سعر"
 
 #: .\templates\quotations\quotation_list.html:4
-#, fuzzy
 #| msgid "Expired"
 msgid "Expiry"
-msgstr "منتهي الصلاحية"
+msgstr "تاريخ الانتهاء"
 
 #: .\templates\quotations\quotation_list.html:4
-#, fuzzy
 #| msgid "New quotation"
 msgid "No quotations."
-msgstr "عرض سعر جديد"
+msgstr "لا توجد عروض أسعار."
 
 #: .\templates\registration\login.html:1
-#, fuzzy
 #| msgid "Sign out"
 msgid "Sign in"
-msgstr "تسجيل الخروج"
+msgstr "تسجيل الدخول"
 
 #: .\templates\registration\login.html:1
 msgid "Your business, connected"
-msgstr ""
+msgstr "أعمالك مترابطة"
 
 #: .\templates\registration\login.html:1
 msgid "Clarity across every transaction."
-msgstr ""
+msgstr "وضوح في كل معاملة."
 
 #: .\templates\registration\login.html:1
 msgid ""
 "Finance, inventory, sales, and purchasing—all working together in one secure "
 "workspace."
-msgstr ""
+msgstr "المالية والمخزون والمبيعات والمشتريات، جميعها تعمل معًا ضمن مساحة عمل آمنة واحدة."
 
 #: .\templates\registration\login.html:1
 msgid "Welcome back"
-msgstr ""
+msgstr "مرحبًا بعودتك"
 
 #: .\templates\registration\login.html:1
 msgid "Sign in to your account"
-msgstr ""
+msgstr "تسجيل الدخول إلى حسابك"
 
 #: .\templates\registration\login.html:1
 msgid "Enter your details to continue to the dashboard."
-msgstr ""
+msgstr "أدخل بياناتك للمتابعة إلى لوحة التحكم."
 
 #: .\templates\registration\login.html:1
-#, fuzzy
 #| msgid "User"
 msgid "Username"
-msgstr "المستخدم"
+msgstr "اسم المستخدم"
 
 #: .\templates\registration\login.html:1
 msgid "Password"
-msgstr ""
+msgstr "كلمة المرور"
 
 #: .\templates\registration\login.html:1
 msgid "Secure access to your company workspace"
-msgstr ""
+msgstr "وصول آمن إلى مساحة عمل شركتك"
 
 #: .\templates\reports\general_ledger.html:3
 #, fuzzy
@@ -2397,10 +2331,9 @@ msgid "Balance"
 msgstr "الرصيد"
 
 #: .\templates\reports\general_ledger.html:3
-#, fuzzy
 #| msgid "Recent transactions"
 msgid "No transactions."
-msgstr "أحدث الحركات"
+msgstr "لا توجد حركات."
 
 #: .\templates\reports\general_ledger.html:3
 msgid "Closing balance"
@@ -2408,33 +2341,30 @@ msgstr "الرصيد الختامي"
 
 #: .\templates\reports\trial_balance.html:3
 msgid "No posted activity."
-msgstr ""
+msgstr "لا توجد حركات مُرحّلة."
 
 #: .\templates\reports\trial_balance.html:3
 msgid "Totals"
 msgstr "الإجماليات"
 
 #: .\templates\reports\trial_balance.html:3
-#, fuzzy
 #| msgid "Balance"
 msgid "Balanced"
-msgstr "الرصيد"
+msgstr "متوازن"
 
 #: .\templates\reports\trial_balance.html:3
-#, fuzzy
 #| msgid "Stock Balance"
 msgid "Out of balance"
-msgstr "رصيد المخزون"
+msgstr "غير متوازن"
 
 #: .\templates\suppliers\supplier_list.html:4
 msgid "Opening balance"
 msgstr "الرصيد الافتتاحي"
 
 #: .\templates\suppliers\supplier_list.html:4
-#, fuzzy
 #| msgid "New supplier"
 msgid "No suppliers found."
-msgstr "مورد جديد"
+msgstr "لم يتم العثور على موردين."
 
 #, fuzzy
 #~| msgid "Message"
