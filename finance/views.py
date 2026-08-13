@@ -9,13 +9,20 @@ from django.views.decorators.http import require_POST
 from core.permissions import accountant_required
 
 from .forms import (
+    AsOfDateForm,
     JournalEntryForm,
     JournalEntryLineFormSet,
     PaymentVoucherForm,
     ReceiptVoucherForm,
+    ReportDateRangeForm,
 )
 from .models import Account, JournalEntry, PaymentVoucher, ReceiptVoucher
-from .reports import generate_general_ledger, generate_trial_balance
+from .reports import (
+    generate_balance_sheet,
+    generate_general_ledger,
+    generate_income_statement,
+    generate_trial_balance,
+)
 from .services import (
     post_journal_entry,
     post_payment_voucher,
@@ -252,3 +259,50 @@ def reverse_journal_view(request, pk):
     except ValidationError as exc:
         _message_validation_error(request, exc)
         return redirect("finance:journal_detail", pk=pk)
+
+
+@login_required
+@accountant_required
+def income_statement_view(request):
+    date_form = ReportDateRangeForm(request.GET or None)
+    statement = None
+
+    if not date_form.is_bound:
+        statement = generate_income_statement()
+    elif date_form.is_valid():
+        statement = generate_income_statement(
+            start_date=date_form.cleaned_data["start_date"],
+            end_date=date_form.cleaned_data["end_date"],
+        )
+
+    return render(
+        request,
+        "reports/income_statement.html",
+        {
+            "statement": statement,
+            "date_form": date_form,
+        },
+    )
+
+
+@login_required
+@accountant_required
+def balance_sheet_view(request):
+    date_form = AsOfDateForm(request.GET or None)
+    balance_sheet = None
+
+    if not date_form.is_bound:
+        balance_sheet = generate_balance_sheet()
+    elif date_form.is_valid():
+        balance_sheet = generate_balance_sheet(
+            as_of_date=date_form.cleaned_data["as_of_date"],
+        )
+
+    return render(
+        request,
+        "reports/balance_sheet.html",
+        {
+            "balance_sheet": balance_sheet,
+            "date_form": date_form,
+        },
+    )

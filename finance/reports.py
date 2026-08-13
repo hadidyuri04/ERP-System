@@ -1,7 +1,9 @@
 from decimal import Decimal
 from django.db.models import Sum
 from django.utils.translation import gettext_lazy as _
+
 from .models import Account, JournalEntry, JournalEntryLine
+
 
 def get_account_balance(account, start_date=None, end_date=None):
     """
@@ -134,4 +136,160 @@ def generate_trial_balance(start_date=None, end_date=None):
         'total_debit': total_debit_sum,
         'total_credit': total_credit_sum,
         'is_balanced': is_balanced
+    }
+
+
+def generate_income_statement(start_date=None, end_date=None):
+    accounts = Account.objects.filter(
+        account_type__in=[
+            Account.AccountType.REVENUE,
+            Account.AccountType.EXPENSE,
+        ]
+    ).order_by("code")
+
+    revenue_rows = []
+    expense_rows = []
+    total_revenue = Decimal("0.000")
+    total_expenses = Decimal("0.000")
+
+    for account in accounts:
+        lines = JournalEntryLine.objects.filter(
+            account=account,
+            journal_entry__status__in=[
+                JournalEntry.Status.POSTED,
+                JournalEntry.Status.REVERSED,
+            ],
+        )
+
+        if start_date:
+            lines = lines.filter(journal_entry__date__gte=start_date)
+
+        if end_date:
+            lines = lines.filter(journal_entry__date__lte=end_date)
+
+        totals = lines.aggregate(
+            debit=Sum("debit"),
+            credit=Sum("credit"),
+        )
+
+        debit = totals["debit"] or Decimal("0.000")
+        credit = totals["credit"] or Decimal("0.000")
+
+        if account.account_type == Account.AccountType.REVENUE:
+            amount = credit - debit
+
+            if amount != 0:
+                revenue_rows.append({
+                    "account_code": account.code,
+                    "account_name": account.name,
+                    "amount": amount,
+                })
+                total_revenue += amount
+
+        elif account.account_type == Account.AccountType.EXPENSE:
+            amount = debit - credit
+
+            if amount != 0:
+                expense_rows.append({
+                    "account_code": account.code,
+                    "account_name": account.name,
+                    "amount": amount,
+                })
+                total_expenses += amount
+
+    net_profit = total_revenue - total_expenses
+
+    return {
+        "revenue_rows": revenue_rows,
+        "expense_rows": expense_rows,
+        "total_revenue": total_revenue,
+        "total_expenses": total_expenses,
+        "net_profit": net_profit,
+    }
+
+
+def generate_balance_sheet(as_of_date=None):
+    accounts = Account.objects.filter(
+        account_type__in=[
+            Account.AccountType.ASSET,
+            Account.AccountType.LIABILITY,
+            Account.AccountType.EQUITY,
+            Account.AccountType.REVENUE,
+            Account.AccountType.EXPENSE,
+        ]
+    ).order_by("code")
+
+    asset_rows = []
+    liability_rows = []
+    equity_rows = []
+    total_assets = Decimal("0.000")
+    total_liabilities = Decimal("0.000")
+    total_equity = Decimal("0.000")
+    total_revenue = Decimal("0.000")
+    total_expenses = Decimal("0.000")
+
+    for account in accounts:
+        lines = JournalEntryLine.objects.filter(
+            account=account,
+            journal_entry__status__in=[
+                JournalEntry.Status.POSTED,
+                JournalEntry.Status.REVERSED,
+            ],
+        )
+        if as_of_date:
+            lines = lines.filter(journal_entry__date__lte=as_of_date)
+
+        totals = lines.aggregate(debit=Sum("debit"), credit=Sum("credit"))
+        debit = totals["debit"] or Decimal("0.000")
+        credit = totals["credit"] or Decimal("0.000")
+
+        if account.account_type == Account.AccountType.ASSET:
+            amount = debit - credit
+            if amount != 0:
+                asset_rows.append({
+                    "account_code": account.code,
+                    "account_name": account.name,
+                    "amount": amount,
+                })
+                total_assets += amount
+        elif account.account_type == Account.AccountType.LIABILITY:
+            amount = credit - debit
+            if amount != 0:
+                liability_rows.append({
+                    "account_code": account.code,
+                    "account_name": account.name,
+                    "amount": amount,
+                })
+                total_liabilities += amount
+        elif account.account_type == Account.AccountType.EQUITY:
+            amount = credit - debit
+            if amount != 0:
+                equity_rows.append({
+                    "account_code": account.code,
+                    "account_name": account.name,
+                    "amount": amount,
+                })
+                total_equity += amount
+        elif account.account_type == Account.AccountType.REVENUE:
+            total_revenue += credit - debit
+        elif account.account_type == Account.AccountType.EXPENSE:
+            total_expenses += debit - credit
+
+    current_earnings = total_revenue - total_expenses
+    total_equity_and_earnings = total_equity + current_earnings
+    total_liabilities_and_equity = total_liabilities + total_equity_and_earnings
+    difference = total_assets - total_liabilities_and_equity
+
+    return {
+        "asset_rows": asset_rows,
+        "liability_rows": liability_rows,
+        "equity_rows": equity_rows,
+        "total_assets": total_assets,
+        "total_liabilities": total_liabilities,
+        "total_equity": total_equity,
+        "current_earnings": current_earnings,
+        "total_equity_and_earnings": total_equity_and_earnings,
+        "total_liabilities_and_equity": total_liabilities_and_equity,
+        "difference": difference,
+        "is_balanced": difference == Decimal("0.000"),
     }

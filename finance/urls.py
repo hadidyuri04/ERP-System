@@ -37,4 +37,14 @@ urlpatterns = [
         views.reverse_journal_view,
         name="journal_reverse",
     ),
+    path(
+        "reports/income-statement/",
+        views.income_statement_view,
+        name="income_statement",
+    ),
+    path(
+        "reports/balance-sheet/",
+        views.balance_sheet_view,
+        name="balance_sheet",
+    ),
 ]

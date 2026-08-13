@@ -31,6 +31,8 @@ class ConnectedViewsSmokeTests(TestCase):
         "finance:payment_create",
         "finance:general_ledger",
         "finance:trial_balance",
+        "finance:income_statement",
+        "finance:balance_sheet",
         "pos:terminal",
         "pos:sale_list",
         "quotations:list",

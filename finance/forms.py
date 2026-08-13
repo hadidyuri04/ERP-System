@@ -8,6 +8,37 @@ from django.utils.translation import gettext_lazy as _
 from .models import Account, JournalEntry, JournalEntryLine, PaymentVoucher, ReceiptVoucher
 
 
+class ReportDateRangeForm(forms.Form):
+    start_date = forms.DateField(
+        label=_("Start date"),
+        required=False,
+        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+    )
+    end_date = forms.DateField(
+        label=_("End date"),
+        required=False,
+        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        start_date = cleaned_data.get("start_date")
+        end_date = cleaned_data.get("end_date")
+        if start_date and end_date and start_date > end_date:
+            raise forms.ValidationError(
+                _("The start date cannot be later than the end date.")
+            )
+        return cleaned_data
+
+
+class AsOfDateForm(forms.Form):
+    as_of_date = forms.DateField(
+        label=_("As of date"),
+        required=False,
+        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+    )
+
+
 class CashAccountMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

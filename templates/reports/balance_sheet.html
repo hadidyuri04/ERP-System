@@ -1,0 +1,84 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Balance sheet" %}{% endblock %}
+
+{% block page_header %}
+<h1>{% trans "Balance sheet" %}</h1>
+<p>{% trans "Assets, liabilities, and equity as of the selected date." %}</p>
+{% endblock %}
+
+{% block content %}
+<div class="card-soft">
+  <form method="get" class="filter-bar">
+    <div>
+      <label for="{{ date_form.as_of_date.id_for_label }}" class="form-label">
+        {{ date_form.as_of_date.label }}
+      </label>
+      {{ date_form.as_of_date }}
+      {{ date_form.as_of_date.errors }}
+    </div>
+    <button type="submit" class="btn btn-primary">{% trans "Apply" %}</button>
+  </form>
+
+  {% if balance_sheet %}
+    <div class="card-pad"><h3>{% trans "Assets" %}</h3></div>
+    <div class="table-wrap">
+      <table class="table-erp">
+        <thead><tr><th>{% trans "Code" %}</th><th>{% trans "Account" %}</th><th>{% trans "Amount" %}</th></tr></thead>
+        <tbody>
+          {% for row in balance_sheet.asset_rows %}
+            <tr><td>{{ row.account_code }}</td><td>{{ row.account_name }}</td><td>{{ row.amount|floatformat:3 }}</td></tr>
+          {% empty %}
+            <tr><td colspan="3">{% trans "No asset balances." %}</td></tr>
+          {% endfor %}
+        </tbody>
+        <tfoot><tr><td colspan="2">{% trans "Total assets" %}</td><td>{{ balance_sheet.total_assets|floatformat:3 }}</td></tr></tfoot>
+      </table>
+    </div>
+
+    <div class="card-pad"><h3>{% trans "Liabilities" %}</h3></div>
+    <div class="table-wrap">
+      <table class="table-erp">
+        <thead><tr><th>{% trans "Code" %}</th><th>{% trans "Account" %}</th><th>{% trans "Amount" %}</th></tr></thead>
+        <tbody>
+          {% for row in balance_sheet.liability_rows %}
+            <tr><td>{{ row.account_code }}</td><td>{{ row.account_name }}</td><td>{{ row.amount|floatformat:3 }}</td></tr>
+          {% empty %}
+            <tr><td colspan="3">{% trans "No liability balances." %}</td></tr>
+          {% endfor %}
+        </tbody>
+        <tfoot><tr><td colspan="2">{% trans "Total liabilities" %}</td><td>{{ balance_sheet.total_liabilities|floatformat:3 }}</td></tr></tfoot>
+      </table>
+    </div>
+
+    <div class="card-pad"><h3>{% trans "Equity" %}</h3></div>
+    <div class="table-wrap">
+      <table class="table-erp">
+        <thead><tr><th>{% trans "Code" %}</th><th>{% trans "Account" %}</th><th>{% trans "Amount" %}</th></tr></thead>
+        <tbody>
+          {% for row in balance_sheet.equity_rows %}
+            <tr><td>{{ row.account_code }}</td><td>{{ row.account_name }}</td><td>{{ row.amount|floatformat:3 }}</td></tr>
+          {% empty %}
+            <tr><td colspan="3">{% trans "No equity balances." %}</td></tr>
+          {% endfor %}
+          <tr><td colspan="2">{% trans "Current earnings" %}</td><td>{{ balance_sheet.current_earnings|floatformat:3 }}</td></tr>
+        </tbody>
+        <tfoot>
+          <tr><td colspan="2">{% trans "Total equity and current earnings" %}</td><td>{{ balance_sheet.total_equity_and_earnings|floatformat:3 }}</td></tr>
+          <tr><td colspan="2">{% trans "Total liabilities and equity" %}</td><td>{{ balance_sheet.total_liabilities_and_equity|floatformat:3 }}</td></tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="card-pad">
+      {% if balance_sheet.is_balanced %}
+        <strong>{% trans "Balance sheet is balanced." %}</strong>
+      {% else %}
+        <strong>{% trans "Balance sheet is out of balance." %}</strong>
+        <p>{% trans "Difference" %}: {{ balance_sheet.difference|floatformat:3 }}</p>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Income statement" %}{% endblock %}
+
+{% block page_header %}
+<h1>{% trans "Income statement" %}</h1>
+<p>{% trans "Revenue, expenses, and net profit for the selected period." %}</p>
+{% endblock %}
+
+{% block content %}
+<div class="card-soft">
+
+  <form method="get" class="filter-bar">
+    <div>
+      <label for="{{ date_form.start_date.id_for_label }}" class="form-label">{{ date_form.start_date.label }}</label>
+      {{ date_form.start_date }}
+      {{ date_form.start_date.errors }}
+    </div>
+    <div>
+      <label for="{{ date_form.end_date.id_for_label }}" class="form-label">{{ date_form.end_date.label }}</label>
+      {{ date_form.end_date }}
+      {{ date_form.end_date.errors }}
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+      {% trans "Apply" %}
+    </button>
+  </form>
+
+  {{ date_form.non_field_errors }}
+
+  {% if statement %}
+
+  <div class="card-pad">
+    <h3>{% trans "Revenue" %}</h3>
+  </div>
+
+  <div class="table-wrap">
+    <table class="table-erp">
+      <thead>
+        <tr>
+          <th>{% trans "Code" %}</th>
+          <th>{% trans "Account" %}</th>
+          <th>{% trans "Amount" %}</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for row in statement.revenue_rows %}
+        <tr>
+          <td>{{ row.account_code }}</td>
+          <td>{{ row.account_name }}</td>
+          <td>{{ row.amount|floatformat:3 }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="3">{% trans "No revenue activity." %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+
+      <tfoot>
+        <tr>
+          <td colspan="2">{% trans "Total revenue" %}</td>
+          <td>{{ statement.total_revenue|floatformat:3 }}</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <div class="card-pad">
+    <h3>{% trans "Expenses" %}</h3>
+  </div>
+
+  <div class="table-wrap">
+    <table class="table-erp">
+      <thead>
+        <tr>
+          <th>{% trans "Code" %}</th>
+          <th>{% trans "Account" %}</th>
+          <th>{% trans "Amount" %}</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for row in statement.expense_rows %}
+        <tr>
+          <td>{{ row.account_code }}</td>
+          <td>{{ row.account_name }}</td>
+          <td>{{ row.amount|floatformat:3 }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="3">{% trans "No expense activity." %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+
+      <tfoot>
+        <tr>
+          <td colspan="2">{% trans "Total expenses" %}</td>
+          <td>{{ statement.total_expenses|floatformat:3 }}</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <div class="card-pad">
+    <h3>
+      {% if statement.net_profit >= 0 %}
+        {% trans "Net profit" %}
+      {% else %}
+        {% trans "Net loss" %}
+      {% endif %}
+    </h3>
+
+    <strong class="stat-value">
+      {{ statement.net_profit|floatformat:3 }}
+    </strong>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

@@ -25,7 +25,7 @@ from purchasing.models import PurchaseInvoice, PurchaseInvoiceItem
 from suppliers.models import Supplier
 
 from .models import Account, JournalEntry, JournalEntryLine, PaymentVoucher, ReceiptVoucher
-from .reports import get_account_balance
+from .reports import generate_balance_sheet, generate_income_statement, get_account_balance
 from .services import (
     get_posting_account,
     post_journal_entry,
@@ -640,3 +640,304 @@ class JournalReversalTests(TestCase):
         )
         self.assertContains(original_response, "Entered twice")
         self.assertContains(original_response, reversal.entry_number)
+
+
+class IncomeStatementTests(TestCase):
+    def setUp(self):
+        self.accountant = get_user_model().objects.create_user(
+            username="statement-accountant",
+            password="test-password",
+            role="accountant",
+        )
+        self.cash = Account.objects.create(
+            code="IS1100",
+            name="Statement cash",
+            account_type=Account.AccountType.ASSET,
+        )
+        self.revenue = Account.objects.create(
+            code="IS4100",
+            name="Statement revenue",
+            account_type=Account.AccountType.REVENUE,
+        )
+        self.expense = Account.objects.create(
+            code="IS5100",
+            name="Statement expense",
+            account_type=Account.AccountType.EXPENSE,
+        )
+
+    def create_journal(self, number, journal_date, lines, *, status):
+        journal = JournalEntry.objects.create(
+            entry_number=number,
+            date=journal_date,
+            description="Income statement test",
+            status=status,
+            created_by=self.accountant,
+            approved_by=(
+                self.accountant if status == JournalEntry.Status.POSTED else None
+            ),
+        )
+        for account, debit, credit in lines:
+            JournalEntryLine.objects.create(
+                journal_entry=journal,
+                account=account,
+                debit=debit,
+                credit=credit,
+            )
+        return journal
+
+    def test_income_statement_calculates_profit_and_excludes_drafts(self):
+        self.create_journal(
+            "IS-SALE",
+            date(2026, 8, 1),
+            [
+                (self.cash, Decimal("100.000"), Decimal("0.000")),
+                (self.revenue, Decimal("0.000"), Decimal("100.000")),
+            ],
+            status=JournalEntry.Status.POSTED,
+        )
+        self.create_journal(
+            "IS-EXPENSE",
+            date(2026, 8, 2),
+            [
+                (self.expense, Decimal("40.000"), Decimal("0.000")),
+                (self.cash, Decimal("0.000"), Decimal("40.000")),
+            ],
+            status=JournalEntry.Status.POSTED,
+        )
+        self.create_journal(
+            "IS-DRAFT",
+            date(2026, 8, 3),
+            [
+                (self.cash, Decimal("500.000"), Decimal("0.000")),
+                (self.revenue, Decimal("0.000"), Decimal("500.000")),
+            ],
+            status=JournalEntry.Status.DRAFT,
+        )
+
+        statement = generate_income_statement()
+
+        self.assertEqual(statement["total_revenue"], Decimal("100.000"))
+        self.assertEqual(statement["total_expenses"], Decimal("40.000"))
+        self.assertEqual(statement["net_profit"], Decimal("60.000"))
+
+    def test_income_statement_applies_date_range(self):
+        self.create_journal(
+            "IS-JULY",
+            date(2026, 7, 31),
+            [
+                (self.cash, Decimal("80.000"), Decimal("0.000")),
+                (self.revenue, Decimal("0.000"), Decimal("80.000")),
+            ],
+            status=JournalEntry.Status.POSTED,
+        )
+        self.create_journal(
+            "IS-AUGUST",
+            date(2026, 8, 1),
+            [
+                (self.cash, Decimal("25.000"), Decimal("0.000")),
+                (self.revenue, Decimal("0.000"), Decimal("25.000")),
+            ],
+            status=JournalEntry.Status.POSTED,
+        )
+
+        statement = generate_income_statement(
+            start_date=date(2026, 8, 1),
+            end_date=date(2026, 8, 31),
+        )
+
+        self.assertEqual(statement["total_revenue"], Decimal("25.000"))
+
+    def test_reversal_cancels_income_statement_activity(self):
+        original = self.create_journal(
+            "IS-REVERSED",
+            date(2026, 8, 1),
+            [
+                (self.cash, Decimal("70.000"), Decimal("0.000")),
+                (self.revenue, Decimal("0.000"), Decimal("70.000")),
+            ],
+            status=JournalEntry.Status.POSTED,
+        )
+        reverse_journal_entry(original.pk, self.accountant, "Incorrect sale")
+
+        statement = generate_income_statement()
+
+        self.assertEqual(statement["total_revenue"], Decimal("0.000"))
+        self.assertEqual(statement["net_profit"], Decimal("0.000"))
+        self.assertEqual(statement["revenue_rows"], [])
+
+    def test_income_statement_view_validates_dates(self):
+        self.client.force_login(self.accountant)
+        url = reverse("finance:income_statement")
+
+        invalid_format = self.client.get(url, {"start_date": "not-a-date"})
+        self.assertEqual(invalid_format.status_code, 200)
+        self.assertContains(invalid_format, "Enter a valid date.")
+
+        reversed_range = self.client.get(
+            url,
+            {"start_date": "2026-08-31", "end_date": "2026-08-01"},
+        )
+        self.assertEqual(reversed_range.status_code, 200)
+        self.assertContains(
+            reversed_range,
+            "The start date cannot be later than the end date.",
+        )
+
+
+class BalanceSheetTests(TestCase):
+    def setUp(self):
+        self.accountant = get_user_model().objects.create_user(
+            username="balance-accountant",
+            password="test-password",
+            role="accountant",
+        )
+        self.cash = Account.objects.create(
+            code="BS1100",
+            name="Balance cash",
+            account_type=Account.AccountType.ASSET,
+        )
+        self.payable = Account.objects.create(
+            code="BS2100",
+            name="Balance payable",
+            account_type=Account.AccountType.LIABILITY,
+        )
+        self.capital = Account.objects.create(
+            code="BS3100",
+            name="Owner capital",
+            account_type=Account.AccountType.EQUITY,
+        )
+        self.revenue = Account.objects.create(
+            code="BS4100",
+            name="Balance revenue",
+            account_type=Account.AccountType.REVENUE,
+        )
+        self.expense = Account.objects.create(
+            code="BS5100",
+            name="Balance expense",
+            account_type=Account.AccountType.EXPENSE,
+        )
+
+    def create_journal(self, number, journal_date, lines, *, status=JournalEntry.Status.POSTED):
+        journal = JournalEntry.objects.create(
+            entry_number=number,
+            date=journal_date,
+            description="Balance sheet test",
+            status=status,
+            created_by=self.accountant,
+            approved_by=(
+                self.accountant if status == JournalEntry.Status.POSTED else None
+            ),
+        )
+        for account, debit, credit in lines:
+            JournalEntryLine.objects.create(
+                journal_entry=journal,
+                account=account,
+                debit=debit,
+                credit=credit,
+            )
+        return journal
+
+    def test_balance_sheet_includes_equity_liabilities_and_current_earnings(self):
+        self.create_journal(
+            "BS-CAPITAL",
+            date(2026, 8, 1),
+            [
+                (self.cash, Decimal("100.000"), Decimal("0.000")),
+                (self.capital, Decimal("0.000"), Decimal("100.000")),
+            ],
+        )
+        self.create_journal(
+            "BS-PAYABLE",
+            date(2026, 8, 2),
+            [
+                (self.cash, Decimal("30.000"), Decimal("0.000")),
+                (self.payable, Decimal("0.000"), Decimal("30.000")),
+            ],
+        )
+        self.create_journal(
+            "BS-PROFIT",
+            date(2026, 8, 3),
+            [
+                (self.cash, Decimal("20.000"), Decimal("0.000")),
+                (self.revenue, Decimal("0.000"), Decimal("30.000")),
+                (self.expense, Decimal("10.000"), Decimal("0.000")),
+            ],
+        )
+
+        report = generate_balance_sheet()
+
+        self.assertEqual(report["total_assets"], Decimal("150.000"))
+        self.assertEqual(report["total_liabilities"], Decimal("30.000"))
+        self.assertEqual(report["total_equity"], Decimal("100.000"))
+        self.assertEqual(report["current_earnings"], Decimal("20.000"))
+        self.assertEqual(
+            report["total_liabilities_and_equity"],
+            Decimal("150.000"),
+        )
+        self.assertTrue(report["is_balanced"])
+
+    def test_balance_sheet_excludes_drafts_and_entries_after_as_of_date(self):
+        self.create_journal(
+            "BS-IN-RANGE",
+            date(2026, 8, 1),
+            [
+                (self.cash, Decimal("40.000"), Decimal("0.000")),
+                (self.capital, Decimal("0.000"), Decimal("40.000")),
+            ],
+        )
+        self.create_journal(
+            "BS-AFTER",
+            date(2026, 9, 1),
+            [
+                (self.cash, Decimal("50.000"), Decimal("0.000")),
+                (self.capital, Decimal("0.000"), Decimal("50.000")),
+            ],
+        )
+        self.create_journal(
+            "BS-DRAFT",
+            date(2026, 8, 2),
+            [
+                (self.cash, Decimal("60.000"), Decimal("0.000")),
+                (self.capital, Decimal("0.000"), Decimal("60.000")),
+            ],
+            status=JournalEntry.Status.DRAFT,
+        )
+
+        report = generate_balance_sheet(as_of_date=date(2026, 8, 31))
+
+        self.assertEqual(report["total_assets"], Decimal("40.000"))
+        self.assertEqual(report["total_equity"], Decimal("40.000"))
+        self.assertTrue(report["is_balanced"])
+
+    def test_reversal_cancels_balance_sheet_activity(self):
+        original = self.create_journal(
+            "BS-REVERSED",
+            date(2026, 8, 1),
+            [
+                (self.cash, Decimal("70.000"), Decimal("0.000")),
+                (self.revenue, Decimal("0.000"), Decimal("70.000")),
+            ],
+        )
+        reverse_journal_entry(original.pk, self.accountant, "Incorrect sale")
+
+        report = generate_balance_sheet()
+
+        self.assertEqual(report["total_assets"], Decimal("0.000"))
+        self.assertEqual(report["current_earnings"], Decimal("0.000"))
+        self.assertTrue(report["is_balanced"])
+
+    def test_balance_sheet_view_validates_date_and_restricts_cashiers(self):
+        url = reverse("finance:balance_sheet")
+        self.client.force_login(self.accountant)
+
+        invalid = self.client.get(url, {"as_of_date": "not-a-date"})
+        self.assertEqual(invalid.status_code, 200)
+        self.assertContains(invalid, "Enter a valid date.")
+
+        cashier = get_user_model().objects.create_user(
+            username="balance-cashier",
+            password="test-password",
+            role="cashier",
+        )
+        self.client.force_login(cashier)
+        self.assertEqual(self.client.get(url).status_code, 403)
