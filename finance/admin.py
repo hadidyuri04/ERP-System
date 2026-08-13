@@ -98,7 +98,10 @@ class JournalEntryLineInline(admin.TabularInline):
     extra = 2
 
     def get_readonly_fields(self, request, obj=None):
-        if obj and obj.status == JournalEntry.Status.POSTED:
+        if obj and obj.status in (
+            JournalEntry.Status.POSTED,
+            JournalEntry.Status.REVERSED,
+        ):
             return (
                 "account",
                 "customer",
@@ -114,13 +117,19 @@ class JournalEntryLineInline(admin.TabularInline):
         )
 
     def has_add_permission(self, request, obj=None):
-        if obj and obj.status == JournalEntry.Status.POSTED:
+        if obj and obj.status in (
+            JournalEntry.Status.POSTED,
+            JournalEntry.Status.REVERSED,
+        ):
             return False
 
         return super().has_add_permission(request, obj)
 
     def has_delete_permission(self, request, obj=None):
-        if obj and obj.status == JournalEntry.Status.POSTED:
+        if obj and obj.status in (
+            JournalEntry.Status.POSTED,
+            JournalEntry.Status.REVERSED,
+        ):
             return False
 
         return super().has_delete_permission(request, obj)
@@ -157,7 +166,10 @@ class JournalEntryAdmin(admin.ModelAdmin):
     ]
 
     def get_readonly_fields(self, request, obj=None):
-        if obj and obj.status == JournalEntry.Status.POSTED:
+        if obj and obj.status in (
+            JournalEntry.Status.POSTED,
+            JournalEntry.Status.REVERSED,
+        ):
             return (
                 "entry_number",
                 "date",
@@ -167,6 +179,10 @@ class JournalEntryAdmin(admin.ModelAdmin):
                 "status",
                 "created_by",
                 "approved_by",
+                "reversal_of",
+                "reversal_reason",
+                "reversed_by",
+                "reversed_at",
                 "created_at",
                 "updated_at",
             )
@@ -174,12 +190,19 @@ class JournalEntryAdmin(admin.ModelAdmin):
         return (
             "status",
             "approved_by",
+            "reversal_of",
+            "reversal_reason",
+            "reversed_by",
+            "reversed_at",
             "created_at",
             "updated_at",
         )
 
     def has_delete_permission(self, request, obj=None):
-        if obj and obj.status == JournalEntry.Status.POSTED:
+        if obj and obj.status in (
+            JournalEntry.Status.POSTED,
+            JournalEntry.Status.REVERSED,
+        ):
             return False
 
         return super().has_delete_permission(request, obj)

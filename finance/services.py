@@ -1,8 +1,11 @@
+import uuid
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+
 from .models import (
     Account,
     JournalEntry,
@@ -87,7 +90,7 @@ def post_journal_entry(entry_id, user):
     # 1. Only draft entries can be posted
     if entry.status != JournalEntry.Status.DRAFT:
         raise ValidationError(
-            "Only draft journal entries can be posted."
+            _("Only draft journal entries can be posted.")
         )
 
     # Get all journal lines
@@ -98,7 +101,7 @@ def post_journal_entry(entry_id, user):
     # 2. A journal entry needs at least two lines
     if len(lines) < 2:
         raise ValidationError(
-            "A journal entry must contain at least two lines."
+            _("A journal entry must contain at least two lines.")
         )
 
     total_debit = Decimal("0.000")
@@ -110,12 +113,14 @@ def post_journal_entry(entry_id, user):
 
         if not line.account.is_active:
             raise ValidationError(
-                f"Account {line.account.code} is inactive."
+                _("Account %(code)s is inactive.") % {"code": line.account.code}
             )
 
         if not line.account.allow_posting:
             raise ValidationError(
-                f"Account {line.account.code} does not allow posting."
+                _("Account %(code)s does not allow posting.") % {
+                    "code": line.account.code,
+                }
             )
 
         total_debit += line.debit
@@ -124,15 +129,16 @@ def post_journal_entry(entry_id, user):
     # 4. Debit must equal credit
     if total_debit != total_credit:
         raise ValidationError(
-            f"Journal entry is not balanced. "
-            f"Debit = {total_debit}, "
-            f"Credit = {total_credit}."
+            _(
+                "Journal entry is not balanced. Debit = %(debit)s, "
+                "Credit = %(credit)s."
+            ) % {"debit": total_debit, "credit": total_credit}
         )
 
     # 5. Total cannot be zero
     if total_debit == Decimal("0.000"):
         raise ValidationError(
-            "Journal entry total cannot be zero."
+            _("Journal entry total cannot be zero.")
         )
 
     # 6. Everything is valid → POST it
@@ -161,13 +167,13 @@ def post_receipt_voucher(voucher_id, user):
     # 1. Only draft vouchers can be posted
     if voucher.status != ReceiptVoucher.Status.DRAFT:
         raise ValidationError(
-            "Only draft receipt vouchers can be posted."
+            _("Only draft receipt vouchers can be posted.")
         )
 
     # 2. Amount must be greater than zero
     if voucher.amount <= 0:
         raise ValidationError(
-            "Receipt voucher amount must be greater than zero."
+            _("Receipt voucher amount must be greater than zero.")
         )
 
     if voucher.customer is None:
@@ -241,13 +247,13 @@ def post_payment_voucher(voucher_id, user):
     # 1. Only draft vouchers can be posted
     if voucher.status != PaymentVoucher.Status.DRAFT:
         raise ValidationError(
-            "Only draft payment vouchers can be posted."
+            _("Only draft payment vouchers can be posted.")
         )
 
     # 2. Amount must be greater than zero
     if voucher.amount <= 0:
         raise ValidationError(
-            "Payment voucher amount must be greater than zero."
+            _("Payment voucher amount must be greater than zero.")
         )
 
     if voucher.supplier is None:
@@ -788,3 +794,78 @@ def post_waste_loss(waste_id, user):
     )
 
     return post_journal_entry(journal.id, user)
+
+
+@transaction.atomic
+def reverse_journal_entry(entry_id, user, reason):
+    original = (
+        JournalEntry.objects
+        .select_for_update()
+        .prefetch_related("lines__account")
+        .get(pk=entry_id)
+    )
+
+    if hasattr(original, "reversal_entry"):
+        raise ValidationError(
+            _("This journal entry has already been reversed.")
+        )
+
+    if original.status != JournalEntry.Status.POSTED:
+        raise ValidationError(
+            _("Only posted journal entries can be reversed.")
+        )
+
+    if original.source_type == JournalEntry.SourceType.REVERSAL:
+        raise ValidationError(
+            _("A reversal journal entry cannot be reversed.")
+        )
+
+    reason = (reason or "").strip()
+    if not reason:
+        raise ValidationError(
+            _("A reversal reason is required.")
+        )
+
+    reversal = JournalEntry.objects.create(
+        entry_number=f"REV-{uuid.uuid4().hex[:12].upper()}",
+        date=timezone.localdate(),
+        description=_("Reversal of journal entry %(number)s") % {
+            "number": original.entry_number,
+        },
+        source_type=JournalEntry.SourceType.REVERSAL,
+        source_id=original.pk,
+        status=JournalEntry.Status.DRAFT,
+        created_by=user,
+        reversal_of=original,
+    )
+
+    JournalEntryLine.objects.bulk_create(
+        [
+            JournalEntryLine(
+                journal_entry=reversal,
+                account=line.account,
+                description=line.description,
+                debit=line.credit,
+                credit=line.debit,
+            )
+            for line in original.lines.all()
+        ]
+    )
+
+    reversal = post_journal_entry(reversal.pk, user)
+
+    original.status = JournalEntry.Status.REVERSED
+    original.reversal_reason = reason
+    original.reversed_by = user
+    original.reversed_at = timezone.now()
+    original.save(
+        update_fields=[
+            "status",
+            "reversal_reason",
+            "reversed_by",
+            "reversed_at",
+            "updated_at",
+        ]
+    )
+
+    return reversal
