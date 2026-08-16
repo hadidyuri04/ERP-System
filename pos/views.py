@@ -1,7 +1,7 @@
 import json
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
-from django.db.models import Sum, Q
+from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
@@ -19,7 +19,7 @@ from .services import complete_sale
 @login_required
 @cashier_required
 def pos_terminal(request):
-    # MODERNIZATION: We no longer load all products. The frontend will fetch them via API.
+    """Renders the modern POS terminal screen with active customers and warehouses."""
     return render(request, "pos/pos_screen.html", {
         "customers": Customer.objects.filter(is_active=True).order_by("name"),
         "warehouses": Warehouse.objects.filter(is_active=True).order_by("name"),
@@ -31,7 +31,8 @@ def pos_terminal(request):
 @require_GET
 def search_product(request):
     """
-    Fast API endpoint for barcode scanners and manual searches.
+    Fast API endpoint for barcode scanners and manual searches,
+    checking stock levels specifically for the selected warehouse.
     """
     query = request.GET.get("q", "").strip()
     warehouse_id = request.GET.get("warehouse_id")
@@ -41,13 +42,13 @@ def search_product(request):
 
     # 1. Prioritize Exact Barcode Match (Fastest for Supermarkets)
     products = Product.objects.filter(barcode=query, is_active=True)
-    
+
     # 2. Fallback to Name or Product Code if barcode not found
     if not products.exists():
         products = Product.objects.filter(
             Q(name__icontains=query) | Q(code__icontains=query),
             is_active=True
-        )[:20] # Limit to 20 to prevent payload bloat
+        )[:20]  # Limit payload size
 
     results = []
     for product in products:
@@ -61,7 +62,7 @@ def search_product(request):
             "code": product.code,
             "barcode": product.barcode,
             "selling_price": str(product.selling_price),
-            "tax_rate": "0.00", # Placeholder: Expand this when tax logic is added
+            "tax_rate": "0.00",
             "available_stock": str(available_qty),
             "track_expiration": product.track_expiration
         })
@@ -75,6 +76,7 @@ def search_product(request):
 @login_required
 @cashier_required
 def sale_list(request):
+    """Renders the list of past POS sales with optimized querysets."""
     sales = POSSale.objects.select_related("customer", "warehouse", "cashier").order_by("-date")
     return render(request, "pos/sale_list.html", {"sales": sales})
 
@@ -82,6 +84,7 @@ def sale_list(request):
 @login_required
 @cashier_required
 def sale_detail(request, pk):
+    """Renders detailed receipt view for a single transaction."""
     sale = get_object_or_404(
         POSSale.objects.select_related("customer", "warehouse", "cashier").prefetch_related("items__product", "payments"),
         pk=pk,
@@ -93,12 +96,13 @@ def sale_detail(request, pk):
 @cashier_required
 @require_POST
 def complete_sale_view(request):
-    # (Keep your existing complete_sale_view implementation here)
+    """Handles checkout payload, processes inventory/finance services, and returns receipt metadata."""
     try:
         payload = json.loads(request.body or "{}")
         warehouse = Warehouse.objects.get(pk=payload["warehouse_id"], is_active=True)
         customer_id = payload.get("customer_id")
         customer = Customer.objects.get(pk=customer_id, is_active=True) if customer_id else None
+        
         items_data = []
         for item in payload.get("items", []):
             product = Product.objects.get(pk=item["product_id"], is_active=True)
@@ -109,6 +113,7 @@ def complete_sale_view(request):
                 "discount_amount": item.get("discount_amount", "0.000"),
                 "tax_amount": item.get("tax_amount", "0.000"),
             })
+
         sale = complete_sale(
             warehouse=warehouse,
             cashier=request.user,

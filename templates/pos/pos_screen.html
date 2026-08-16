@@ -27,23 +27,221 @@
   const cartRoot = document.getElementById('cart');
   const empty = document.getElementById('cart-empty');
   const complete = document.getElementById('complete');
+  const warehouseSelect = document.getElementById('warehouse');
+  const searchInput = document.getElementById('product-search');
+  const productGrid = document.getElementById('product-grid');
+  
   const money = value => Number(value).toFixed(3);
   function notify(message, type='warning') { if (window.ERP?.toast?.[type]) ERP.toast[type](message); else alert(message); }
+
   function draw() {
     cartRoot.innerHTML = ''; let total = 0; let quantity = 0;
     for (const item of cart.values()) {
       total += item.quantity * item.unit_price; quantity += item.quantity;
       const row = document.createElement('div'); row.className = 'cart-row';
       row.innerHTML = '<div class="flex-grow-1 min-w-0"><p class="c-name text-truncate"></p><span class="c-meta"></span></div><div class="qty-stepper"><button type="button" data-action="minus"><i class="bi bi-dash"></i></button><span class="q"></span><button type="button" data-action="plus"><i class="bi bi-plus"></i></button></div><span class="c-total"></span><button type="button" class="btn-icon danger" data-action="remove"><i class="bi bi-x-lg"></i></button>';
-      row.querySelector('.c-name').textContent = item.name; row.querySelector('.c-meta').textContent = money(item.unit_price) + ' × ' + item.quantity; row.querySelector('.q').textContent = item.quantity; row.querySelector('.c-total').textContent = money(item.quantity * item.unit_price);
-      row.addEventListener('click', event => { const action = event.target.closest('[data-action]')?.dataset.action; if (!action) return; if (action === 'plus') item.quantity += 1; if (action === 'minus') item.quantity -= 1; if (action === 'remove' || item.quantity <= 0) cart.delete(item.product_id); draw(); }); cartRoot.appendChild(row);
+      row.querySelector('.c-name').textContent = item.name; 
+      row.querySelector('.c-meta').textContent = money(item.unit_price) + ' × ' + item.quantity; 
+      row.querySelector('.q').textContent = item.quantity; 
+      row.querySelector('.c-total').textContent = money(item.quantity * item.unit_price);
+      
+      row.addEventListener('click', event => { 
+        const action = event.target.closest('[data-action]')?.dataset.action; 
+        if (!action) return; 
+        if (action === 'plus') {
+          if (item.quantity < item.available_stock) {
+            item.quantity += 1;
+          } else {
+            notify('{% trans "Cannot exceed available stock in selected warehouse." %}');
+          }
+        }
+        if (action === 'minus') item.quantity -= 1; 
+        if (action === 'remove' || item.quantity <= 0) cart.delete(item.product_id); 
+        draw(); 
+      }); 
+      cartRoot.appendChild(row);
     }
-    document.getElementById('total').textContent = money(total); document.getElementById('quantity-total').textContent = quantity; document.getElementById('cart-count').textContent = cart.size; empty.hidden = cart.size > 0; complete.disabled = cart.size === 0;
+    document.getElementById('total').textContent = money(total); 
+    document.getElementById('quantity-total').textContent = quantity; 
+    document.getElementById('cart-count').textContent = cart.size; 
+    empty.hidden = cart.size > 0; 
+    complete.disabled = cart.size === 0;
   }
-  document.querySelectorAll('.product-button').forEach(button => button.addEventListener('click', () => { const id = Number(button.dataset.id); if (cart.has(id)) cart.get(id).quantity += 1; else cart.set(id, {product_id:id, name:button.dataset.name, quantity:1, unit_price:Number(button.dataset.price)}); draw(); }));
-  document.getElementById('clear-cart').addEventListener('click', () => { cart.clear(); draw(); });
-  document.getElementById('product-search').addEventListener('input', event => { const query = event.target.value.trim().toLowerCase(); let visible = 0; document.querySelectorAll('.product-button').forEach(button => { const match = !query || (button.dataset.name + ' ' + button.dataset.code).toLowerCase().includes(query); button.hidden = !match; if (match) visible += 1; }); document.getElementById('product-count').textContent = visible + ' {% trans "items" %}'; });
-  complete.addEventListener('click', async () => { const warehouse = document.getElementById('warehouse').value; const total = Number(document.getElementById('total').textContent); if (!warehouse) { notify('{% trans "Select a warehouse before completing the sale." %}'); return; } complete.disabled = true; complete.classList.add('is-loading'); try { const response = await fetch('{% url "pos:complete_sale" %}', {method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'}, body:JSON.stringify({warehouse_id:warehouse, customer_id:document.getElementById('customer').value || null, items:[...cart.values()], payments:[{payment_method:document.getElementById('payment-method').value, amount:money(total)}]})}); const data = await response.json(); if (data.ok) window.location = data.detail_url; else notify(data.error || '{% trans "Could not complete the sale." %}', 'error'); } catch (error) { notify('{% trans "Could not connect to the server." %}', 'error'); } finally { complete.disabled = cart.size === 0; complete.classList.remove('is-loading'); } });
+
+  // Bind click events to existing product buttons
+  function bindProductButtons() {
+    document.querySelectorAll('.product-button').forEach(button => {
+      // Prevent duplicate event listeners binding
+      if (button.dataset.bound) return;
+      button.dataset.bound = "true";
+      
+      button.addEventListener('click', () => {
+        const warehouseId = warehouseSelect.value;
+        if (!warehouseId) {
+          notify('{% trans "Please select a warehouse first." %}');
+          warehouseSelect.focus();
+          return;
+        }
+
+        const id = Number(button.dataset.id);
+        const stock = Number(button.dataset.stock || 0);
+        
+        if (stock <= 0) {
+          notify('{% trans "Product is out of stock in this warehouse." %}', 'error');
+          return;
+        }
+
+        if (cart.has(id)) {
+          let item = cart.get(id);
+          if (item.quantity < item.available_stock) {
+            item.quantity += 1;
+          } else {
+            notify('{% trans "Cannot add more than available stock balance." %}');
+          }
+        } else {
+          cart.set(id, {
+            product_id: id, 
+            name: button.dataset.name, 
+            quantity: 1, 
+            unit_price: Number(button.dataset.price),
+            available_stock: stock
+          });
+        }
+        draw();
+      });
+    });
+  }
+
+  // Dynamic AJAX search using your backend's `search_product` endpoint
+  async function performSearch(query) {
+    const warehouseId = warehouseSelect.value;
+    if (!warehouseId) {
+      // Fallback to client-side filtering if warehouse not chosen yet
+      let visible = 0;
+      document.querySelectorAll('.product-button').forEach(button => {
+        const match = !query || (button.dataset.name + ' ' + button.dataset.code).toLowerCase().includes(query);
+        button.hidden = !match;
+        if (match) visible += 1;
+      });
+      document.getElementById('product-count').textContent = visible + ' {% trans "items" %}';
+      return;
+    }
+
+    if (!query) {
+      // Reset grid visibility if search query is cleared
+      document.querySelectorAll('.product-button').forEach(b => b.hidden = false);
+      return;
+    }
+
+    try {
+      const response = `{% url 'pos:search_product' %}?q=${encodeURIComponent(query)}&warehouse_id=${warehouseId}`;
+      const res = await fetch(response);
+      const data = await res.json();
+      
+      if (data.ok && data.results) {
+        const validIds = new Set(data.results.map(r => r.id));
+        let visible = 0;
+        
+        document.querySelectorAll('.product-button').forEach(button => {
+          const id = Number(button.dataset.id);
+          const isMatch = validIds.has(id);
+          button.hidden = !isMatch;
+          
+          if (isMatch) {
+            visible += 1;
+            // Update stock display dynamically from server response
+            const matchedProduct = data.results.find(r => r.id === id);
+            if (matchedProduct) {
+              button.dataset.stock = matchedProduct.available_stock;
+              const stockSpan = button.querySelector('.t-stock');
+              if (stockSpan) {
+                stockSpan.textContent = matchedProduct.code + ' · ' + Number(matchedProduct.available_stock).toFixed(3) + ' {% trans "in stock" %}';
+              }
+            }
+          }
+        });
+
+        document.getElementById('product-count').textContent = visible + ' {% trans "items" %}';
+
+        // Fast Barcode Supermarket Shortcut: If exact barcode match returns 1 item, auto-add to cart
+        if (data.results.length === 1 && data.results[0].barcode === query.trim()) {
+          const prod = data.results[0];
+          if (Number(prod.available_stock) > 0) {
+            const id = prod.id;
+            if (cart.has(id)) {
+              let item = cart.get(id);
+              if (item.quantity < item.available_stock) item.quantity += 1;
+            } else {
+              cart.set(id, {
+                product_id: id,
+                name: prod.name,
+                quantity: 1,
+                unit_price: Number(prod.selling_price),
+                available_stock: Number(prod.available_stock)
+              });
+            }
+            draw();
+            searchInput.value = '';
+            performSearch('');
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Search fetch error:", e);
+    }
+  }
+
+  searchInput.addEventListener('input', event => {
+    performSearch(event.target.value.trim());
+  });
+
+  document.getElementById('clear-cart').addEventListener('click', () => { 
+    cart.clear(); 
+    draw(); 
+  });
+
+  complete.addEventListener('click', async () => { 
+    const warehouse = warehouseSelect.value; 
+    const total = Number(document.getElementById('total').textContent); 
+    if (!warehouse) { 
+      notify('{% trans "Select a warehouse before completing the sale." %}'); 
+      return; 
+    } 
+    complete.disabled = true; 
+    complete.classList.add('is-loading'); 
+    try { 
+      const response = await fetch('{% url "pos:complete_sale" %}', {
+        method: 'POST', 
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token }}'
+        }, 
+        body: JSON.stringify({
+          warehouse_id: warehouse, 
+          customer_id: document.getElementById('customer').value || null, 
+          items: [...cart.values()], 
+          payments: [{
+            payment_method: document.getElementById('payment-method').value, 
+            amount: money(total)
+          }]
+        })
+      }); 
+      const data = await response.json(); 
+      if (data.ok) {
+        window.location = data.detail_url; 
+      } else {
+        notify(data.error || '{% trans "Could not complete the sale." %}', 'error'); 
+      }
+    } catch (error) { 
+      notify('{% trans "Could not connect to the server." %}', 'error'); 
+    } finally { 
+      complete.disabled = cart.size === 0; 
+      complete.classList.remove('is-loading'); 
+    } 
+  });
+
+  // Initialize bindings on load
+  bindProductButtons();
   draw();
 })();
 </script>
