@@ -63,6 +63,16 @@ class Product(models.Model):
     
     track_expiration = models.BooleanField(_("Track Expiration"), default=False)
     is_active = models.BooleanField(_("Is Active"), default=True)
+    image = models.ImageField(_("Product Image"), upload_to='products/', blank=True, null=True)
+    primary_supplier = models.ForeignKey(
+        'suppliers.Supplier', 
+        verbose_name=_("Primary Supplier"), 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True
+    )
+    maximum_stock = models.DecimalField(_("Maximum Stock"), max_digits=12, decimal_places=3, default=0.000)
+    reorder_quantity = models.DecimalField(_("Reorder Quantity"), max_digits=12, decimal_places=3, default=0.000)
 
     class Meta:
         verbose_name = _("Product")
@@ -166,6 +176,10 @@ class StockBalance(models.Model):
     reserved_quantity = models.DecimalField(_("Reserved Quantity"), max_digits=12, decimal_places=3, default=0.000)
     updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
 
+    @property
+    def needs_reorder(self):
+        return self.quantity <= self.product.minimum_stock
+
     class Meta:
         unique_together = ('product', 'warehouse')
         verbose_name = _("Stock Balance")
@@ -256,9 +270,9 @@ class WarehouseTransferItem(models.Model):
 class WasteLoss(models.Model):
     """Records expired, damaged, spoiled, broken, or missing stock."""
     class Status(models.TextChoices):
-        DRAFT = "draft", _("Draft")
-        CONFIRMED = "confirmed", _("Confirmed")
-        CANCELLED = "cancelled", _("Cancelled")
+        DRAFT = "DRAFT", _("Draft")
+        CONFIRMED = "CONFIRMED", _("Confirmed")
+        CANCELLED = "CANCELLED", _("Cancelled")
 
     class WasteReason(models.TextChoices):
         EXPIRED = 'EXPIRED', _('Expired')
@@ -337,3 +351,77 @@ class WasteLossItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity}x {self.product.name} written off for {self.waste_loss.reason}"
+
+
+class StockAdjustment(models.Model):
+    """Document for physical inventory counts and stock reconciliation."""
+    class Status(models.TextChoices):
+        DRAFT = 'DRAFT', _('Draft')
+        CONFIRMED = 'CONFIRMED', _('Confirmed')
+        CANCELLED = 'CANCELLED', _('Cancelled')
+
+    adjustment_number = models.CharField(_("Adjustment Number"), max_length=100, unique=True)
+    warehouse = models.ForeignKey(
+        Warehouse,
+        verbose_name=_("Warehouse"),
+        on_delete=models.PROTECT,
+        related_name='stock_adjustments'
+    )
+    date = models.DateField(_("Date"))
+    status = models.CharField(_("Status"), max_length=20, choices=Status.choices, default=Status.DRAFT)
+    notes = models.TextField(_("Reason / Notes"), blank=True, null=True)
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("Created By"),
+        on_delete=models.PROTECT,
+        related_name='stock_adjustments'
+    )
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("Stock Adjustment")
+        verbose_name_plural = _("Stock Adjustments")
+
+    def __str__(self):
+        return f"Adjustment #{self.adjustment_number} @ {self.warehouse.name}"
+
+
+class StockAdjustmentItem(models.Model):
+    """Counted vs system quantity for one product line in an adjustment."""
+    adjustment = models.ForeignKey(
+        StockAdjustment,
+        verbose_name=_("Adjustment"),
+        on_delete=models.CASCADE,
+        related_name='items'
+    )
+    product = models.ForeignKey(
+        Product,
+        verbose_name=_("Product"),
+        on_delete=models.PROTECT,
+        related_name='adjustment_items'
+    )
+    batch = models.ForeignKey(
+        StockBatch,
+        verbose_name=_("Stock Batch"),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='adjustment_items'
+    )
+
+    system_quantity = models.DecimalField(_("System Quantity"), max_digits=12, decimal_places=3)
+    counted_quantity = models.DecimalField(_("Counted Quantity"), max_digits=12, decimal_places=3)
+    variance = models.DecimalField(_("Variance"), max_digits=12, decimal_places=3, editable=False)
+
+    class Meta:
+        unique_together = ('adjustment', 'product', 'batch')
+        verbose_name = _("Stock Adjustment Item")
+        verbose_name_plural = _("Stock Adjustment Items")
+
+    def save(self, *args, **kwargs):
+        self.variance = self.counted_quantity - self.system_quantity
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.product.name}: counted {self.counted_quantity} vs system {self.system_quantity}"
