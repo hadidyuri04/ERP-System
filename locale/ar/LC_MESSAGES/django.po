@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ERP System\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-13 14:40+0300\n"
+"POT-Creation-Date: 2026-08-16 15:53+0300\n"
 "PO-Revision-Date: 2026-08-13 13:30+0300\n"
 "Last-Translator: ERP Team\n"
 "Language-Team: Arabic\n"
@@ -26,6 +26,7 @@ msgid "Accountant"
 msgstr "محاسب"
 
 #: .\accounts\models.py:10 .\pos\models.py:34
+#: .\templates\pos\sale_detail.html:73
 msgid "Cashier"
 msgstr "كاشير"
 
@@ -35,8 +36,8 @@ msgstr "الدور"
 
 #: .\accounts\models.py:19 .\customers\models.py:64 .\finance\models.py:40
 #: .\finance\models.py:141 .\finance\models.py:212 .\finance\models.py:338
-#: .\finance\models.py:433 .\inventory\models.py:150 .\inventory\models.py:214
-#: .\inventory\models.py:298 .\notifications\models.py:20
+#: .\finance\models.py:433 .\inventory\models.py:160 .\inventory\models.py:229
+#: .\inventory\models.py:313 .\notifications\models.py:20
 #: .\purchasing\models.py:122 .\purchasing\models.py:201
 #: .\quotations\models.py:28
 msgid "Created At"
@@ -44,7 +45,7 @@ msgstr "تاريخ الإنشاء"
 
 #: .\accounts\models.py:20 .\customers\models.py:69 .\finance\models.py:41
 #: .\finance\models.py:142 .\finance\models.py:343 .\finance\models.py:438
-#: .\inventory\models.py:167 .\purchasing\models.py:127
+#: .\inventory\models.py:177 .\purchasing\models.py:127
 msgid "Updated At"
 msgstr "تاريخ التحديث"
 
@@ -107,11 +108,11 @@ msgid "Database backup triggered successfully."
 msgstr "تم تشغيل النسخ الاحتياطي لقاعدة البيانات بنجاح."
 
 #: .\customers\models.py:7 .\finance\models.py:19 .\inventory\models.py:7
-#: .\inventory\models.py:42 .\inventory\models.py:76
+#: .\inventory\models.py:42 .\inventory\models.py:86
 #: .\templates\customers\customer_list.html:4
 #: .\templates\finance\account_list.html:1
 #: .\templates\inventory\product_list.html:4
-#: .\templates\inventory\warehouse_list.html:3
+#: .\templates\inventory\warehouse_list.html:11
 #: .\templates\reports\balance_sheet.html:28
 #: .\templates\reports\balance_sheet.html:43
 #: .\templates\reports\balance_sheet.html:58
@@ -123,11 +124,11 @@ msgid "Code"
 msgstr "الرمز"
 
 #: .\customers\models.py:13 .\finance\models.py:20 .\inventory\models.py:8
-#: .\inventory\models.py:29 .\inventory\models.py:44 .\inventory\models.py:77
+#: .\inventory\models.py:29 .\inventory\models.py:44 .\inventory\models.py:87
 #: .\templates\customers\customer_list.html:4
 #: .\templates\finance\account_list.html:1
 #: .\templates\inventory\product_list.html:4
-#: .\templates\inventory\warehouse_list.html:3
+#: .\templates\inventory\warehouse_list.html:12
 #: .\templates\suppliers\supplier_list.html:4
 msgid "Name"
 msgstr "الاسم"
@@ -136,18 +137,18 @@ msgstr "الاسم"
 msgid "Credit Limit"
 msgstr "حد الائتمان"
 
-#: .\customers\models.py:47 .\inventory\models.py:125
+#: .\customers\models.py:47 .\inventory\models.py:135
 msgid "Opening Balance"
 msgstr "رصيد افتتاحي"
 
-#: .\customers\models.py:54 .\inventory\models.py:148 .\inventory\models.py:206
-#: .\inventory\models.py:290 .\pos\models.py:55 .\purchasing\models.py:110
-#: .\quotations\models.py:26
+#: .\customers\models.py:54 .\inventory\models.py:158
+#: .\inventory\models.py:221 .\inventory\models.py:305 .\pos\models.py:55
+#: .\purchasing\models.py:110 .\quotations\models.py:26
 msgid "Notes"
 msgstr "ملاحظات"
 
 #: .\customers\models.py:59 .\finance\models.py:38 .\inventory\models.py:18
-#: .\inventory\models.py:31 .\inventory\models.py:65 .\inventory\models.py:80
+#: .\inventory\models.py:31 .\inventory\models.py:65 .\inventory\models.py:90
 msgid "Is Active"
 msgstr "نشط"
 
@@ -155,7 +156,7 @@ msgstr "نشط"
 #: .\pos\models.py:18 .\quotations\models.py:16
 #: .\templates\finance\journal_form.html:33
 #: .\templates\finance\receipt_list.html:1 .\templates\pos\pos_screen.html:17
-#: .\templates\pos\sale_list.html:1
+#: .\templates\pos\sale_list.html:27
 #: .\templates\quotations\quotation_list.html:4
 msgid "Customer"
 msgstr "العميل"
@@ -272,8 +273,9 @@ msgid "Accounts"
 msgstr "الحسابات"
 
 #: .\finance\models.py:53 .\finance\models.py:262 .\finance\models.py:357
-#: .\inventory\models.py:181 .\inventory\models.py:259 .\pos\models.py:9
-#: .\purchasing\models.py:11 .\quotations\models.py:9
+#: .\inventory\models.py:196 .\inventory\models.py:274
+#: .\inventory\models.py:358 .\pos\models.py:9 .\purchasing\models.py:11
+#: .\quotations\models.py:9
 msgid "Draft"
 msgstr "مسودة"
 
@@ -289,7 +291,7 @@ msgstr "معكوس"
 msgid "Manual"
 msgstr "يدوي"
 
-#: .\finance\models.py:59 .\inventory\models.py:126
+#: .\finance\models.py:59 .\inventory\models.py:136
 msgid "Purchase"
 msgstr "شراء"
 
@@ -323,14 +325,14 @@ msgid "Entry Number"
 msgstr "رقم القيد"
 
 #: .\finance\models.py:73 .\finance\models.py:277 .\finance\models.py:372
-#: .\inventory\models.py:199 .\inventory\models.py:278 .\pos\models.py:39
-#: .\quotations\models.py:17 .\templates\core\accountant_dashboard.html:7
+#: .\inventory\models.py:214 .\inventory\models.py:293
+#: .\inventory\models.py:364 .\pos\models.py:39 .\quotations\models.py:17
+#: .\templates\core\accountant_dashboard.html:7
 #: .\templates\core\admin_dashboard.html:14
 #: .\templates\finance\journal_list.html:31
 #: .\templates\finance\payment_list.html:1
 #: .\templates\finance\receipt_list.html:1
 #: .\templates\inventory\waste_loss_list.html:4
-#: .\templates\pos\sale_list.html:1
 #: .\templates\purchasing\purchase_invoice_list.html:4
 #: .\templates\quotations\quotation_list.html:4
 #: .\templates\reports\general_ledger.html:3
@@ -339,7 +341,7 @@ msgstr "التاريخ"
 
 #: .\finance\models.py:75 .\finance\models.py:193 .\finance\models.py:319
 #: .\finance\models.py:414 .\inventory\models.py:17 .\inventory\models.py:45
-#: .\inventory\models.py:79 .\templates\core\accountant_dashboard.html:7
+#: .\inventory\models.py:89 .\templates\core\accountant_dashboard.html:7
 #: .\templates\finance\journal_detail.html:41
 #: .\templates\finance\journal_form.html:33
 #: .\templates\finance\journal_list.html:31
@@ -356,23 +358,24 @@ msgid "Source ID"
 msgstr "معرف المصدر"
 
 #: .\finance\models.py:91 .\finance\models.py:324 .\finance\models.py:419
-#: .\inventory\models.py:112 .\inventory\models.py:201
-#: .\inventory\models.py:285 .\pos\models.py:41 .\purchasing\models.py:61
-#: .\quotations\models.py:19 .\templates\core\admin_dashboard.html:14
+#: .\inventory\models.py:122 .\inventory\models.py:216
+#: .\inventory\models.py:300 .\inventory\models.py:365 .\pos\models.py:41
+#: .\purchasing\models.py:61 .\quotations\models.py:19
+#: .\templates\core\admin_dashboard.html:14
 #: .\templates\customers\customer_list.html:4
 #: .\templates\finance\journal_list.html:31
 #: .\templates\finance\payment_list.html:1
 #: .\templates\finance\receipt_list.html:1
 #: .\templates\inventory\waste_loss_list.html:4
-#: .\templates\pos\sale_list.html:1
+#: .\templates\pos\sale_detail.html:69 .\templates\pos\sale_list.html:30
 #: .\templates\purchasing\purchase_invoice_list.html:4
 #: .\templates\quotations\quotation_list.html:4
 msgid "Status"
 msgstr "الحالة"
 
 #: .\finance\models.py:99 .\finance\models.py:332 .\finance\models.py:427
-#: .\inventory\models.py:149 .\inventory\models.py:210
-#: .\inventory\models.py:294 .\pos\models.py:133 .\purchasing\models.py:116
+#: .\inventory\models.py:159 .\inventory\models.py:225
+#: .\inventory\models.py:309 .\pos\models.py:133 .\purchasing\models.py:116
 #: .\quotations\models.py:27
 msgid "Created By"
 msgstr "أنشئ بواسطة"
@@ -405,7 +408,7 @@ msgstr "قيد يومية"
 msgid "Journal Entries"
 msgstr "قيود اليومية"
 
-#: .\finance\models.py:185 .\finance\models.py:376 .\inventory\models.py:109
+#: .\finance\models.py:185 .\finance\models.py:376 .\inventory\models.py:119
 #: .\purchasing\models.py:27 .\templates\finance\journal_form.html:33
 #: .\templates\finance\payment_list.html:1
 #: .\templates\purchasing\purchase_invoice_list.html:4
@@ -459,13 +462,14 @@ msgstr "هذا الحساب لا يسمح له بالنشر المياشر ."
 msgid "This account is inactive."
 msgstr "هذا الحساب غير نشط."
 
-#: .\finance\models.py:263 .\finance\models.py:358 .\inventory\models.py:260
-#: .\purchasing\models.py:12
+#: .\finance\models.py:263 .\finance\models.py:358 .\inventory\models.py:275
+#: .\inventory\models.py:359 .\purchasing\models.py:12
 msgid "Confirmed"
 msgstr "مؤكد"
 
-#: .\finance\models.py:264 .\finance\models.py:359 .\inventory\models.py:183
-#: .\inventory\models.py:261 .\pos\models.py:11 .\purchasing\models.py:13
+#: .\finance\models.py:264 .\finance\models.py:359 .\inventory\models.py:198
+#: .\inventory\models.py:276 .\inventory\models.py:360 .\pos\models.py:11
+#: .\purchasing\models.py:13
 msgid "Cancelled"
 msgstr "ملغي"
 
@@ -549,8 +553,12 @@ msgstr "الحساب المحاسبي %(code)s لا يسمح بالترحيل."
 
 #: .\finance\services.py:56
 #, python-format
-msgid "Accounting account %(code)s has the wrong type. Expected %(expected)s but found %(actual)s."
-msgstr "نوع الحساب المحاسبي %(code)s غير صحيح. النوع المتوقع: %(expected)s، والنوع الموجود: %(actual)s."
+msgid ""
+"Accounting account %(code)s has the wrong type. Expected %(expected)s but "
+"found %(actual)s."
+msgstr ""
+"نوع الحساب المحاسبي %(code)s غير صحيح. النوع المتوقع: %(expected)s، والنوع "
+"الموجود: %(actual)s."
 
 #: .\finance\services.py:71
 msgid "The selected cash or bank account must be an asset account."
@@ -613,8 +621,12 @@ msgstr "يجب أن يكون الإجمالي المحاسبي للمشتريا�
 
 #: .\finance\services.py:396
 #, python-format
-msgid "Purchase accounting total does not match invoice total. Calculated: %(calculated)s, Invoice total: %(invoice_total)s"
-msgstr "الإجمالي المحاسبي للمشتريات لا يطابق إجمالي الفاتورة. المحسوب: %(calculated)s، إجمالي الفاتورة: %(invoice_total)s"
+msgid ""
+"Purchase accounting total does not match invoice total. Calculated: "
+"%(calculated)s, Invoice total: %(invoice_total)s"
+msgstr ""
+"الإجمالي المحاسبي للمشتريات لا يطابق إجمالي الفاتورة. المحسوب: "
+"%(calculated)s، إجمالي الفاتورة: %(invoice_total)s"
 
 #: .\finance\services.py:409
 #, python-format
@@ -683,8 +695,12 @@ msgstr "مبلغ الباقي يتجاوز مبلغ الدفع النقدي ال
 
 #: .\finance\services.py:669
 #, python-format
-msgid "POS payment total does not match sale total. Payments: %(payments)s, Sale total: %(total)s"
-msgstr "إجمالي دفعات نقطة البيع لا يطابق إجمالي عملية البيع. الدفعات: %(payments)s، إجمالي البيع: %(total)s"
+msgid ""
+"POS payment total does not match sale total. Payments: %(payments)s, Sale "
+"total: %(total)s"
+msgstr ""
+"إجمالي دفعات نقطة البيع لا يطابق إجمالي عملية البيع. الدفعات: %(payments)s، "
+"إجمالي البيع: %(total)s"
 
 #: .\finance\services.py:682
 #, python-format
@@ -832,263 +848,307 @@ msgstr "الحد الأدنى للمخزون"
 msgid "Track Expiration"
 msgstr "تتبع صلاحية المنتج"
 
-#: .\inventory\models.py:68 .\inventory\models.py:98 .\inventory\models.py:137
-#: .\inventory\models.py:162 .\inventory\models.py:234
-#: .\inventory\models.py:318 .\pos\models.py:76 .\purchasing\models.py:148
-#: .\quotations\models.py:40 .\templates\inventory\waste_loss_detail.html:3
-#: .\templates\pos\sale_detail.html:1
+#: .\inventory\models.py:66
+msgid "Product Image"
+msgstr "صورة المنتج"
+
+#: .\inventory\models.py:69
+msgid "Primary Supplier"
+msgstr "المورد الرئيسي"
+
+#: .\inventory\models.py:74
+msgid "Maximum Stock"
+msgstr "الحد الأقصى للمخزون"
+
+#: .\inventory\models.py:75
+msgid "Reorder Quantity"
+msgstr "كمية إعادة الطلب"
+
+#: .\inventory\models.py:78 .\inventory\models.py:108
+#: .\inventory\models.py:147 .\inventory\models.py:172
+#: .\inventory\models.py:249 .\inventory\models.py:333 .\pos\models.py:76
+#: .\purchasing\models.py:148 .\quotations\models.py:40
+#: .\templates\inventory\waste_loss_detail.html:3
+#: .\templates\pos\sale_detail.html:35
 #: .\templates\purchasing\purchase_invoice_detail.html:3
 #: .\templates\quotations\quotation_detail.html:3
 #: .\templates\quotations\quotation_form.html:8
 msgid "Product"
 msgstr "المنتج"
 
-#: .\inventory\models.py:69 .\templates\core\base.html:182
+#: .\inventory\models.py:79 .\templates\core\base.html:182
 #: .\templates\inventory\product_list.html:2
 msgid "Products"
 msgstr "المنتجات"
 
-#: .\inventory\models.py:78 .\templates\inventory\warehouse_list.html:3
+#: .\inventory\models.py:88 .\templates\inventory\warehouse_list.html:13
 msgid "Location"
 msgstr "الموقع"
 
-#: .\inventory\models.py:83 .\inventory\models.py:99 .\inventory\models.py:138
-#: .\inventory\models.py:163 .\inventory\models.py:274 .\pos\models.py:27
+#: .\inventory\models.py:93 .\inventory\models.py:109
+#: .\inventory\models.py:148 .\inventory\models.py:173
+#: .\inventory\models.py:289 .\inventory\models.py:363 .\pos\models.py:27
 #: .\purchasing\models.py:34 .\templates\inventory\waste_loss_list.html:4
-#: .\templates\pos\pos_screen.html:17
+#: .\templates\pos\pos_screen.html:17 .\templates\pos\sale_list.html:28
 #: .\templates\purchasing\purchase_invoice_list.html:4
 #: .\templates\quotations\quotation_detail.html:4
 msgid "Warehouse"
 msgstr "المستودع"
 
-#: .\inventory\models.py:84 .\templates\core\base.html:64
+#: .\inventory\models.py:94 .\templates\core\base.html:64
 #: .\templates\core\base.html:182 .\templates\inventory\warehouse_list.html:2
 msgid "Warehouses"
 msgstr "المستودعات"
 
-#: .\inventory\models.py:93 .\templates\customers\customer_list.html:4
-#: .\templates\inventory\warehouse_list.html:3
+#: .\inventory\models.py:103 .\templates\customers\customer_list.html:4
+#: .\templates\inventory\warehouse_list.html:14
 msgid "Active"
 msgstr "نشط"
 
-#: .\inventory\models.py:94 .\inventory\models.py:264
+#: .\inventory\models.py:104 .\inventory\models.py:279
 #: .\notifications\models.py:9 .\quotations\models.py:13
 msgid "Expired"
 msgstr "منتهي الصلاحية"
 
-#: .\inventory\models.py:95
+#: .\inventory\models.py:105
 msgid "Depleted"
 msgstr "منتهي"
 
-#: .\inventory\models.py:96
+#: .\inventory\models.py:106
 msgid "Blocked"
 msgstr "محظور"
 
-#: .\inventory\models.py:100 .\purchasing\models.py:189
+#: .\inventory\models.py:110 .\purchasing\models.py:189
 msgid "Batch Number"
 msgstr "رقم التشغيلة / الدفعة"
 
-#: .\inventory\models.py:102 .\purchasing\models.py:195
+#: .\inventory\models.py:112 .\purchasing\models.py:195
 msgid "Expiration Date"
 msgstr "تاريخ الانتهاء"
 
-#: .\inventory\models.py:103
+#: .\inventory\models.py:113
 msgid "Received Date"
 msgstr "تاريخ الاستلام"
 
-#: .\inventory\models.py:105 .\inventory\models.py:143
-#: .\inventory\models.py:331 .\pos\models.py:92 .\purchasing\models.py:161
+#: .\inventory\models.py:115 .\inventory\models.py:153
+#: .\inventory\models.py:346 .\pos\models.py:92 .\purchasing\models.py:161
 msgid "Unit Cost"
 msgstr "تكلفة الوحدة"
 
-#: .\inventory\models.py:106
+#: .\inventory\models.py:116
 msgid "Quantity Received"
 msgstr "الكمية المستلمة"
 
-#: .\inventory\models.py:107
+#: .\inventory\models.py:117
 msgid "Quantity Remaining"
 msgstr "الكمية المتبقية"
 
-#: .\inventory\models.py:110
+#: .\inventory\models.py:120
 msgid "Purchase Item"
 msgstr "بند الشراء"
 
-#: .\inventory\models.py:115 .\inventory\models.py:139
-#: .\inventory\models.py:240 .\inventory\models.py:324 .\pos\models.py:83
+#: .\inventory\models.py:125 .\inventory\models.py:149
+#: .\inventory\models.py:255 .\inventory\models.py:339 .\pos\models.py:83
 msgid "Stock Batch"
 msgstr "دفعة المخزون"
 
-#: .\inventory\models.py:116
+#: .\inventory\models.py:126
 msgid "Stock Batches"
 msgstr "دفعات المخزون"
 
-#: .\inventory\models.py:127
+#: .\inventory\models.py:137
 msgid "Purchase Return"
 msgstr "مرتجعات الشراء"
 
-#: .\inventory\models.py:128 .\pos\models.py:69 .\pos\models.py:116
+#: .\inventory\models.py:138 .\pos\models.py:69 .\pos\models.py:116
 msgid "Sale"
 msgstr "بيع"
 
-#: .\inventory\models.py:129
+#: .\inventory\models.py:139
 msgid "Sale Return"
 msgstr "مرتجعات المبيعات"
 
-#: .\inventory\models.py:130
+#: .\inventory\models.py:140
 msgid "Transfer In"
 msgstr "تحويل وارد"
 
-#: .\inventory\models.py:131
+#: .\inventory\models.py:141
 msgid "Transfer Out"
 msgstr "تحويل صادر"
 
-#: .\inventory\models.py:132
+#: .\inventory\models.py:142
 msgid "Waste"
 msgstr "تالف"
 
-#: .\inventory\models.py:133
+#: .\inventory\models.py:143
 msgid "Damage"
 msgstr "تالف / ضرر"
 
-#: .\inventory\models.py:134
+#: .\inventory\models.py:144
 msgid "Adjustment In"
 msgstr "تسوية إضافة"
 
-#: .\inventory\models.py:135
+#: .\inventory\models.py:145
 msgid "Adjustment Out"
 msgstr "تسوية خصم"
 
-#: .\inventory\models.py:141
+#: .\inventory\models.py:151
 msgid "Movement Type"
 msgstr "نوع الحركة"
 
-#: .\inventory\models.py:142 .\inventory\models.py:165
-#: .\inventory\models.py:246 .\inventory\models.py:330 .\pos\models.py:90
+#: .\inventory\models.py:152 .\inventory\models.py:175
+#: .\inventory\models.py:261 .\inventory\models.py:345 .\pos\models.py:90
 #: .\purchasing\models.py:154 .\quotations\models.py:41
 #: .\templates\inventory\waste_loss_detail.html:3
-#: .\templates\pos\sale_detail.html:1
 #: .\templates\purchasing\purchase_invoice_detail.html:3
 #: .\templates\quotations\quotation_detail.html:3
 #: .\templates\quotations\quotation_form.html:8
 msgid "Quantity"
 msgstr "الكمية"
 
-#: .\inventory\models.py:145
+#: .\inventory\models.py:155
 msgid "Reference Type"
 msgstr "نوع المرجع"
 
-#: .\inventory\models.py:146
+#: .\inventory\models.py:156
 msgid "Reference ID"
 msgstr "معرف المرجع"
 
-#: .\inventory\models.py:153
+#: .\inventory\models.py:163
 msgid "Stock Movement"
 msgstr "حركة المخزون"
 
-#: .\inventory\models.py:154
+#: .\inventory\models.py:164
 msgid "Stock Movements"
 msgstr "حركات المخزون"
 
-#: .\inventory\models.py:166
+#: .\inventory\models.py:176
 msgid "Reserved Quantity"
 msgstr "الكمية المحجوزة"
 
-#: .\inventory\models.py:171
+#: .\inventory\models.py:178
+msgid "Reorder Level"
+msgstr "حد إعادة الطلب"
+
+#: .\inventory\models.py:186
 msgid "Stock Balance"
 msgstr "رصيد المخزون"
 
-#: .\inventory\models.py:172
+#: .\inventory\models.py:187
 msgid "Stock Balances"
 msgstr "أرصدة المخزون"
 
-#: .\inventory\models.py:182 .\pos\models.py:10
+#: .\inventory\models.py:197 .\pos\models.py:10
 msgid "Completed"
 msgstr "مكتمل"
 
-#: .\inventory\models.py:185
+#: .\inventory\models.py:200
 msgid "Transfer Number"
 msgstr "رقم التحويل"
 
-#: .\inventory\models.py:188
+#: .\inventory\models.py:203
 msgid "Source Warehouse"
 msgstr "المستودع المصدر"
 
-#: .\inventory\models.py:194
+#: .\inventory\models.py:209
 msgid "Destination Warehouse"
 msgstr "المستودع المستهدف"
 
-#: .\inventory\models.py:217
+#: .\inventory\models.py:232
 msgid "Warehouse Transfer"
 msgstr "تحويل بين المستودعات"
 
-#: .\inventory\models.py:218
+#: .\inventory\models.py:233
 msgid "Warehouse Transfers"
 msgstr "تحويلات المستودعات"
 
-#: .\inventory\models.py:228
+#: .\inventory\models.py:243
 msgid "Transfer"
 msgstr "تحويل"
 
-#: .\inventory\models.py:249
+#: .\inventory\models.py:264
 msgid "Warehouse Transfer Item"
 msgstr "بند تحويل المستودع"
 
-#: .\inventory\models.py:250
+#: .\inventory\models.py:265
 msgid "Warehouse Transfer Items"
 msgstr "بنود تحويل المستودع"
 
-#: .\inventory\models.py:265
+#: .\inventory\models.py:280
 msgid "Damaged"
 msgstr "متضرر"
 
-#: .\inventory\models.py:266
+#: .\inventory\models.py:281
 msgid "Spoiled"
 msgstr "فاسد"
 
-#: .\inventory\models.py:267
+#: .\inventory\models.py:282
 msgid "Broken"
 msgstr "مكسور"
 
-#: .\inventory\models.py:268
+#: .\inventory\models.py:283
 msgid "Missing"
 msgstr "مفقود"
 
-#: .\inventory\models.py:269
+#: .\inventory\models.py:284
 msgid "Other"
 msgstr "أخرى"
 
-#: .\inventory\models.py:271
+#: .\inventory\models.py:286
 msgid "Document Number"
 msgstr "رقم المستند"
 
-#: .\inventory\models.py:280 .\templates\inventory\waste_loss_list.html:4
+#: .\inventory\models.py:295 .\templates\inventory\waste_loss_list.html:4
 msgid "Reason"
 msgstr "السبب"
 
-#: .\inventory\models.py:301 .\inventory\models.py:312
+#: .\inventory\models.py:316 .\inventory\models.py:327
 msgid "Waste Loss"
 msgstr "الهالك والفاقد"
 
-#: .\inventory\models.py:302
+#: .\inventory\models.py:317
 msgid "Waste Losses"
 msgstr "الهالك والفاقد"
 
-#: .\inventory\models.py:332
+#: .\inventory\models.py:347
 msgid "Total Cost"
 msgstr "التكلفة الإجمالية"
 
-#: .\inventory\models.py:335
+#: .\inventory\models.py:350
 msgid "Waste Loss Item"
 msgstr "بند الهالك والفاقد"
 
-#: .\inventory\models.py:336
+#: .\inventory\models.py:351
 msgid "Waste Loss Items"
 msgstr "بنود الهالك والفاقد"
 
+#: .\inventory\models.py:362
+msgid "Adjustment Number"
+msgstr "رقم التسوية"
+
+#: .\inventory\models.py:366
+msgid "Reason / Notes"
+msgstr "السبب / ملاحظات"
+
+#: .\inventory\models.py:375
+msgid "System Quantity"
+msgstr "الكمية في النظام"
+
+#: .\inventory\models.py:376
+msgid "Counted Quantity"
+msgstr "الكمية المجرودة"
+
+#: .\inventory\models.py:377
+msgid "Variance"
+msgstr "الفرق"
+
 #: .\inventory\services.py:45
 #, python-format
-msgid "Insufficient unexpired stock for product %(product)s. Short by %(short)s."
-msgstr "المخزون غير منتهي الصلاحية غير كافٍ للصنف %(product)s. مقدار العجز: %(short)s."
+msgid ""
+"Insufficient unexpired stock for product %(product)s. Short by %(short)s."
+msgstr ""
+"المخزون غير منتهي الصلاحية غير كافٍ للصنف %(product)s. مقدار العجز: "
+"%(short)s."
 
 #: .\inventory\services.py:56
 msgid "Stock addition quantity must be greater than zero."
@@ -1100,8 +1160,12 @@ msgstr "يجب أن تكون كمية إزالة المخزون أكبر من ا
 
 #: .\inventory\services.py:107
 #, python-format
-msgid "Negative stock rule enforced: Cannot remove %(qty)s of %(product)s. Available: %(available)s."
-msgstr "قاعدة منع المخزون السالب مفعلة: لا يمكن إزالة %(qty)s من %(product)s. المتاح: %(available)s."
+msgid ""
+"Negative stock rule enforced: Cannot remove %(qty)s of %(product)s. "
+"Available: %(available)s."
+msgstr ""
+"قاعدة منع المخزون السالب مفعلة: لا يمكن إزالة %(qty)s من %(product)s. "
+"المتاح: %(available)s."
 
 #: .\inventory\services.py:157
 msgid "Only draft waste and loss documents can be confirmed."
@@ -1222,8 +1286,8 @@ msgstr "قيمة الضريبة"
 
 #: .\pos\models.py:50 .\purchasing\models.py:96 .\quotations\models.py:24
 #: .\templates\inventory\waste_loss_detail.html:3
-#: .\templates\pos\pos_screen.html:21 .\templates\pos\sale_detail.html:1
-#: .\templates\pos\sale_list.html:1
+#: .\templates\pos\pos_screen.html:21 .\templates\pos\sale_detail.html:38
+#: .\templates\pos\sale_list.html:29
 #: .\templates\purchasing\purchase_invoice_detail.html:3
 #: .\templates\purchasing\purchase_invoice_list.html:4
 #: .\templates\quotations\quotation_detail.html:3
@@ -1289,8 +1353,20 @@ msgstr "لا يمكن إتمام عملية بيع باستخدام عربة ت�
 
 #: .\pos\services.py:37
 #, python-format
-msgid "Insufficient stock for product %(product_name)s. Available: %(available)s, Requested: %(quantity)s"
-msgstr "الكمية غير كافية للمنتج %(product_name)s. المتوفر: %(available)s، المطلوبة: %(quantity)s"
+msgid ""
+"Insufficient stock for product %(product_name)s. Available: %(available)s, "
+"Requested: %(quantity)s"
+msgstr ""
+"الكمية غير كافية للمنتج %(product_name)s. المتوفر: %(available)s، المطلوبة: "
+"%(quantity)s"
+
+#: .\pos\views.py:41
+msgid "Search query and warehouse ID are required."
+msgstr "مطلوب إدخال كلمة البحث وتحديد المستودع."
+
+#: .\pos\views.py:71
+msgid "Product not found or out of stock."
+msgstr "المنتج غير موجود أو نفدت كميته."
 
 #: .\purchasing\models.py:20
 msgid "Invoice Number"
@@ -1547,7 +1623,8 @@ msgid "One clear view of your operation."
 msgstr "رؤية موحدة وواضحة لعملياتك."
 
 #: .\templates\core\admin_dashboard.html:6
-msgid "Manage sales, stock, purchases, and finance from one connected workspace."
+msgid ""
+"Manage sales, stock, purchases, and finance from one connected workspace."
 msgstr "أدر المبيعات والمخزون والمشتريات والمالية من مساحة عمل مترابطة واحدة."
 
 #: .\templates\core\admin_dashboard.html:8 .\templates\core\dashboard.html:37
@@ -1899,7 +1976,7 @@ msgid "Cashier · Main branch"
 msgstr "أمين صندوق · الفرع الرئيسي"
 
 #: .\templates\core\dashboard.html:178 .\templates\pos\pos_screen.html:3
-#: .\templates\pos\sale_list.html:1
+#: .\templates\pos\sale_detail.html:7 .\templates\pos\sale_list.html:7
 msgid "Sales"
 msgstr "المبيعات"
 
@@ -1913,8 +1990,12 @@ msgstr "دفعات قاربت على انتهاء الصلاحية"
 
 #: .\templates\core\dashboard.html:202
 #, python-format
-msgid "Items reaching their expiration date within %(days)s days. Expired stock is blocked from sale and must be written off through Waste &amp; Loss."
-msgstr "أصناف تنتهي صلاحيتها خلال %(days)s أيام. المخزون منتهي الصلاحية ممنوع من البيع ويجب إخراجه عبر الهالك والخسائر."
+msgid ""
+"Items reaching their expiration date within %(days)s days. Expired stock is "
+"blocked from sale and must be written off through Waste &amp; Loss."
+msgstr ""
+"أصناف تنتهي صلاحيتها خلال %(days)s أيام. المخزون منتهي الصلاحية ممنوع من "
+"البيع ويجب إخراجه عبر الهالك والخسائر."
 
 #: .\templates\core\dashboard.html:205
 msgid "Review batches"
@@ -1985,7 +2066,7 @@ msgstr "تشغيل النسخ الاحتياطي لقاعدة البيانات"
 
 #: .\templates\customers\customer_form.html:3
 #: .\templates\inventory\product_form.html:3
-#: .\templates\inventory\warehouse_list.html:3
+#: .\templates\inventory\warehouse_list.html:40
 #: .\templates\suppliers\supplier_form.html:3
 msgid "Save"
 msgstr "حفظ"
@@ -2125,7 +2206,7 @@ msgstr "تصفية"
 #: .\templates\finance\payment_list.html:1
 #: .\templates\finance\receipt_list.html:1
 #: .\templates\inventory\waste_loss_list.html:4
-#: .\templates\pos\sale_list.html:1
+#: .\templates\pos\sale_list.html:25
 #: .\templates\purchasing\purchase_invoice_list.html:4
 #: .\templates\quotations\quotation_list.html:4
 msgid "Number"
@@ -2156,7 +2237,8 @@ msgstr "لا توجد سندات قبض."
 msgid "Post voucher"
 msgstr "ترحيل السند"
 
-#: .\templates\inventory\product_list.html:4 .\templates\pos\sale_detail.html:1
+#: .\templates\inventory\product_list.html:4
+#: .\templates\pos\sale_detail.html:37
 msgid "Price"
 msgstr "السعر"
 
@@ -2168,11 +2250,11 @@ msgstr "المخزون"
 msgid "No products found."
 msgstr "لم يتم العثور على أصناف."
 
-#: .\templates\inventory\warehouse_list.html:3
+#: .\templates\inventory\warehouse_list.html:26
 msgid "No warehouses found."
 msgstr "لم يتم العثور على مستودعات."
 
-#: .\templates\inventory\warehouse_list.html:3
+#: .\templates\inventory\warehouse_list.html:36
 msgid "New warehouse"
 msgstr "مخزن جديد"
 
@@ -2218,11 +2300,12 @@ msgstr "سجل المبيعات"
 msgid "Search products by name or code..."
 msgstr "ابحث عن المنتجات بالاسم أو الرمز..."
 
-#: .\templates\pos\pos_screen.html:8 .\templates\pos\pos_screen.html:45
+#: .\templates\pos\pos_screen.html:8 .\templates\pos\pos_screen.html:126
+#: .\templates\pos\pos_screen.html:164
 msgid "items"
 msgstr "صنف"
 
-#: .\templates\pos\pos_screen.html:11
+#: .\templates\pos\pos_screen.html:11 .\templates\pos\pos_screen.html:158
 msgid "in stock"
 msgstr "في المخزون"
 
@@ -2246,7 +2329,7 @@ msgstr "مسح"
 msgid "Select warehouse"
 msgstr "اختر المخزن"
 
-#: .\templates\pos\pos_screen.html:17
+#: .\templates\pos\pos_screen.html:17 .\templates\pos\sale_detail.html:10
 msgid "Walk-in customer"
 msgstr "عميل نقدي"
 
@@ -2275,25 +2358,101 @@ msgstr "آجل على العميل"
 msgid "Complete sale"
 msgstr "إتمام البيع"
 
-#: .\templates\pos\pos_screen.html:46
+#: .\templates\pos\pos_screen.html:55
+msgid "Cannot exceed available stock in selected warehouse."
+msgstr "لا يمكن تجاوز الكمية المتوفرة في المستودع المحدد."
+
+#: .\templates\pos\pos_screen.html:81
+msgid "Please select a warehouse first."
+msgstr "يرجى اختيار المستودع أولاً."
+
+#: .\templates\pos\pos_screen.html:90
+msgid "Product is out of stock in this warehouse."
+msgstr "الصنف غير متوفر في هذا المستودع."
+
+#: .\templates\pos\pos_screen.html:99
+msgid "Cannot add more than available stock balance."
+msgstr "لا يمكن إضافة أكثر من الرصيد المتوفر."
+
+#: .\templates\pos\pos_screen.html:207
 msgid "Select a warehouse before completing the sale."
 msgstr "اختر مخزنًا قبل إتمام عملية البيع."
 
-#: .\templates\pos\pos_screen.html:46
+#: .\templates\pos\pos_screen.html:233
 msgid "Could not complete the sale."
 msgstr "تعذر إتمام عملية البيع."
 
-#: .\templates\pos\pos_screen.html:46
+#: .\templates\pos\pos_screen.html:236
 msgid "Could not connect to the server."
 msgstr "تعذر الاتصال بالخادم."
 
-#: .\templates\pos\sale_detail.html:1 .\templates\pos\sale_list.html:1
+#: .\templates\pos\sale_detail.html:2
+msgid "Receipt"
+msgstr "سند قبض"
+
+#: .\templates\pos\sale_detail.html:16
+msgid "Print receipt"
+msgstr "طباعة السند"
+
+#: .\templates\pos\sale_detail.html:19
+msgid "Back to sales"
+msgstr "العودة إلى المبيعات"
+
+#: .\templates\pos\sale_detail.html:30
+msgid "Ordered Items"
+msgstr "الأصناف المطلوبة"
+
+#: .\templates\pos\sale_detail.html:36
+msgid "Qty"
+msgstr "الكمية"
+
+#: .\templates\pos\sale_detail.html:54
+msgid "No items recorded for this sale."
+msgstr "لا توجد أصناف مسجلة لهذه العملية."
+
+#: .\templates\pos\sale_detail.html:66
+msgid "Payment Summary"
+msgstr "ملخص الدفع"
+
+#: .\templates\pos\sale_detail.html:82
+msgid "Payment Methods"
+msgstr "طرق الدفع"
+
+#: .\templates\pos\sale_detail.html:94
+msgid "Grand Total"
+msgstr "الإجمالي الكلي"
+
+#: .\templates\pos\sale_list.html:2 .\templates\pos\sale_list.html:8
+msgid "Sales History"
+msgstr "سجل المبيعات"
+
+#: .\templates\pos\sale_list.html:9
+msgid "Review past transactions, receipts, and order statuses."
+msgstr "استعراض الحركات السابقة والسندات وحالات الطلبات."
+
+#: .\templates\pos\sale_list.html:13
+msgid "Open POS Terminal"
+msgstr "فتح نقطة البيع"
+
+#: .\templates\pos\sale_list.html:26
+msgid "Date & Time"
+msgstr "التاريخ والوقت"
+
+#: .\templates\pos\sale_list.html:31
+msgid "Actions"
+msgstr "إجراءات"
+
+#: .\templates\pos\sale_list.html:47
 msgid "Walk-in"
 msgstr "عميل نقدي"
 
-#: .\templates\pos\sale_list.html:1
-msgid "No sales."
-msgstr "لا توجد مبيعات."
+#: .\templates\pos\sale_list.html:58
+msgid "View Receipt"
+msgstr "عرض السند"
+
+#: .\templates\pos\sale_list.html:68
+msgid "No sales recorded yet."
+msgstr "لا توجد مبيعات مسجلة بعد."
 
 #: .\templates\purchasing\purchase_invoice_detail.html:3
 msgid "Invoice total"
@@ -2358,43 +2517,48 @@ msgstr "تاريخ الانتهاء"
 msgid "No quotations."
 msgstr "لا توجد عروض أسعار."
 
-#: .\templates\registration\login.html:1
+#: .\templates\registration\login.html:7
+#: .\templates\registration\login.html:76
 msgid "Sign in"
 msgstr "تسجيل الدخول"
 
-#: .\templates\registration\login.html:1
+#: .\templates\registration\login.html:25
 msgid "Your business, connected"
 msgstr "أعمالك مترابطة"
 
-#: .\templates\registration\login.html:1
+#: .\templates\registration\login.html:26
 msgid "Clarity across every transaction."
 msgstr "وضوح في كل معاملة."
 
-#: .\templates\registration\login.html:1
-msgid "Finance, inventory, sales, and purchasing—all working together in one secure workspace."
-msgstr "المالية والمخزون والمبيعات والمشتريات، جميعها تعمل معًا ضمن مساحة عمل آمنة واحدة."
+#: .\templates\registration\login.html:27
+msgid ""
+"Finance, inventory, sales, and purchasing—all working together in one secure"
+" workspace."
+msgstr ""
+"المالية والمخزون والمبيعات والمشتريات، جميعها تعمل معًا ضمن مساحة عمل آمنة "
+"واحدة."
 
-#: .\templates\registration\login.html:1
+#: .\templates\registration\login.html:42
 msgid "Welcome back"
 msgstr "مرحبًا بعودتك"
 
-#: .\templates\registration\login.html:1
+#: .\templates\registration\login.html:43
 msgid "Sign in to your account"
 msgstr "تسجيل الدخول إلى حسابك"
 
-#: .\templates\registration\login.html:1
+#: .\templates\registration\login.html:44
 msgid "Enter your details to continue to the dashboard."
 msgstr "أدخل بياناتك للمتابعة إلى لوحة التحكم."
 
-#: .\templates\registration\login.html:1
+#: .\templates\registration\login.html:54
 msgid "Username"
 msgstr "اسم المستخدم"
 
-#: .\templates\registration\login.html:1
+#: .\templates\registration\login.html:63
 msgid "Password"
 msgstr "كلمة المرور"
 
-#: .\templates\registration\login.html:1
+#: .\templates\registration\login.html:83
 msgid "Secure access to your company workspace"
 msgstr "وصول آمن إلى مساحة عمل شركتك"
 
@@ -2524,9 +2688,3 @@ msgstr "الرصيد الافتتاحي"
 #: .\templates\suppliers\supplier_list.html:4
 msgid "No suppliers found."
 msgstr "لم يتم العثور على موردين."
-
-msgid "Search query and warehouse ID are required."
-msgstr "مطلوب إدخال كلمة البحث وتحديد المستودع."
-
-msgid "Product not found or out of stock."
-msgstr "المنتج غير موجود أو نفدت كميته."
