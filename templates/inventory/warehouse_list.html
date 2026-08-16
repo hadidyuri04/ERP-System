@@ -1,3 +1,45 @@
 {% extends "core/base.html" %}{% load i18n %}
 {% block title %}{% trans "Warehouses" %}{% endblock %}{% block page_header %}<h1>{% trans "Warehouses" %}</h1>{% endblock %}
-{% block content %}<div class="row g-3"><div class="col-md-8"><div class="card-soft"><div class="table-wrap"><table class="table-erp"><thead><tr><th>{% trans "Code" %}</th><th>{% trans "Name" %}</th><th>{% trans "Location" %}</th><th>{% trans "Active" %}</th></tr></thead><tbody>{% for warehouse in warehouses %}<tr><td>{{ warehouse.code }}</td><td>{{ warehouse.name }}</td><td>{{ warehouse.location }}</td><td>{{ warehouse.is_active }}</td></tr>{% empty %}<tr><td colspan="4">{% trans "No warehouses found." %}</td></tr>{% endfor %}</tbody></table></div></div></div><div class="col-md-4"><div class="card-soft card-pad"><h3>{% trans "New warehouse" %}</h3><form method="post">{% csrf_token %}{{ form.as_p }}<button class="btn btn-primary">{% trans "Save" %}</button></form></div></div></div>{% endblock %}
+{% block content %}
+<div class="row g-3">
+<div class="col-md-8">
+<div class="card-soft">
+<div class="table-wrap">
+<table class="table-erp">
+<thead>
+<tr>
+<th>{% trans "Code" %}</th>
+<th>{% trans "Name" %}</th>
+<th>{% trans "Location" %}</th>
+<th>{% trans "Active" %}</th>
+</tr>
+</thead>
+<tbody>{% for warehouse in warehouses %}
+<tr>
+<td>{{ warehouse.code }}</td>
+<td>{{ warehouse.name }}</td>
+<td>{{ warehouse.location }}</td>
+<td>{{ warehouse.is_active }}</td>
+</tr>
+{% empty %}
+<tr>
+<td colspan="4">{% trans "No warehouses found." %}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="col-md-4">
+<div class="card-soft card-pad">
+<h3>{% trans "New warehouse" %}</h3>
+<form method="post">
+{% csrf_token %}
+{{ form.as_p }}
+<button class="btn btn-primary">{% trans "Save" %}</button>
+</form>
+</div>
+</div>
+</div>
+{% endblock %}
