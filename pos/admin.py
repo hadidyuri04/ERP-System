@@ -1,5 +1,24 @@
 from django.contrib import admin
-from .models import POSSale, POSSaleItem, POSPayment
+from .models import POSSession, POSCashTransaction, POSSale, POSSaleItem, POSPayment
+
+
+class POSCashTransactionInline(admin.TabularInline):
+    model = POSCashTransaction
+    extra = 0
+
+
+@admin.register(POSSession)
+class POSSessionAdmin(admin.ModelAdmin):
+    list_display = ('session_number', 'cashier', 'warehouse', 'status', 'opened_at', 'closed_at', 'opening_balance', 'closing_balance_actual', 'difference')
+    search_fields = ('session_number', 'cashier__username')
+    list_filter = ('status', 'warehouse', 'opened_at')
+    inlines = [POSCashTransactionInline]
+
+
+@admin.register(POSCashTransaction)
+class POSCashTransactionAdmin(admin.ModelAdmin):
+    list_display = ('session', 'transaction_type', 'amount', 'reason', 'user', 'created_at')
+    list_filter = ('transaction_type', 'created_at')
 
 
 class POSSaleItemInline(admin.TabularInline):
@@ -14,8 +33,8 @@ class POSPaymentInline(admin.TabularInline):
 
 @admin.register(POSSale)
 class POSSaleAdmin(admin.ModelAdmin):
-    list_display = ('sale_number', 'customer', 'warehouse', 'cashier', 'date', 'status', 'total', 'paid_amount', 'change_amount')
-    search_fields = ('sale_number', 'customer__name')
+    list_display = ('sale_number', 'session', 'customer', 'warehouse', 'cashier', 'date', 'status', 'total', 'paid_amount', 'change_amount')
+    search_fields = ('sale_number', 'customer__name', 'session__session_number')
     list_filter = ('status', 'warehouse', 'date')
     inlines = [POSSaleItemInline, POSPaymentInline]
 

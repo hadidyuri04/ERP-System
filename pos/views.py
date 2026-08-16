@@ -3,15 +3,15 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_POST, require_GET
 from django.utils.translation import gettext as _
-
+from .models import POSSession, POSCashTransaction
 from core.permissions import cashier_required
 from customers.models import Customer
 from inventory.models import Product, Warehouse, StockBalance
-
+from django.utils import timezone
 from .models import POSSale
 from .services import complete_sale
 
@@ -131,3 +131,88 @@ def complete_sale_view(request):
     except (KeyError, ValueError, json.JSONDecodeError, ValidationError, Product.DoesNotExist, Warehouse.DoesNotExist, Customer.DoesNotExist) as exc:
         message = "; ".join(exc.messages) if hasattr(exc, "messages") else str(exc)
         return JsonResponse({"ok": False, "error": message}, status=400)
+@login_required
+def session_list(value):
+    """List all POS register sessions."""
+    sessions = POSSession.objects.all().order_by('-opened_at')
+    context = {'sessions': sessions}
+    return render(value, 'pos/session_list.html', context)
+
+@login_required
+def open_session(request):
+    """Open a new register session with a starting cash float."""
+    if request.method == 'POST':
+        warehouse_id = request.POST.get('warehouse_id')
+        opening_balance = request.POST.get('opening_balance', '0.000')
+        notes = request.POST.get('notes', '')
+
+        # Check if cashier already has an open session
+        existing_open = POSSession.objects.filter(cashier=request.user, status=POSSession.SessionStatus.OPEN).exists()
+        if existing_open:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'ok': False, 'error': 'You already have an open register session.'}, status=400)
+            return redirect('pos:session_list')
+
+        session_number = f"SES-{timezone.now().strftime('%Y%m%d%H%M%S')}-{request.user.id}"
+        
+        session = POSSession.objects.create(
+            session_number=session_number,
+            cashier=request.user,
+            warehouse_id=warehouse_id,
+            opening_balance=opening_balance,
+            status=POSSession.SessionStatus.OPEN,
+            notes=notes
+        )
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'ok': True, 'session_id': session.pk})
+        return redirect('pos:terminal')
+
+    return redirect('pos:session_list')
+
+@login_required
+def close_session(request, pk):
+    """Close and reconcile a register session."""
+    session = get_object_or_404(POSSession, pk=pk, cashier=request.user, status=POSSession.SessionStatus.OPEN)
+    
+    if request.method == 'POST':
+        actual_cash = float(request.POST.get('closing_balance_actual', 0))
+        
+        # Calculate expected cash: opening balance + cash sales + cash in - cash out
+        cash_sales_total = sum(
+            payment.amount for sale in session.sales.filter(status='COMPLETED') 
+            for payment in sale.payments.filter(payment_method='cash')
+        )
+        cash_in_total = sum(t.amount for t in session.cash_transactions.filter(transaction_type='IN'))
+        cash_out_total = sum(t.amount for t in session.cash_transactions.filter(transaction_type='OUT'))
+        
+        expected_cash = float(session.opening_balance) + float(cash_sales_total) + float(cash_in_total) - float(cash_out_total)
+        difference = actual_cash - expected_cash
+
+        session.closing_balance_expected = expected_cash
+        session.closing_balance_actual = actual_cash
+        session.difference = difference
+        session.status = POSSession.SessionStatus.CLOSED
+        session.closed_at = timezone.now()
+        session.save()
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'ok': True})
+        return redirect('pos:session_list')
+
+    return redirect('pos:session_list')
+
+@login_required
+def cash_transaction(request, pk):
+    """Log a manual cash drop or cash-in during an active session."""
+    session = get_object_or_404(POSSession, pk=pk, status=POSSession.SessionStatus.OPEN)
+    if request.method == 'POST':
+        POSCashTransaction.objects.create(
+            session=session,
+            user=request.user,
+            transaction_type=request.POST.get('transaction_type'),
+            amount=request.POST.get('amount'),
+            reason=request.POST.get('reason', '')
+        )
+        return JsonResponse({'ok': True})
+    return JsonResponse({'ok': False}, status=400)
