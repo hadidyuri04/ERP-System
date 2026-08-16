@@ -8,7 +8,7 @@ from inventory.services import remove_stock, get_available_stock
 from .models import POSSale, POSSaleItem, POSPayment
 
 @transaction.atomic
-def complete_sale(warehouse, cashier, items_data, payments_data, customer=None, notes=""):
+def complete_sale(warehouse, cashier, items_data, payments_data, customer=None, notes="", session=None,):
     """
     Completes a POS sale:
     1. Validates available stock and expiry.
@@ -59,6 +59,7 @@ def complete_sale(warehouse, cashier, items_data, payments_data, customer=None, 
     # Create POSSale header
     sale_number = f"POS-{timezone.now().strftime('%Y%m%d%H%M%S')}" # Ensure timezone import or use format
     sale = POSSale.objects.create(
+        session=session,
         sale_number=sale_number,
         customer=customer,
         warehouse=warehouse,

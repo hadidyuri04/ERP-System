@@ -1,26 +1,39 @@
 import json
+from decimal import Decimal
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_POST, require_GET
 from django.utils.translation import gettext as _
-from .models import POSSession, POSCashTransaction
+from django.utils import timezone
+
 from core.permissions import cashier_required
 from customers.models import Customer
 from inventory.models import Product, Warehouse, StockBalance
-from django.utils import timezone
-from .models import POSSale
+from .models import POSSession, POSCashTransaction, POSSale, POSPayment
 from .services import complete_sale
 
 
 @login_required
 @cashier_required
 def pos_terminal(request):
-    """Renders the modern POS terminal screen with active customers and warehouses."""
+    """
+    Renders the modern POS terminal screen. Enforces that a cashier
+    must have an open register session before accessing the terminal.
+    """
+    active_session = POSSession.objects.filter(
+        cashier=request.user, 
+        status=POSSession.SessionStatus.OPEN
+    ).first()
+
+    if not active_session:
+        return redirect("pos:session_list")
+
     return render(request, "pos/pos_screen.html", {
+        "active_session": active_session,
         "customers": Customer.objects.filter(is_active=True).order_by("name"),
         "warehouses": Warehouse.objects.filter(is_active=True).order_by("name"),
     })
@@ -40,19 +53,18 @@ def search_product(request):
     if not query or not warehouse_id:
         return JsonResponse({"ok": False, "error": str(_("Search query and warehouse ID are required."))}, status=400)
 
-    # 1. Prioritize Exact Barcode Match (Fastest for Supermarkets)
+    # 1. Prioritize Exact Barcode Match
     products = Product.objects.filter(barcode=query, is_active=True)
 
-    # 2. Fallback to Name or Product Code if barcode not found
+    # 2. Fallback to Name or Product Code
     if not products.exists():
         products = Product.objects.filter(
             Q(name__icontains=query) | Q(code__icontains=query),
             is_active=True
-        )[:20]  # Limit payload size
+        )[:20]
 
     results = []
     for product in products:
-        # Fetch available stock specifically for the selected warehouse
         stock = StockBalance.objects.filter(product=product, warehouse_id=warehouse_id).first()
         available_qty = (stock.quantity - stock.reserved_quantity) if stock else 0
 
@@ -77,7 +89,7 @@ def search_product(request):
 @cashier_required
 def sale_list(request):
     """Renders the list of past POS sales with optimized querysets."""
-    sales = POSSale.objects.select_related("customer", "warehouse", "cashier").order_by("-date")
+    sales = POSSale.objects.select_related("customer", "warehouse", "cashier", "session").order_by("-date")
     return render(request, "pos/sale_list.html", {"sales": sales})
 
 
@@ -86,7 +98,7 @@ def sale_list(request):
 def sale_detail(request, pk):
     """Renders detailed receipt view for a single transaction."""
     sale = get_object_or_404(
-        POSSale.objects.select_related("customer", "warehouse", "cashier").prefetch_related("items__product", "payments"),
+        POSSale.objects.select_related("customer", "warehouse", "cashier", "session").prefetch_related("items__product", "payments"),
         pk=pk,
     )
     return render(request, "pos/sale_detail.html", {"sale": sale})
@@ -96,8 +108,17 @@ def sale_detail(request, pk):
 @cashier_required
 @require_POST
 def complete_sale_view(request):
-    """Handles checkout payload, processes inventory/finance services, and returns receipt metadata."""
+    """Handles checkout payload, links active session, processes services, and returns receipt metadata."""
     try:
+        # Locate cashier's active session
+        active_session = POSSession.objects.filter(
+            cashier=request.user,
+            status=POSSession.SessionStatus.OPEN
+        ).first()
+
+        if not active_session:
+            return JsonResponse({"ok": False, "error": str(_("No active register session found. Please open a session first."))}, status=400)
+
         payload = json.loads(request.body or "{}")
         warehouse = Warehouse.objects.get(pk=payload["warehouse_id"], is_active=True)
         customer_id = payload.get("customer_id")
@@ -117,6 +138,7 @@ def complete_sale_view(request):
         sale = complete_sale(
             warehouse=warehouse,
             cashier=request.user,
+            session=active_session,  # Pass active session instance to service
             items_data=items_data,
             payments_data=payload.get("payments", []),
             customer=customer,
@@ -131,27 +153,43 @@ def complete_sale_view(request):
     except (KeyError, ValueError, json.JSONDecodeError, ValidationError, Product.DoesNotExist, Warehouse.DoesNotExist, Customer.DoesNotExist) as exc:
         message = "; ".join(exc.messages) if hasattr(exc, "messages") else str(exc)
         return JsonResponse({"ok": False, "error": message}, status=400)
-@login_required
-def session_list(value):
-    """List all POS register sessions."""
-    sessions = POSSession.objects.all().order_by('-opened_at')
-    context = {'sessions': sessions}
-    return render(value, 'pos/session_list.html', context)
+
 
 @login_required
+@cashier_required
+def session_list(request):
+    """List all POS register sessions and check if user has an open register."""
+    sessions = POSSession.objects.select_related("cashier", "warehouse").order_by('-opened_at')
+    active_session = POSSession.objects.filter(cashier=request.user, status=POSSession.SessionStatus.OPEN).first()
+    warehouses = Warehouse.objects.filter(is_active=True).order_by("name")
+
+    return render(request, 'pos/session_list.html', {
+        'sessions': sessions,
+        'active_session': active_session,
+        'warehouses': warehouses,
+    })
+
+
+@login_required
+@cashier_required
 def open_session(request):
     """Open a new register session with a starting cash float."""
     if request.method == 'POST':
         warehouse_id = request.POST.get('warehouse_id')
-        opening_balance = request.POST.get('opening_balance', '0.000')
+        opening_balance = Decimal(request.POST.get('opening_balance', '0.000') or '0.000')
         notes = request.POST.get('notes', '')
+
+        if not warehouse_id:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'ok': False, 'error': str(_('Please select a warehouse.'))}, status=400)
+            return redirect('pos:session_list')
 
         # Check if cashier already has an open session
         existing_open = POSSession.objects.filter(cashier=request.user, status=POSSession.SessionStatus.OPEN).exists()
         if existing_open:
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'ok': False, 'error': 'You already have an open register session.'}, status=400)
-            return redirect('pos:session_list')
+                return JsonResponse({'ok': False, 'error': str(_('You already have an active register session.'))}, status=400)
+            return redirect('pos:terminal')
 
         session_number = f"SES-{timezone.now().strftime('%Y%m%d%H%M%S')}-{request.user.id}"
         
@@ -165,28 +203,38 @@ def open_session(request):
         )
 
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'ok': True, 'session_id': session.pk})
+            return JsonResponse({'ok': True, 'session_id': session.pk, 'redirect_url': reverse('pos:terminal')})
         return redirect('pos:terminal')
 
     return redirect('pos:session_list')
 
+
 @login_required
+@cashier_required
 def close_session(request, pk):
-    """Close and reconcile a register session."""
+    """Close and reconcile a register session with accurate database aggregation."""
     session = get_object_or_404(POSSession, pk=pk, cashier=request.user, status=POSSession.SessionStatus.OPEN)
     
     if request.method == 'POST':
-        actual_cash = float(request.POST.get('closing_balance_actual', 0))
+        actual_cash = Decimal(request.POST.get('closing_balance_actual', '0.000') or '0.000')
         
-        # Calculate expected cash: opening balance + cash sales + cash in - cash out
-        cash_sales_total = sum(
-            payment.amount for sale in session.sales.filter(status='COMPLETED') 
-            for payment in sale.payments.filter(payment_method='cash')
-        )
-        cash_in_total = sum(t.amount for t in session.cash_transactions.filter(transaction_type='IN'))
-        cash_out_total = sum(t.amount for t in session.cash_transactions.filter(transaction_type='OUT'))
+        # Calculate cash sales total via database aggregation
+        cash_sales = POSPayment.objects.filter(
+            sale__session=session,
+            sale__status=POSSale.SaleStatus.COMPLETED,
+            payment_method=POSPayment.PaymentMethod.CASH
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0.000')
+
+        # Calculate manual cash transactions
+        cash_in = session.cash_transactions.filter(
+            transaction_type=POSCashTransaction.TransactionType.CASH_IN
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0.000')
+
+        cash_out = session.cash_transactions.filter(
+            transaction_type=POSCashTransaction.TransactionType.CASH_OUT
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0.000')
         
-        expected_cash = float(session.opening_balance) + float(cash_sales_total) + float(cash_in_total) - float(cash_out_total)
+        expected_cash = session.opening_balance + cash_sales + cash_in - cash_out
         difference = actual_cash - expected_cash
 
         session.closing_balance_expected = expected_cash
@@ -197,22 +245,34 @@ def close_session(request, pk):
         session.save()
 
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'ok': True})
+            return JsonResponse({'ok': True, 'redirect_url': reverse('pos:session_list')})
         return redirect('pos:session_list')
 
     return redirect('pos:session_list')
 
+
 @login_required
+@cashier_required
+@require_POST
 def cash_transaction(request, pk):
-    """Log a manual cash drop or cash-in during an active session."""
+    """Log a manual cash drop or cash-in float during an active session."""
     session = get_object_or_404(POSSession, pk=pk, status=POSSession.SessionStatus.OPEN)
-    if request.method == 'POST':
+    
+    try:
+        amount = Decimal(request.POST.get('amount', '0.000'))
+        trans_type = request.POST.get('transaction_type')
+        reason = request.POST.get('reason', '').strip()
+
+        if amount <= 0 or trans_type not in POSCashTransaction.TransactionType.values:
+            return JsonResponse({'ok': False, 'error': str(_('Invalid transaction amount or type.'))}, status=400)
+
         POSCashTransaction.objects.create(
             session=session,
             user=request.user,
-            transaction_type=request.POST.get('transaction_type'),
-            amount=request.POST.get('amount'),
-            reason=request.POST.get('reason', '')
+            transaction_type=trans_type,
+            amount=amount,
+            reason=reason
         )
         return JsonResponse({'ok': True})
-    return JsonResponse({'ok': False}, status=400)
+    except (ValueError, TypeError, ValidationError) as e:
+        return JsonResponse({'ok': False, 'error': str(e)}, status=400)

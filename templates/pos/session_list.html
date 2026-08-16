@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "POS Register Sessions" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header & Action Toolbar -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1">{% translate "Register Sessions & Cash Drawer" %}</h3>
+            <p class="text-muted small mb-0">{% translate "Manage cashier shifts, track daily floats, and reconcile cash." %}</p>
+        </div>
+        <div>
+            {% if active_session %}
+                <a href="{% url 'pos:terminal' %}" class="btn btn-primary me-2">
+                    <i class="bi bi-display me-1"></i> {% translate "Open Terminal" %}
+                </a>
+                <button type="button" class="btn btn-warning me-2" data-bs-toggle="modal" data-bs-target="#cashTransactionModal">
+                    <i class="bi bi-cash-stack me-1"></i> {% translate "Cash In / Out" %}
+                </button>
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#closeSessionModal">
+                    <i class="bi bi-x-circle me-1"></i> {% translate "Close Register" %}
+                </button>
+            {% else %}
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#openSessionModal">
+                    <i class="bi bi-play-circle me-1"></i> {% translate "Open New Session" %}
+                </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Active Register Status Banner -->
+    {% if active_session %}
+    <div class="card border-0 shadow-sm mb-4 bg-light-subtle border-start border-4 border-success">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-3 border-end">
+                    <span class="badge bg-success mb-1">{% translate "ACTIVE SHIFT" %}</span>
+                    <h5 class="fw-bold mb-0">#{{ active_session.session_number }}</h5>
+                </div>
+                <div class="col-md-3 border-end">
+                    <small class="text-muted d-block">{% translate "Cashier / Warehouse" %}</small>
+                    <strong class="text-dark">{{ active_session.cashier.get_full_name|default:active_session.cashier.username }}</strong>
+                    <span class="text-muted">({{ active_session.warehouse.name }})</span>
+                </div>
+                <div class="col-md-3 border-end">
+                    <small class="text-muted d-block">{% translate "Opened At" %}</small>
+                    <strong class="text-dark">{{ active_session.opened_at|date:"Y-m-d H:i" }}</strong>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted d-block">{% translate "Opening Float" %}</small>
+                    <strong class="text-dark fs-5">${{ active_session.opening_balance }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Session History Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3">
+            <h6 class="fw-bold mb-0">{% translate "Session Logs" %}</h6>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>{% translate "Session #" %}</th>
+                        <th>{% translate "Cashier" %}</th>
+                        <th>{% translate "Warehouse" %}</th>
+                        <th>{% translate "Status" %}</th>
+                        <th>{% translate "Opened At" %}</th>
+                        <th>{% translate "Closed At" %}</th>
+                        <th class="text-end">{% translate "Opening Float" %}</th>
+                        <th class="text-end">{% translate "Actual Cash" %}</th>
+                        <th class="text-end">{% translate "Discrepancy" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for session in sessions %}
+                    <tr>
+                        <td class="fw-bold">#{{ session.session_number }}</td>
+                        <td>{{ session.cashier.username }}</td>
+                        <td>{{ session.warehouse.name }}</td>
+                        <td>
+                            {% if session.status == 'OPEN' %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle">{% translate "Open" %}</span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">{% translate "Closed" %}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ session.opened_at|date:"M d, Y H:i" }}</td>
+                        <td>{{ session.closed_at|date:"M d, Y H:i"|default:"-" }}</td>
+                        <td class="text-end">${{ session.opening_balance }}</td>
+                        <td class="text-end">
+                            {% if session.status == 'CLOSED' %}
+                                ${{ session.closing_balance_actual }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if session.status == 'CLOSED' %}
+                                {% if session.difference < 0 %}
+                                    <span class="text-danger fw-bold">${{ session.difference }}</span>
+                                {% elif session.difference > 0 %}
+                                    <span class="text-success fw-bold">+${{ session.difference }}</span>
+                                {% else %}
+                                    <span class="text-muted">$0.000</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center py-4 text-muted">{% translate "No register sessions recorded yet." %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Open Session -->
+<div class="modal fade" id="openSessionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'pos:open_session' %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">{% translate "Open Register Session" %}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="id_warehouse" class="form-label">{% translate "Select Warehouse / Store" %}</label>
+                        <select name="warehouse_id" id="id_warehouse" class="form-select" required>
+                            <option value="">{% translate "Choose..." %}</option>
+                            {% for w in warehouses %}
+                                <option value="{{ w.id }}">{{ w.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_opening_balance" class="form-label">{% translate "Opening Cash Float" %}</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" step="0.001" name="opening_balance" id="id_opening_balance" class="form-control" placeholder="0.000" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_notes" class="form-label">{% translate "Notes" %}</label>
+                        <textarea name="notes" id="id_notes" class="form-control" rows="2" placeholder="{% translate 'Optional shift notes...' %}"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">{% translate "Cancel" %}</button>
+                    <button type="submit" class="btn btn-success">{% translate "Start Shift" %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% if active_session %}
+<!-- Modal: Close Session -->
+<div class="modal fade" id="closeSessionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'pos:close_session' active_session.pk %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">{% translate "Close & Reconcile Register" %}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small">{% translate "Count the physical cash in the drawer and enter the total below." %}</p>
+                    <div class="mb-3">
+                        <label for="id_closing_balance_actual" class="form-label">{% translate "Actual Counted Cash" %}</label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text">$</span>
+                            <input type="number" step="0.001" name="closing_balance_actual" id="id_closing_balance_actual" class="form-control" placeholder="0.000" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">{% translate "Cancel" %}</button>
+                    <button type="submit" class="btn btn-danger">{% translate "Close Register Session" %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Cash Transaction (In / Out) -->
+<div class="modal fade" id="cashTransactionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'pos:cash_transaction' active_session.pk %}">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">{% translate "Cash Drawer Movement" %}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="id_transaction_type" class="form-label">{% translate "Movement Type" %}</label>
+                        <select name="transaction_type" id="id_transaction_type" class="form-select" required>
+                            <option value="IN">{% translate "Cash In / Add Float" %}</option>
+                            <option value="OUT">{% translate "Cash Out / Drawer Drop" %}</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_amount" class="form-label">{% translate "Amount" %}</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" step="0.001" name="amount" id="id_amount" class="form-control" placeholder="0.000" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_reason" class="form-label">{% translate "Reason / Reference" %}</label>
+                        <input type="text" name="reason" id="id_reason" class="form-control" placeholder="e.g. Petty cash payout, Mid-day bank drop" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">{% translate "Cancel" %}</button>
+                    <button type="submit" class="btn btn-warning">{% translate "Save Movement" %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
