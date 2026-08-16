@@ -1,1 +1,77 @@
-{% extends "core/base.html" %}{% load i18n %}{% block title %}{% trans "Sales" %}{% endblock %}{% block page_header %}<h1>{% trans "Sales" %}</h1>{% endblock %}{% block content %}<div class="card-soft"><table class="table-erp"><thead><tr><th>{% trans "Number" %}</th><th>{% trans "Date" %}</th><th>{% trans "Customer" %}</th><th>{% trans "Total" %}</th><th>{% trans "Status" %}</th></tr></thead><tbody>{% for sale in sales %}<tr><td><a href="{% url 'pos:sale_detail' sale.pk %}">{{ sale.sale_number }}</a></td><td>{{ sale.date }}</td><td>{% if sale.customer %}{{ sale.customer }}{% else %}{% trans "Walk-in" %}{% endif %}</td><td>{{ sale.total }}</td><td>{{ sale.get_status_display }}</td></tr>{% empty %}<tr><td colspan="5">{% trans "No sales." %}</td></tr>{% endfor %}</tbody></table></div>{% endblock %}
+{% extends "core/base.html" %}{% load i18n %}
+{% block title %}{% trans "Sales History" %}{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center">
+    <div>
+        <span class="eyebrow">{% trans "Sales" %}</span>
+        <h1>{% trans "Sales History" %}</h1>
+        <p>{% trans "Review past transactions, receipts, and order statuses." %}</p>
+    </div>
+    <div>
+        <a class="btn btn-primary" href="{% url 'pos:terminal' %}">
+            <i class="bi bi-cash-stack me-1"></i>{% trans "Open POS Terminal" %}
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card-soft">
+    <div class="table-responsive">
+        <table class="table-erp align-middle">
+            <thead>
+                <tr>
+                    <th>{% trans "Number" %}</th>
+                    <th>{% trans "Date & Time" %}</th>
+                    <th>{% trans "Customer" %}</th>
+                    <th>{% trans "Warehouse" %}</th>
+                    <th class="text-end">{% trans "Total" %}</th>
+                    <th class="text-center">{% trans "Status" %}</th>
+                    <th class="text-end">{% trans "Actions" %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sale in sales %}
+                <tr>
+                    <td>
+                        <a href="{% url 'pos:sale_detail' sale.pk %}" class="fw-bold text-decoration-none">
+                            {{ sale.sale_number }}
+                        </a>
+                    </td>
+                    <td>{{ sale.date|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        {% if sale.customer %}
+                            {{ sale.customer.name }}
+                        {% else %}
+                            <span class="text-muted">{% trans "Walk-in" %}</span>
+                        {% endif %}
+                    </td>
+                    <td><span class="text-muted">{{ sale.warehouse.name|default:"-" }}</span></td>
+                    <td class="text-end fw-bold">{{ sale.total|floatformat:3 }}</td>
+                    <td class="text-center">
+                        <span class="badge badge-soft {% if sale.status == 'COMPLETED' %}badge-success{% else %}badge-warning{% endif %}">
+                            {{ sale.get_status_display }}
+                        </span>
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'pos:sale_detail' sale.pk %}" class="btn btn-sm btn-soft" title="{% trans 'View Receipt' %}">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center py-5">
+                        <div class="empty-state">
+                            <i class="bi bi-receipt fs-1 text-muted mb-2"></i>
+                            <p class="text-muted">{% trans "No sales recorded yet." %}</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
