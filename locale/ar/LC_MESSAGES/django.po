@@ -2524,3 +2524,9 @@ msgstr "الرصيد الافتتاحي"
 #: .\templates\suppliers\supplier_list.html:4
 msgid "No suppliers found."
 msgstr "لم يتم العثور على موردين."
+
+msgid "Search query and warehouse ID are required."
+msgstr "مطلوب إدخال كلمة البحث وتحديد المستودع."
+
+msgid "Product not found or out of stock."
+msgstr "المنتج غير موجود أو نفدت كميته."
