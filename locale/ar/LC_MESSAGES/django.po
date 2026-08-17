@@ -2688,3 +2688,93 @@ msgstr "الرصيد الافتتاحي"
 #: .\templates\suppliers\supplier_list.html:4
 msgid "No suppliers found."
 msgstr "لم يتم العثور على موردين."
+
+msgid "Register Sessions & Cash Drawer"
+msgstr "جلسات نقطة البيع ودرج النقود"
+
+msgid "Manage cashier shifts, track daily floats, and reconcile cash."
+msgstr "إدارة مناوبات الكاشير، وتتبع النقدية اليومية، وتسوية الحسابات."
+
+msgid "Open New Session"
+msgstr "فتح جلسة جديدة"
+
+msgid "Open Register Session"
+msgstr "فتح جلسة الخزينة"
+
+msgid "Select Warehouse / Store"
+msgstr "اختر المستودع / المتجر"
+
+msgid "Choose..."
+msgstr "اختر..."
+
+msgid "Optional shift notes..."
+msgstr "ملاحظات اختيارية للمناوبة..."
+
+msgid "Start Shift & Open Terminal"
+msgstr "بدء المناوبة وفتح شاشة البيع"
+
+msgid "Session Logs"
+msgstr "سجلات الجلسات"
+
+msgid "Session #"
+msgstr "رقم الجلسة"
+
+msgid "Opened At"
+msgstr "وقت الفتح"
+
+msgid "Closed At"
+msgstr "وقت الإغلاق"
+
+msgid "Opening Cash Float"
+msgstr "الرصيد الافتتاحي"
+
+msgid "Actual Cash"
+msgstr "النقد الفعلي"
+
+msgid "Discrepancy"
+msgstr "الفارق"
+
+msgid "Open Terminal"
+msgstr "فتح شاشة البيع"
+
+msgid "Cash In / Out"
+msgstr "إيداع / سحب نقدي"
+
+msgid "Close Register"
+msgstr "إغلاق الخزينة"
+
+msgid "ACTIVE SHIFT"
+msgstr "مناوبة نشطة"
+
+msgid "Cashier / Warehouse"
+msgstr "الكاشير / المستودع"
+
+msgid "No register sessions recorded yet."
+msgstr "لم يتم تسجيل أي جلسات خزينة بعد."
+
+msgid "Close & Reconcile Register"
+msgstr "إغلاق وتسوية الخزينة"
+
+msgid "Count the physical cash in the drawer and enter the total below."
+msgstr "قم بعد النقد الفعلي في الدرج وأدخل الإجمالي أدناه."
+
+msgid "Actual Counted Cash"
+msgstr "النقد الفعلي المحسوب"
+
+msgid "Close Register Session"
+msgstr "إغلاق جلسة الخزينة"
+
+msgid "Cash Drawer Movement"
+msgstr "حركة درج النقود"
+
+msgid "Cash In / Add Float"
+msgstr "إيداع نقدي / إضافة رصيد"
+
+msgid "Cash Out / Drawer Drop"
+msgstr "سحب نقدي / سحب من الدرج"
+
+msgid "Reason / Reference"
+msgstr "السبب / المرجع"
+
+msgid "Save Movement"
+msgstr "حفظ الحركة"
