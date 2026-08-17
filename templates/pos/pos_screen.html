@@ -1,8 +1,65 @@
 {% extends "core/base.html" %}{% load i18n %}
 {% block title %}{% trans "Point of sale" %}{% endblock %}
-{% block page_header %}<span class="eyebrow">{% trans "Sales" %}</span><h1>{% trans "Point of sale" %}</h1><p>{% trans "Select products, review the order, and complete payment." %}</p>{% endblock %}
-{% block topbar_actions %}<a class="btn btn-soft" href="{% url 'pos:sale_list' %}"><i class="bi bi-receipt me-1"></i>{% trans "Sales history" %}</a>{% endblock %}
+
+{% block page_header %}
+<span class="eyebrow">{% trans "Sales" %}</span>
+<div class="d-flex align-items-center justify-content-between w-100">
+    <div>
+        <h1>{% trans "Point of sale" %}</h1>
+        <p>{% trans "Select products, review the order, and complete payment." %}</p>
+    </div>
+    <!-- Active Session Badge & Quick Close Trigger -->
+    {% if active_session %}
+    <div class="d-flex align-items-center gap-2 bg-body-tertiary px-3 py-2 rounded border shadow-sm">
+        <div class="text-end">
+            {% blocktrans with session_num=active_session.session_number float_amt=active_session.opening_balance %}
+            <span class="badge bg-success mb-0" style="font-size: 0.7rem;">SHIFT #{{ session_num }}</span>
+            <div class="small fw-bold text-dark">${{ float_amt }} Float</div>
+            {% endblocktrans %}
+        </div>
+        <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="collapse" data-bs-target="#terminalCloseSessionCard">
+            <i class="bi bi-x-circle me-1"></i>{% trans "Close Register" %}
+        </button>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block topbar_actions %}
+<a class="btn btn-soft" href="{% url 'pos:sale_list' %}"><i class="bi bi-receipt me-1"></i>{% trans "Sales history" %}</a>
+{% endblock %}
+
 {% block content %}
+<!-- Collapsible Close Session Card for POS Screen -->
+{% if active_session %}
+<div class="collapse mb-4" id="terminalCloseSessionCard">
+    <div class="card border-0 shadow-sm bg-body-tertiary border-start border-4 border-danger">
+        <div class="card-header bg-danger text-white py-3">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-x-circle me-2"></i>{% trans "Close & Reconcile Register (Shift #" %}{{ active_session.session_number }})</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" action="{% url 'pos:close_session' active_session.pk %}">
+                {% csrf_token %}
+                <p class="text-muted mb-3">{% trans "Count the physical cash in the drawer and enter the total below to close out your shift." %}</p>
+                <div class="row align-items-center">
+                    <div class="col-md-6 mb-3">
+                        <label for="id_closing_balance_actual_term" class="form-label fw-bold">{% trans "Actual Counted Cash" %}</label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text">$</span>
+                            <input type="number" step="0.001" name="closing_balance_actual" id="id_closing_balance_actual_term" class="form-control" placeholder="0.000" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3 d-flex justify-content-end align-items-end h-100 gap-2 mt-md-4">
+                        <button type="button" class="btn btn-secondary btn-lg" data-bs-toggle="collapse" data-bs-target="#terminalCloseSessionCard">{% trans "Cancel" %}</button>
+                        <button type="submit" class="btn btn-danger btn-lg px-4 fw-bold">{% trans "Confirm & Close Register" %}</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="pos-layout">
   <section>
     <div class="pos-search mb-3"><i class="bi bi-search text-purple"></i><input id="product-search" type="search" placeholder="{% trans 'Search products by name or code...' %}" autocomplete="off"><span id="product-count" class="badge-soft badge-info">{{ products|length }} {% trans "items" %}</span></div>
