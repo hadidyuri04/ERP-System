@@ -1,11 +1,12 @@
 from django.conf import settings
 from django.db import models
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _, get_language
 
 
 class Category(models.Model):
     code = models.CharField(_("Code"), max_length=50, unique=True)
-    name = models.CharField(_("Name"), max_length=255)
+    name_en = models.CharField(_("English Name"), max_length=255)
+    name_ar = models.CharField(_("Arabic Name"), max_length=255)
     parent = models.ForeignKey(
         'self', 
         verbose_name=_("Parent Category"),
@@ -21,18 +22,32 @@ class Category(models.Model):
         verbose_name = _("Category")
         verbose_name_plural = _("Categories")
 
+    @property
+    def name(self):
+        """Dynamic property to return Arabic or English name based on active language."""
+        if get_language() == 'ar' and self.name_ar:
+            return self.name_ar
+        return self.name_en
+
     def __str__(self):
         return f"[{self.code}] {self.name}"
 
 
 class Unit(models.Model):
-    name = models.CharField(_("Name"), max_length=100)
+    name_en = models.CharField(_("English Name"), max_length=100)
+    name_ar = models.CharField(_("Arabic Name"), max_length=100)
     symbol = models.CharField(_("Symbol"), max_length=20)
     is_active = models.BooleanField(_("Is Active"), default=True)
 
     class Meta:
         verbose_name = _("Unit")
         verbose_name_plural = _("Units")
+
+    @property
+    def name(self):
+        if get_language() == 'ar' and self.name_ar:
+            return self.name_ar
+        return self.name_en
 
     def __str__(self):
         return f"{self.name} ({self.symbol})"
@@ -41,7 +56,8 @@ class Unit(models.Model):
 class Product(models.Model):
     code = models.CharField(_("Code"), max_length=50, unique=True)
     barcode = models.CharField(_("Barcode"), max_length=100, unique=True, blank=True, null=True)
-    name = models.CharField(_("Name"), max_length=255)
+    name_en = models.CharField(_("English Name"), max_length=255)
+    name_ar = models.CharField(_("Arabic Name"), max_length=255)
     description = models.TextField(_("Description"), blank=True, null=True)
     
     category = models.ForeignKey(
@@ -77,6 +93,12 @@ class Product(models.Model):
     class Meta:
         verbose_name = _("Product")
         verbose_name_plural = _("Products")
+
+    @property
+    def name(self):
+        if get_language() == 'ar' and self.name_ar:
+            return self.name_ar
+        return self.name_en
 
     def __str__(self):
         return f"[{self.code}] {self.name}"

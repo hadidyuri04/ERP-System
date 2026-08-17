@@ -1,16 +1,28 @@
 from django import forms
 from django.forms import inlineformset_factory
 
-from .models import Product, Warehouse, WasteLoss, WasteLossItem
+from .models import Category, Unit, Product, Warehouse, WasteLoss, WasteLossItem
+
+
+class CategoryForm(forms.ModelForm):
+    class Meta:
+        model = Category
+        fields = ["code", "name_en", "name_ar", "parent", "description", "is_active"]
+
+
+class UnitForm(forms.ModelForm):
+    class Meta:
+        model = Unit
+        fields = ["name_en", "name_ar", "symbol", "is_active"]
 
 
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
         fields = [
-            "code", "barcode", "name", "description", "category", "unit",
-            "purchase_price", "selling_price", "minimum_stock",
-            "track_expiration", "is_active",
+            "code", "barcode", "name_en", "name_ar", "description", "category", "unit",
+            "purchase_price", "selling_price", "minimum_stock", "maximum_stock",
+            "reorder_quantity", "track_expiration", "image", "primary_supplier", "is_active",
         ]
 
 
