@@ -16,10 +16,10 @@
                 <a href="{% url 'pos:terminal' %}" class="btn btn-primary me-2">
                     <i class="bi bi-display me-1"></i> {% translate "Open Terminal" %}
                 </a>
-                <button type="button" class="btn btn-warning me-2" data-bs-toggle="modal" data-bs-target="#cashTransactionModal">
+                <button type="button" class="btn btn-warning me-2" data-bs-toggle="collapse" data-bs-target="#cashTransactionCard">
                     <i class="bi bi-cash-stack me-1"></i> {% translate "Cash In / Out" %}
                 </button>
-                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#closeSessionModal">
+                <button type="button" class="btn btn-danger" data-bs-toggle="collapse" data-bs-target="#closeSessionCard">
                     <i class="bi bi-x-circle me-1"></i> {% translate "Close Register" %}
                 </button>
             {% else %}
@@ -55,10 +55,77 @@
             </div>
         </div>
     </div>
+
+    <!-- Inline Cash Transaction Card -->
+    <div class="collapse mb-4" id="cashTransactionCard">
+        <div class="card border-0 shadow-sm bg-body-tertiary border-start border-4 border-warning">
+            <div class="card-header bg-warning py-3">
+                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-cash-stack me-2"></i>{% translate "Cash Drawer Movement" %}</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'pos:cash_transaction' active_session.pk %}">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="id_transaction_type" class="form-label fw-bold">{% translate "Movement Type" %}</label>
+                            <select name="transaction_type" id="id_transaction_type" class="form-select" required>
+                                <option value="IN">{% translate "Cash In / Add Float" %}</option>
+                                <option value="OUT">{% translate "Cash Out / Drawer Drop" %}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="id_amount" class="form-label fw-bold">{% translate "Amount" %}</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" step="0.001" name="amount" id="id_amount" class="form-control" placeholder="0.000" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="id_reason" class="form-label fw-bold">{% translate "Reason / Reference" %}</label>
+                            <input type="text" name="reason" id="id_reason" class="form-control" placeholder="{% translate 'e.g. Petty cash payout, Bank drop' %}" required>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary" data-bs-toggle="collapse" data-bs-target="#cashTransactionCard">{% translate "Cancel" %}</button>
+                        <button type="submit" class="btn btn-warning px-4 fw-bold">{% translate "Save Movement" %}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inline Close Session Card -->
+    <div class="collapse mb-4" id="closeSessionCard">
+        <div class="card border-0 shadow-sm bg-body-tertiary border-start border-4 border-danger">
+            <div class="card-header bg-danger text-white py-3">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-x-circle me-2"></i>{% translate "Close & Reconcile Register" %}</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'pos:close_session' active_session.pk %}">
+                    {% csrf_token %}
+                    <p class="text-muted mb-3">{% translate "Count the physical cash in the drawer and enter the total below to close out your shift." %}</p>
+                    <div class="row align-items-center">
+                        <div class="col-md-6 mb-3">
+                            <label for="id_closing_balance_actual" class="form-label fw-bold">{% translate "Actual Counted Cash" %}</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text">$</span>
+                                <input type="number" step="0.001" name="closing_balance_actual" id="id_closing_balance_actual" class="form-control" placeholder="0.000" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3 d-flex justify-content-end align-items-end h-100 gap-2 mt-md-4">
+                            <button type="button" class="btn btn-secondary btn-lg" data-bs-toggle="collapse" data-bs-target="#closeSessionCard">{% translate "Cancel" %}</button>
+                            <button type="submit" class="btn btn-danger btn-lg px-4 fw-bold">{% translate "Close Register Session" %}</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
     {% else %}
-    <!-- Inline Open Session Card (No Modal Backdrop Bugs) -->
+    <!-- Inline Open Session Card -->
     <div class="collapse mb-4" id="openSessionCard">
-        <div class="card border-0 shadow-sm bg-body-tertiary">
+        <div class="card border-0 shadow-sm bg-body-tertiary border-start border-4 border-success">
             <div class="card-header bg-success text-white py-3">
                 <h5 class="mb-0 fw-bold"><i class="bi bi-play-circle me-2"></i>{% translate "Open Register Session" %}</h5>
             </div>
@@ -164,74 +231,4 @@
         </div>
     </div>
 </div>
-
-{% if active_session %}
-<!-- Modal: Close Session -->
-<div class="modal fade" id="closeSessionModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content shadow">
-            <form method="post" action="{% url 'pos:close_session' active_session.pk %}">
-                {% csrf_token %}
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold">{% translate "Close & Reconcile Register" %}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="text-muted small">{% translate "Count the physical cash in the drawer and enter the total below." %}</p>
-                    <div class="mb-3">
-                        <label for="id_closing_balance_actual" class="form-label">{% translate "Actual Counted Cash" %}</label>
-                        <div class="input-group input-group-lg">
-                            <span class="input-group-text">$</span>
-                            <input type="number" step="0.001" name="closing_balance_actual" id="id_closing_balance_actual" class="form-control" placeholder="0.000" required>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">{% translate "Cancel" %}</button>
-                    <button type="submit" class="btn btn-danger">{% translate "Close Register Session" %}</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Modal: Cash Transaction (In / Out) -->
-<div class="modal fade" id="cashTransactionModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content shadow">
-            <form method="post" action="{% url 'pos:cash_transaction' active_session.pk %}">
-                {% csrf_token %}
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold">{% translate "Cash Drawer Movement" %}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="id_transaction_type" class="form-label">{% translate "Movement Type" %}</label>
-                        <select name="transaction_type" id="id_transaction_type" class="form-select" required>
-                            <option value="IN">{% translate "Cash In / Add Float" %}</option>
-                            <option value="OUT">{% translate "Cash Out / Drawer Drop" %}</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="id_amount" class="form-label">{% translate "Amount" %}</label>
-                        <div class="input-group">
-                            <span class="input-group-text">$</span>
-                            <input type="number" step="0.001" name="amount" id="id_amount" class="form-control" placeholder="0.000" required>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="id_reason" class="form-label">{% translate "Reason / Reference" %}</label>
-                        <input type="text" name="reason" id="id_reason" class="form-control" placeholder="e.g. Petty cash payout, Mid-day bank drop" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">{% translate "Cancel" %}</button>
-                    <button type="submit" class="btn btn-warning">{% translate "Save Movement" %}</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-{% endif %}
 {% endblock %}
