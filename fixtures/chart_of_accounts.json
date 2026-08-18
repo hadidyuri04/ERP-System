@@ -1,0 +1,170 @@
+[
+  {
+    "model": "finance.account",
+    "pk": 1,
+    "fields": {
+      "code": "1100",
+      "name": "النقدية",
+      "account_type": "asset",
+      "parent": null,
+      "allow_posting": true,
+      "is_active": true,
+      "created_at": "2026-08-18T00:00:00Z",
+      "updated_at": "2026-08-18T00:00:00Z"
+    }
+  },
+  {
+    "model": "finance.account",
+    "pk": 2,
+    "fields": {
+      "code": "1200",
+      "name": "البنك",
+      "account_type": "asset",
+      "parent": null,
+      "allow_posting": true,
+      "is_active": true,
+      "created_at": "2026-08-18T00:00:00Z",
+      "updated_at": "2026-08-18T00:00:00Z"
+    }
+  },
+  {
+    "model": "finance.account",
+    "pk": 3,
+    "fields": {
+      "code": "1210",
+      "name": "شبكة البطاقات تحت التحصيل",
+      "account_type": "asset",
+      "parent": null,
+      "allow_posting": true,
+      "is_active": true,
+      "created_at": "2026-08-18T00:00:00Z",
+      "updated_at": "2026-08-18T00:00:00Z"
+    }
+  },
+  {
+    "model": "finance.account",
+    "pk": 4,
+    "fields": {
+      "code": "1300",
+      "name": "ذمم مدينة - العملاء",
+      "account_type": "asset",
+      "parent": null,
+      "allow_posting": true,
+      "is_active": true,
+      "created_at": "2026-08-18T00:00:00Z",
+      "updated_at": "2026-08-18T00:00:00Z"
+    }
+  },
+  {
+    "model": "finance.account",
+    "pk": 5,
+    "fields": {
+      "code": "1400",
+      "name": "المخزون",
+      "account_type": "asset",
+      "parent": null,
+      "allow_posting": true,
+      "is_active": true,
+      "created_at": "2026-08-18T00:00:00Z",
+      "updated_at": "2026-08-18T00:00:00Z"
+    }
+  },
+  {
+    "model": "finance.account",
+    "pk": 6,
+    "fields": {
+      "code": "1500",
+      "name": "ضريبة المشتريات",
+      "account_type": "asset",
+      "parent": null,
+      "allow_posting": true,
+      "is_active": true,
+      "created_at": "2026-08-18T00:00:00Z",
+      "updated_at": "2026-08-18T00:00:00Z"
+    }
+  },
+  {
+    "model": "finance.account",
+    "pk": 7,
+    "fields": {
+      "code": "2100",
+      "name": "ذمم دائنة - الموردين",
+      "account_type": "liability",
+      "parent": null,
+      "allow_posting": true,
+      "is_active": true,
+      "created_at": "2026-08-18T00:00:00Z",
+      "updated_at": "2026-08-18T00:00:00Z"
+    }
+  },
+  {
+    "model": "finance.account",
+    "pk": 8,
+    "fields": {
+      "code": "2200",
+      "name": "ضريبة المبيعات المستحقة",
+      "account_type": "liability",
+      "parent": null,
+      "allow_posting": true,
+      "is_active": true,
+      "created_at": "2026-08-18T00:00:00Z",
+      "updated_at": "2026-08-18T00:00:00Z"
+    }
+  },
+  {
+    "model": "finance.account",
+    "pk": 9,
+    "fields": {
+      "code": "3100",
+      "name": "رأس المال",
+      "account_type": "equity",
+      "parent": null,
+      "allow_posting": true,
+      "is_active": true,
+      "created_at": "2026-08-18T00:00:00Z",
+      "updated_at": "2026-08-18T00:00:00Z"
+    }
+  },
+  {
+    "model": "finance.account",
+    "pk": 10,
+    "fields": {
+      "code": "4100",
+      "name": "إيرادات المبيعات",
+      "account_type": "revenue",
+      "parent": null,
+      "allow_posting": true,
+      "is_active": true,
+      "created_at": "2026-08-18T00:00:00Z",
+      "updated_at": "2026-08-18T00:00:00Z"
+    }
+  },
+  {
+    "model": "finance.account",
+    "pk": 11,
+    "fields": {
+      "code": "5100",
+      "name": "تكلفة البضاعة المباعة",
+      "account_type": "expense",
+      "parent": null,
+      "allow_posting": true,
+      "is_active": true,
+      "created_at": "2026-08-18T00:00:00Z",
+      "updated_at": "2026-08-18T00:00:00Z"
+    }
+  },
+  {
+    "model": "finance.account",
+    "pk": 12,
+    "fields": {
+      "code": "6300",
+      "name": "الهدر والفقد",
+      "account_type": "expense",
+      "parent": null,
+      "allow_posting": true,
+      "is_active": true,
+      "created_at": "2026-08-18T00:00:00Z",
+      "updated_at": "2026-08-18T00:00:00Z"
+    }
+  }
+]

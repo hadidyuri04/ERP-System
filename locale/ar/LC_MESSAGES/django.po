@@ -3224,3 +3224,131 @@ msgstr "لا توجد أصناف في هذا المستند."
 #: templates/inventory/waste_loss_detail.html
 msgid "Confirmed documents are locked and cannot be edited."
 msgstr "المستندات المؤكدة مقفلة ولا يمكن تعديلها."
+
+#: inventory/views.py templates/inventory/product_stock_form.html
+msgid "Set stock"
+msgstr "تعديل المخزون"
+
+#: inventory/views.py templates/inventory/product_stock_form.html
+msgid "Current stock"
+msgstr "الرصيد الحالي"
+
+#: inventory/views.py templates/inventory/product_stock_form.html
+msgid "New quantity"
+msgstr "الكمية الجديدة"
+
+#: inventory/views.py templates/inventory/product_stock_form.html
+msgid "Type the quantity you want the stock to be, not the difference."
+msgstr "اكتب الكمية التي تريد أن يصبح عليها المخزون، وليس الفرق."
+
+#: inventory/views.py templates/inventory/product_stock_form.html
+msgid "Why is the stock being changed?"
+msgstr "ما سبب تعديل المخزون؟"
+
+#: inventory/views.py templates/inventory/product_stock_form.html
+msgid "This records a confirmed stock adjustment. Continue?"
+msgstr "سيتم تسجيل تسوية مخزون مؤكدة. هل تريد المتابعة؟"
+
+#: inventory/views.py templates/inventory/product_stock_form.html
+msgid "This shortcut creates a stock adjustment document and confirms it immediately, so the change is still recorded in the stock movements."
+msgstr "هذا الاختصار ينشئ مستند تسوية مخزون ويؤكده فوراً، فيبقى التعديل مسجلاً ضمن حركات المخزون."
+
+#: inventory/views.py templates/inventory/product_stock_form.html
+msgid "Quick stock correction from the item list."
+msgstr "تعديل سريع للمخزون من قائمة الأصناف."
+
+#: inventory/views.py templates/inventory/product_stock_form.html
+msgid "Stock updated. Adjustment %(number)s was created and confirmed."
+msgstr "تم تحديث المخزون. أُنشئت التسوية %(number)s وتم تأكيدها."
+
+#: inventory/views.py templates/inventory/product_stock_form.html
+msgid "Select a warehouse."
+msgstr "اختر مستودعاً."
+
+#: inventory/views.py templates/inventory/product_stock_form.html
+msgid "Enter a quantity of zero or more."
+msgstr "أدخل كمية تساوي صفر أو أكثر."
+
+#: inventory/views.py templates/inventory/product_stock_form.html
+msgid "No active warehouses."
+msgstr "لا توجد مستودعات نشطة."
+
+#: inventory/views.py templates/inventory/product_stock_form.html
+msgid "Items sold and stocked by the business"
+msgstr "الأصناف التي تبيعها وتخزنها المنشأة"
+
+#: templates/inventory/product_stock_form.html
+msgid "Select a warehouse"
+msgstr "اختر مستودعاً"
+
+#: templates/inventory/product_form.html
+msgid "This item has no stock in any warehouse yet."
+msgstr "لا يوجد رصيد لهذا الصنف في أي مستودع بعد."
+
+#: finance/models.py inventory/models.py pos/services.py
+msgid "Tax Rate"
+msgstr "نسبة الضريبة"
+
+#: finance/models.py inventory/models.py pos/services.py
+msgid "Tax Rates"
+msgstr "نسب الضرائب"
+
+#: finance/models.py inventory/models.py pos/services.py
+msgid "Percentage, for example 16.000 for 16%."
+msgstr "نسبة مئوية، مثلاً 16.000 تعني ١٦٪."
+
+#: finance/models.py inventory/models.py pos/services.py
+msgid "Clear this for exempt items so no tax is calculated."
+msgstr "ألغِ التحديد للأصناف المعفاة حتى لا تُحتسب ضريبة."
+
+#: finance/models.py inventory/models.py pos/services.py
+msgid "Subject To Tax"
+msgstr "خاضع للضريبة"
+
+#: finance/models.py inventory/models.py pos/services.py
+msgid "Tax rate cannot be negative."
+msgstr "لا يمكن أن تكون نسبة الضريبة سالبة."
+
+#: finance/models.py inventory/models.py pos/services.py
+msgid "Tax rate cannot be greater than 100%."
+msgstr "لا يمكن أن تتجاوز نسبة الضريبة ١٠٠٪."
+
+#: finance/models.py inventory/models.py pos/services.py
+msgid "Leave empty to treat this item as not taxed."
+msgstr "اتركه فارغاً لاعتبار الصنف غير خاضع للضريبة."
+
+#: finance/models.py inventory/models.py pos/services.py
+msgid "Is Sellable"
+msgstr "قابل للبيع"
+
+#: finance/models.py inventory/models.py pos/services.py
+msgid "Clear this for items that are only bought, never sold."
+msgstr "ألغِ التحديد للأصناف التي تُشترى فقط ولا تُباع."
+
+#: finance/models.py inventory/models.py pos/services.py
+msgid "Maximum Discount"
+msgstr "أقصى خصم"
+
+#: finance/models.py inventory/models.py pos/services.py
+msgid "Largest discount percentage allowed on this item."
+msgstr "أعلى نسبة خصم مسموحة على هذا الصنف."
+
+#: finance/models.py inventory/models.py pos/services.py
+msgid "Maximum discount must be between 0 and 100."
+msgstr "يجب أن يكون أقصى خصم بين ٠ و ١٠٠."
+
+#: finance/models.py inventory/models.py pos/services.py
+msgid "%(product_name)s is not available for sale."
+msgstr "الصنف %(product_name)s غير متاح للبيع."
+
+#: finance/models.py inventory/models.py pos/services.py
+msgid "Discount on %(product_name)s exceeds the maximum of %(max)s%%."
+msgstr "الخصم على %(product_name)s يتجاوز الحد الأقصى %(max)s٪."
+
+#: finance/models.py inventory/models.py pos/services.py
+msgid "From the item's tax rate"
+msgstr "محسوبة من نسبة ضريبة الصنف"
+
+#: finance/models.py inventory/models.py pos/services.py
+msgid "The discount here applies to the whole invoice, on top of any discount on the item lines. Tax is not entered by hand: it is calculated from each item's tax rate."
+msgstr "الخصم هنا يُطبّق على الفاتورة كاملة فوق أي خصم على البنود. أما الضريبة فلا تُدخل يدوياً، بل تُحتسب من نسبة ضريبة كل صنف."

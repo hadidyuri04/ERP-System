@@ -6,6 +6,8 @@ from .models import (
     Unit,
     Product,
     Warehouse,
+    StockAdjustment,
+    StockAdjustmentItem,
     StockBatch,
     StockMovement,
     StockBalance,
@@ -69,6 +71,12 @@ class WarehouseTransferItemInline(admin.TabularInline):
     model = WarehouseTransferItem
     extra = 1
 
+    def get_readonly_fields(self, request, obj=None):
+        # Lines of a completed or cancelled transfer are history, not data entry.
+        if obj and obj.status != WarehouseTransfer.TransferStatus.DRAFT:
+            return ("product", "batch", "quantity", "unit_cost")
+        return ("unit_cost",)
+
 
 @admin.register(WarehouseTransfer)
 class WarehouseTransferAdmin(admin.ModelAdmin):
@@ -76,6 +84,49 @@ class WarehouseTransferAdmin(admin.ModelAdmin):
     search_fields = ('transfer_number',)
     list_filter = ('status', 'source_warehouse', 'destination_warehouse')
     inlines = [WarehouseTransferItemInline]
+    readonly_fields = ('status', 'created_by', 'created_at')
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
+
+    def has_change_permission(self, request, obj=None):
+        # Spec 10: confirmed documents are locked.
+        if obj and obj.status != WarehouseTransfer.TransferStatus.DRAFT:
+            return False
+        return super().has_change_permission(request, obj)
+
+
+class StockAdjustmentItemInline(admin.TabularInline):
+    model = StockAdjustmentItem
+    extra = 1
+    readonly_fields = ("system_quantity", "variance")
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj and obj.status != StockAdjustment.Status.DRAFT:
+            return ("product", "batch", "counted_quantity", "system_quantity", "variance")
+        return self.readonly_fields
+
+
+@admin.register(StockAdjustment)
+class StockAdjustmentAdmin(admin.ModelAdmin):
+    list_display = ('adjustment_number', 'warehouse', 'date', 'status', 'created_by')
+    search_fields = ('adjustment_number',)
+    list_filter = ('status', 'warehouse')
+    inlines = [StockAdjustmentItemInline]
+    readonly_fields = ('status', 'created_by', 'created_at')
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
+
+    def has_change_permission(self, request, obj=None):
+        # Spec 10: confirmed documents are locked.
+        if obj and obj.status != StockAdjustment.Status.DRAFT:
+            return False
+        return super().has_change_permission(request, obj)
 
 
 class WasteLossItemInline(admin.TabularInline):

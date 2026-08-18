@@ -43,12 +43,17 @@ def quotation_create(request):
             data = item_form.cleaned_data
             if not data or data.get("DELETE"):
                 continue
+            product = data["product"]
+            discount = data.get("discount_amount") or 0
+            gross = data["quantity"] * data["unit_price"]
+
             items_data.append({
-                "product": data["product"],
+                "product": product,
                 "quantity": data["quantity"],
                 "unit_price": data["unit_price"],
-                "discount_amount": data.get("discount_amount") or 0,
-                "tax_amount": data.get("tax_amount") or 0,
+                "discount_amount": discount,
+                # Derived from the product's tax rate, not typed in.
+                "tax_amount": product.tax_for(gross - discount),
             })
         try:
             quotation = create_quotation(
@@ -58,7 +63,8 @@ def quotation_create(request):
                 items_data=items_data,
                 user=request.user,
                 discount_amount=form.cleaned_data.get("discount_amount") or 0,
-                tax_amount=form.cleaned_data.get("tax_amount") or 0,
+                # Header tax removed: totals come from the line rates only.
+                tax_amount=sum(i["tax_amount"] for i in items_data),
                 notes=form.cleaned_data.get("notes") or "",
             )
             messages.success(request, _("Quotation created successfully."))

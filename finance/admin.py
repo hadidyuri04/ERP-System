@@ -6,12 +6,21 @@ from .models import (
     JournalEntryLine,
     ReceiptVoucher,
     PaymentVoucher,
+    TaxRate,
 )
 
 from .services import (
     post_receipt_voucher,
     post_payment_voucher,
 )
+
+
+@admin.register(TaxRate)
+class TaxRateAdmin(admin.ModelAdmin):
+    list_display = ("code", "name", "rate", "subject_to_tax", "is_active")
+    list_filter = ("subject_to_tax", "is_active")
+    search_fields = ("code", "name")
+    readonly_fields = ("created_at", "updated_at")
 
 
 # =========================

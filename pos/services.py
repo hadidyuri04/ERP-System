@@ -20,7 +20,9 @@ def complete_sale(warehouse, cashier, items_data, payments_data, customer=None, 
         raise ValidationError(_("Cannot complete a sale with an empty cart."))
 
     # Calculate totals
-    subtotal = Decimal('0.000')
+    subtotal = Decimal('0.000')        # goods value before tax and discount
+    total_discount = Decimal('0.000')
+    total_tax = Decimal('0.000')
     sale_items_to_create = []
 
     for item_data in items_data:
@@ -28,8 +30,29 @@ def complete_sale(warehouse, cashier, items_data, payments_data, customer=None, 
         quantity = Decimal(str(item_data['quantity']))
         unit_price = Decimal(str(item_data['unit_price']))
         discount_amount = Decimal(str(item_data.get('discount_amount', '0.000')))
-        tax_amount = Decimal(str(item_data.get('tax_amount', '0.000')))
-        
+
+        # Tax is derived from the product's tax rate, never taken from the
+        # client payload, so a tampered request cannot understate VAT.
+        tax_amount = product.tax_for((quantity * unit_price) - discount_amount)
+
+        if not product.is_sellable:
+            raise ValidationError(
+                _("%(product_name)s is not available for sale.") % {
+                    'product_name': product.name,
+                }
+            )
+
+        if product.maximum_discount and quantity * unit_price > 0:
+            discount_pct = (discount_amount / (quantity * unit_price)) * Decimal("100")
+            if discount_pct > product.maximum_discount:
+                raise ValidationError(
+                    _("Discount on %(product_name)s exceeds the maximum of %(max)s%%.") % {
+                        'product_name': product.name,
+                        'max': product.maximum_discount,
+                    }
+                )
+
+
         # Check available stock before committing
         available = get_available_stock(product, warehouse)
         if available < quantity:
@@ -42,7 +65,10 @@ def complete_sale(warehouse, cashier, items_data, payments_data, customer=None, 
             )
         
         line_total = (quantity * unit_price) - discount_amount + tax_amount
-        subtotal += line_total
+
+        subtotal += quantity * unit_price
+        total_discount += discount_amount
+        total_tax += tax_amount
 
         sale_items_to_create.append({
             'product': product,
@@ -52,6 +78,8 @@ def complete_sale(warehouse, cashier, items_data, payments_data, customer=None, 
             'tax_amount': tax_amount,
             'line_total': line_total
         })
+
+    grand_total = subtotal - total_discount + total_tax
 
     # Validate payments match total (or handle credit logic)
     total_paid = sum(Decimal(str(p['amount'])) for p in payments_data)
@@ -67,9 +95,11 @@ def complete_sale(warehouse, cashier, items_data, payments_data, customer=None, 
         date=timezone.now(),
         status=POSSale.SaleStatus.COMPLETED,
         subtotal=subtotal,
-        total=subtotal, # Expand with global tax/discount if needed
+        discount_amount=total_discount,
+        tax_amount=total_tax,
+        total=grand_total,
         paid_amount=total_paid,
-        change_amount=max(Decimal('0.000'), total_paid - subtotal),
+        change_amount=max(Decimal('0.000'), total_paid - grand_total),
         notes=notes
     )
 

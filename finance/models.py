@@ -8,6 +8,62 @@ from customers.models import Customer
 from suppliers.models import Supplier
 
 
+class TaxRate(models.Model):
+    """
+    A named tax percentage, maintained from the admin.
+
+    Products point at one of these instead of anybody typing a tax amount by
+    hand, which is what previously allowed the same tax to be entered twice on
+    one invoice.
+    """
+    code = models.CharField(_("Code"), max_length=20, unique=True)
+    name = models.CharField(_("Name"), max_length=200)
+
+    rate = models.DecimalField(
+        _("Tax Rate"),
+        max_digits=6,
+        decimal_places=3,
+        default=0,
+        help_text=_("Percentage, for example 16.000 for 16%."),
+    )
+
+    subject_to_tax = models.BooleanField(
+        _("Subject To Tax"),
+        default=True,
+        help_text=_("Clear this for exempt items so no tax is calculated."),
+    )
+
+    is_active = models.BooleanField(_("Is Active"), default=True)
+
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
+
+    class Meta:
+        verbose_name = _("Tax Rate")
+        verbose_name_plural = _("Tax Rates")
+        ordering = ("code",)
+
+    def __str__(self):
+        return f"{self.name} ({self.rate}%)"
+
+    def clean(self):
+        if self.rate < 0:
+            raise ValidationError({"rate": _("Tax rate cannot be negative.")})
+        if self.rate > 100:
+            raise ValidationError({"rate": _("Tax rate cannot be greater than 100%.")})
+
+    def tax_for(self, amount):
+        """Tax due on `amount`, rounded to three decimals. Exempt returns zero."""
+        from decimal import Decimal, ROUND_HALF_UP
+
+        if not self.subject_to_tax or not self.rate:
+            return Decimal("0.000")
+
+        return (Decimal(amount) * Decimal(self.rate) / Decimal("100")).quantize(
+            Decimal("0.001"), rounding=ROUND_HALF_UP
+        )
+
+
 class Account(models.Model):
     class AccountType(models.TextChoices):
         ASSET = "asset", _("Asset")

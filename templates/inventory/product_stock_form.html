@@ -1,0 +1,97 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Set stock" %}{% endblock %}
+
+{% block page_header %}
+  <h1>{% trans "Set stock" %}</h1>
+  <p>{{ product.code }} · {{ product.name }}</p>
+{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{% url 'inventory:product_list' %}" class="btn btn-ghost" data-smooth>{% trans "Cancel" %}</a>
+{% endblock %}
+
+{% block content %}
+{# nav_active = 'items' — shortcut that creates and confirms a StockAdjustment #}
+
+<div class="row g-3 justify-content-center">
+  <div class="col-12 col-lg-7">
+
+    {# ---- Current balances ---- #}
+    <div class="card-soft mb-3">
+      <div class="card-head"><h3 class="mb-0">{% trans "Current stock" %}</h3></div>
+      <div class="table-wrap">
+        <table class="table-erp">
+          <thead>
+            <tr>
+              <th>{% trans "Warehouse" %}</th>
+              <th class="num" style="width:30%">{% trans "Quantity" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in warehouse_rows %}
+              <tr data-row>
+                <td class="cell-strong">{{ row.warehouse.name }}</td>
+                <td class="num cell-strong">{{ row.quantity|floatformat:3 }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="2">
+                  <div class="empty-state">
+                    <p>{% trans "No active warehouses." %}</p>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    {# ---- Set it ---- #}
+    <div class="card-soft card-pad">
+      <form method="post">
+        {% csrf_token %}
+
+        <div class="mb-3">
+          <label class="form-label" for="id_warehouse">{% trans "Warehouse" %}<span class="req">*</span></label>
+          <select class="form-select" id="id_warehouse" name="warehouse" required>
+            <option value="">{% trans "Select a warehouse" %}</option>
+            {% for warehouse in warehouses %}
+              <option value="{{ warehouse.id }}">{{ warehouse.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="id_counted_quantity">{% trans "New quantity" %}<span class="req">*</span></label>
+          <input type="number" step="0.001" min="0" class="form-control"
+                 id="id_counted_quantity" name="counted_quantity" placeholder="0.000" required>
+          <div class="field-hint">{% trans "Type the quantity you want the stock to be, not the difference." %}</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="id_notes">{% trans "Reason / Notes" %}</label>
+          <input type="text" class="form-control" id="id_notes" name="notes"
+                 placeholder="{% trans "Why is the stock being changed?" %}">
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary flex-fill"
+                  data-confirm="{% trans "This records a confirmed stock adjustment. Continue?" %}">
+            <i class="bi bi-check2 me-1"></i>{% trans "Save" %}
+          </button>
+          <a href="{% url 'inventory:product_list' %}" class="btn btn-ghost">{% trans "Cancel" %}</a>
+        </div>
+
+        <p class="field-hint mt-3 mb-0">
+          <i class="bi bi-info-circle me-1"></i>
+          {% trans "This shortcut creates a stock adjustment document and confirms it immediately, so the change is still recorded in the stock movements." %}
+        </p>
+      </form>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

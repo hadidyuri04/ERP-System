@@ -26,6 +26,50 @@
         </div>
       </form>
     </div>
+
+    {# Stock lives on batches and balances, not on the product, so it gets its
+       own panel and its own document rather than a field on this form. #}
+    {% if product %}
+      <div class="card-soft mt-3">
+        <div class="card-head">
+          <h3 class="mb-0">{% trans "Current stock" %}</h3>
+          <div class="spacer"></div>
+          <a href="{% url 'inventory:product_stock_set' product.pk %}" class="btn btn-soft btn-sm" data-smooth>
+            <i class="bi bi-box-seam me-1"></i>{% trans "Set stock" %}
+          </a>
+        </div>
+
+        <div class="table-wrap">
+          <table class="table-erp">
+            <thead>
+              <tr>
+                <th>{% trans "Warehouse" %}</th>
+                <th class="num" style="width:24%">{% trans "Quantity" %}</th>
+                <th class="num" style="width:24%">{% trans "Reserved Quantity" %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in stock_rows %}
+                <tr data-row>
+                  <td class="cell-strong">{{ row.warehouse.name }}</td>
+                  <td class="num cell-strong">{{ row.quantity|floatformat:3 }}</td>
+                  <td class="num cell-muted">{{ row.reserved_quantity|floatformat:3 }}</td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="3">
+                    <div class="empty-state">
+                      <p>{% trans "This item has no stock in any warehouse yet." %}</p>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% endif %}
+
   </div>
 </div>
 {% endblock %}

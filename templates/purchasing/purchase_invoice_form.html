@@ -25,7 +25,7 @@
 
     <p class="field-hint mb-0">
       <i class="bi bi-info-circle me-1"></i>
-      {% trans "Discount and tax here apply to the whole invoice and are added on top of any discount or tax entered on the item lines. Leave them at zero if you already entered them per line." %}
+      {% trans "The discount here applies to the whole invoice, on top of any discount on the item lines. Tax is not entered by hand: it is calculated from each item's tax rate." %}
     </p>
   </div>
 
@@ -88,8 +88,9 @@
               </div>
 
               <div class="col-6 col-md-2">
-                <label class="form-label" for="{{ item_form.tax_amount.id_for_label }}">{% trans "Tax" %}</label>
-                {{ item_form.tax_amount }}
+                <label class="form-label">{% trans "Tax" %}</label>
+                <div class="form-control-plaintext tnum" data-line-tax>0.000</div>
+                <div class="field-hint">{% trans "From the item's tax rate" %}</div>
               </div>
 
               <div class="col-6 col-md-3">
@@ -221,19 +222,32 @@
       return el ? (parseFloat(el.value) || 0) : 0;
     }
 
+    var TAX_RATES = {{ tax_rates_json|safe }};
+
     function recalc() {
       var subtotal = 0, lineDiscount = 0, lineTax = 0;
 
       rows.querySelectorAll('[data-formset-row]:not([hidden])').forEach(function (row) {
-        var qty  = num(row.querySelector('input[name$="-quantity"]'));
-        var cost = num(row.querySelector('input[name$="-unit_cost"]'));
+        var qty      = num(row.querySelector('input[name$="-quantity"]'));
+        var cost     = num(row.querySelector('input[name$="-unit_cost"]'));
+        var discount = num(row.querySelector('input[name$="-discount_amount"]'));
+        var select   = row.querySelector('select[name$="-product"]');
+        var rate     = (select && TAX_RATES[select.value]) || 0;
+
+        // Mirrors Product.tax_for(): discount comes off before tax.
+        var tax = (qty * cost - discount) * rate / 100;
+        if (tax < 0) tax = 0;
+
+        var taxCell = row.querySelector('[data-line-tax]');
+        if (taxCell) taxCell.textContent = tax.toFixed(3);
+
         subtotal     += qty * cost;
-        lineDiscount += num(row.querySelector('input[name$="-discount_amount"]'));
-        lineTax      += num(row.querySelector('input[name$="-tax_amount"]'));
+        lineDiscount += discount;
+        lineTax      += tax;
       });
 
       var discount   = num(document.getElementById('id_discount_amount')) + lineDiscount;
-      var tax        = num(document.getElementById('id_tax_amount')) + lineTax;
+      var tax        = lineTax;
       var additional = num(document.getElementById('id_additional_expenses'));
       var total      = subtotal + tax + additional - discount;
 
@@ -245,7 +259,9 @@
       });
     }
 
-    document.getElementById('purchaseForm').addEventListener('input', recalc);
+    var formEl = document.getElementById('purchaseForm');
+    formEl.addEventListener('input', recalc);
+    formEl.addEventListener('change', recalc);   // product select fires change, not input
     recalc();
   })();
 </script>

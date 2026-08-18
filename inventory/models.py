@@ -90,6 +90,36 @@ class Product(models.Model):
     maximum_stock = models.DecimalField(_("Maximum Stock"), max_digits=12, decimal_places=3, default=0.000)
     reorder_quantity = models.DecimalField(_("Reorder Quantity"), max_digits=12, decimal_places=3, default=0.000)
 
+    tax_rate = models.ForeignKey(
+        'finance.TaxRate',
+        verbose_name=_("Tax Rate"),
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='products',
+        help_text=_("Leave empty to treat this item as not taxed."),
+    )
+    is_sellable = models.BooleanField(
+        _("Is Sellable"),
+        default=True,
+        help_text=_("Clear this for items that are only bought, never sold."),
+    )
+    maximum_discount = models.DecimalField(
+        _("Maximum Discount"),
+        max_digits=6,
+        decimal_places=3,
+        default=0,
+        help_text=_("Largest discount percentage allowed on this item."),
+    )
+
+    def tax_for(self, amount):
+        """Tax due on `amount` using this item's rate. Zero when untaxed."""
+        from decimal import Decimal
+
+        if not self.tax_rate_id:
+            return Decimal("0.000")
+        return self.tax_rate.tax_for(amount)
+
     class Meta:
         verbose_name = _("Product")
         verbose_name_plural = _("Products")
