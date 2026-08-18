@@ -3352,3 +3352,99 @@ msgstr "محسوبة من نسبة ضريبة الصنف"
 #: finance/models.py inventory/models.py pos/services.py
 msgid "The discount here applies to the whole invoice, on top of any discount on the item lines. Tax is not entered by hand: it is calculated from each item's tax rate."
 msgstr "الخصم هنا يُطبّق على الفاتورة كاملة فوق أي خصم على البنود. أما الضريبة فلا تُدخل يدوياً، بل تُحتسب من نسبة ضريبة كل صنف."
+
+#: finance/services.py purchasing/forms.py
+msgid "Paid amount"
+msgstr "المبلغ المدفوع"
+
+#: finance/services.py purchasing/forms.py
+msgid "Remaining owed to supplier"
+msgstr "المتبقي للمورد"
+
+#: finance/services.py purchasing/forms.py
+msgid "The paid amount is greater than the invoice total."
+msgstr "المبلغ المدفوع أكبر من إجمالي الفاتورة."
+
+#: finance/services.py purchasing/forms.py
+msgid "Paid amount cannot be negative."
+msgstr "لا يمكن أن يكون المبلغ المدفوع سالباً."
+
+#: finance/services.py purchasing/forms.py
+msgid "Paid amount %(paid)s is greater than the invoice total %(total)s."
+msgstr "المبلغ المدفوع %(paid)s أكبر من إجمالي الفاتورة %(total)s."
+
+#: finance/services.py purchasing/forms.py
+msgid "Purchase invoice %(invoice_number)s paid"
+msgstr "دفعة على فاتورة الشراء %(invoice_number)s"
+
+#: finance/services.py purchasing/forms.py
+msgid "Purchase invoice %(invoice_number)s outstanding balance"
+msgstr "الرصيد المتبقي على فاتورة الشراء %(invoice_number)s"
+
+#: templates/purchasing/purchase_invoice_form.html
+msgid "The invoice was not saved"
+msgstr "لم يتم حفظ الفاتورة"
+
+#: finance/services.py templates/purchasing/purchase_invoice_form.html
+msgid "A cash invoice must be paid in full before it can be confirmed. Paid: %(paid)s, required: %(total)s."
+msgstr "يجب دفع فاتورة الكاش بالكامل قبل تأكيدها. المدفوع: %(paid)s، المطلوب: %(total)s."
+
+#: finance/services.py templates/purchasing/purchase_invoice_form.html
+msgid "A credit invoice cannot carry a paid amount. Confirm it with zero paid, then settle it using a payment voucher."
+msgstr "لا يمكن أن تحمل الفاتورة الآجلة مبلغاً مدفوعاً. أكّدها بمبلغ صفر ثم سدّدها بسند صرف."
+
+#: finance/services.py templates/purchasing/purchase_invoice_form.html
+msgid "A cash invoice must be paid in full."
+msgstr "يجب دفع فاتورة الكاش بالكامل."
+
+#: finance/services.py templates/purchasing/purchase_invoice_form.html
+msgid "A credit invoice must be confirmed with nothing paid."
+msgstr "الفاتورة الآجلة تُؤكَّد بدون أي مبلغ مدفوع."
+
+#: finance/services.py templates/purchasing/purchase_invoice_form.html
+msgid "You can still save this as a draft, but it will not confirm."
+msgstr "يمكنك حفظها كمسودة، لكنها لن تُؤكَّد."
+
+#: purchasing/views.py templates/purchasing/
+msgid "Only draft invoices can be edited."
+msgstr "يمكن تعديل الفواتير المسودة فقط."
+
+#: purchasing/views.py templates/purchasing/
+msgid "Purchase invoice updated."
+msgstr "تم تحديث فاتورة الشراء."
+
+#: purchasing/views.py templates/purchasing/
+msgid "Edit purchase invoice"
+msgstr "تعديل فاتورة شراء"
+
+#: purchasing/views.py templates/purchasing/
+msgid "Purchase invoice"
+msgstr "فاتورة شراء"
+
+#: purchasing/views.py templates/purchasing/
+msgid "Payment type"
+msgstr "نوع الدفع"
+
+#: purchasing/views.py templates/purchasing/
+msgid "Due date"
+msgstr "تاريخ الاستحقاق"
+
+#: purchasing/views.py templates/purchasing/
+msgid "This invoice has no items."
+msgstr "لا توجد أصناف في هذه الفاتورة."
+
+#: purchasing/views.py templates/purchasing/
+msgid "This invoice has been confirmed"
+msgstr "تم تأكيد هذه الفاتورة"
+
+#: purchasing/views.py templates/purchasing/
+msgid "Confirming adds the stock and posts the journal entry. This cannot be undone. Continue?"
+msgstr "التأكيد يزيد المخزون ويرحّل القيد المحاسبي، ولا يمكن التراجع عنه. هل تريد المتابعة؟"
+
+#: purchasing/views.py templates/purchasing/
+msgid "A cash invoice must be paid in full, and a credit invoice must be confirmed with nothing paid. Use Edit to correct the paid amount."
+msgstr "فاتورة الكاش يجب أن تُدفع بالكامل، والفاتورة الآجلة تُؤكَّد بدون مبلغ مدفوع. استخدم تعديل لتصحيح المبلغ المدفوع."
+
+#: purchasing/views.py templates/purchasing/
+msgid "Discount and tax are not entered here: both are totalled from the item lines, and tax comes from each item's tax rate."
+msgstr "الخصم والضريبة لا تُدخل هنا، بل تُجمع من بنود الأصناف، والضريبة تُحتسب من نسبة ضريبة كل صنف."

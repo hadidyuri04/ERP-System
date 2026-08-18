@@ -1,11 +1,16 @@
 {% extends "core/base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "New purchase invoice" %}{% endblock %}
+{% block title %}{% if invoice %}{{ invoice.invoice_number }}{% else %}{% trans "New purchase invoice" %}{% endif %}{% endblock %}
 
 {% block page_header %}
-  <h1>{% trans "New purchase invoice" %}</h1>
-  <p>{% trans "Record goods received from a supplier" %}</p>
+  {% if invoice %}
+    <h1>{% trans "Edit purchase invoice" %}</h1>
+    <p>{{ invoice.invoice_number }}</p>
+  {% else %}
+    <h1>{% trans "New purchase invoice" %}</h1>
+    <p>{% trans "Record goods received from a supplier" %}</p>
+  {% endif %}
 {% endblock %}
 
 {% block topbar_actions %}
@@ -19,13 +24,46 @@
 <form method="post" id="purchaseForm">
   {% csrf_token %}
 
+  {# Everything that stopped the save, in one place. Without this a failure on
+     a field the row layout does not print looks like the page just reloaded. #}
+  {% if form.errors or formset.errors or formset.non_form_errors %}
+    <div class="card-soft card-pad mb-3" style="border-inline-start:4px solid var(--danger)">
+      <div class="fw-bold mb-2" style="color:var(--danger)">
+        <i class="bi bi-exclamation-triangle me-1"></i>{% trans "The invoice was not saved" %}
+      </div>
+      <ul class="mb-0 small">
+        {% for error in form.non_field_errors %}
+          <li>{{ error }}</li>
+        {% endfor %}
+        {% for field in form %}
+          {% for error in field.errors %}
+            <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+          {% endfor %}
+        {% endfor %}
+        {% for error in formset.non_form_errors %}
+          <li>{{ error }}</li>
+        {% endfor %}
+        {% for item_form in formset %}
+          {% for field in item_form %}
+            {% for error in field.errors %}
+              <li><strong>{% trans "Items" %} · {{ field.label }}:</strong> {{ error }}</li>
+            {% endfor %}
+          {% endfor %}
+          {% for error in item_form.non_field_errors %}
+            <li><strong>{% trans "Items" %}:</strong> {{ error }}</li>
+          {% endfor %}
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
   <div class="card-soft card-pad mb-3">
     <div class="form-section-title">{% trans "Invoice details" %}</div>
     {% include "core/_form_fields.html" with form=form %}
 
     <p class="field-hint mb-0">
       <i class="bi bi-info-circle me-1"></i>
-      {% trans "The discount here applies to the whole invoice, on top of any discount on the item lines. Tax is not entered by hand: it is calculated from each item's tax rate." %}
+      {% trans "Discount and tax are not entered here: both are totalled from the item lines, and tax comes from each item's tax rate." %}
     </p>
   </div>
 
@@ -139,6 +177,22 @@
         <small class="text-muted fs-6 fw-normal">{% trans "JOD" %}</small></span>
     </div>
 
+    <div class="total-line">
+      <span>{% trans "Paid amount" %}</span>
+      <span class="v tnum" data-out="paid">0.000</span>
+    </div>
+    <div class="total-line">
+      <span>{% trans "Remaining owed to supplier" %}</span>
+      <span class="v tnum" data-out="remaining">0.000</span>
+    </div>
+
+    <div class="p-2 rounded-3 small" data-paid-note hidden
+         style="background:var(--danger-bg); color:var(--danger)">
+      <i class="bi bi-exclamation-triangle me-1"></i>
+      <span data-paid-message></span>
+      <div class="mt-1">{% trans "You can still save this as a draft, but it will not confirm." %}</div>
+    </div>
+
     <div class="d-flex gap-2 mt-3">
       <button type="submit" class="btn btn-primary">
         <i class="bi bi-check2 me-1"></i>{% trans "Save draft" %}
@@ -246,13 +300,36 @@
         lineTax      += tax;
       });
 
-      var discount   = num(document.getElementById('id_discount_amount')) + lineDiscount;
+      var discount   = lineDiscount;   // header discount box removed
       var tax        = lineTax;
       var additional = num(document.getElementById('id_additional_expenses'));
       var total      = subtotal + tax + additional - discount;
 
+      // Mirrors the confirmation rule in finance.services.post_purchase_invoice:
+      // a cash invoice must be paid in full, a credit invoice must be paid nothing.
+      var paid = num(document.getElementById('id_paid_amount'));
+      var isCash = (document.getElementById('id_payment_type') || {}).value === 'cash';
+      if (isCash && paid === 0) paid = total;
+      var remaining = total - paid;
+
+      var problem = '';
+      if (isCash && Math.abs(paid - total) > 0.0005) {
+        problem = '{% trans "A cash invoice must be paid in full." %}'
+                + ' ' + paid.toFixed(3) + ' / ' + total.toFixed(3);
+      } else if (!isCash && paid > 0.0005) {
+        problem = '{% trans "A credit invoice must be confirmed with nothing paid." %}';
+      }
+
+      var note = document.querySelector('[data-paid-note]');
+      if (note) {
+        note.hidden = !problem;
+        var msg = note.querySelector('[data-paid-message]');
+        if (msg) msg.textContent = problem;
+      }
+
       var out = {subtotal: subtotal, discount: discount, tax: tax,
-                 additional: additional, total: total};
+                 additional: additional, total: total,
+                 paid: paid, remaining: remaining > 0 ? remaining : 0};
       Object.keys(out).forEach(function (key) {
         var el = document.querySelector('[data-out="' + key + '"]');
         if (el) el.textContent = out[key].toFixed(3);

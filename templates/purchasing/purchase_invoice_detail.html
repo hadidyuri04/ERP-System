@@ -1,3 +1,159 @@
-{% extends "core/base.html" %}{% load i18n %}
-{% block title %}{{ invoice.invoice_number }}{% endblock %}{% block page_header %}<h1>{{ invoice.invoice_number }}</h1><p>{{ invoice.get_status_display }}</p>{% endblock %}
-{% block content %}<div class="card-soft card-pad"><p>{{ invoice.supplier }} · {{ invoice.warehouse }} · {{ invoice.invoice_date }}</p><table class="table-erp"><thead><tr><th>{% trans "Product" %}</th><th>{% trans "Quantity" %}</th><th>{% trans "Unit cost" %}</th><th>{% trans "Total" %}</th></tr></thead><tbody>{% for item in invoice.items.all %}<tr><td>{{ item.product }}</td><td>{{ item.quantity }}</td><td>{{ item.unit_cost }}</td><td>{{ item.line_total }}</td></tr>{% endfor %}</tbody></table><p class="mt-3"><strong>{% trans "Invoice total" %}:</strong> {{ invoice.total|floatformat:3 }}</p>{% if invoice.status == 'draft' %}<form method="post" action="{% url 'purchasing:confirm' invoice.pk %}">{% csrf_token %}<button class="btn btn-primary">{% trans "Confirm and post" %}</button></form>{% endif %}</div>{% endblock %}
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{{ invoice.invoice_number }}{% endblock %}
+
+{% block page_header %}
+  <h1>{{ invoice.invoice_number }}</h1>
+  <p>{% trans "Purchase invoice" %}</p>
+{% endblock %}
+
+{% block topbar_actions %}
+  {% if invoice.status == 'draft' %}
+    <a href="{% url 'purchasing:edit' invoice.pk %}" class="btn btn-soft" data-smooth>
+      <i class="bi bi-pencil me-1"></i>{% trans "Edit" %}
+    </a>
+  {% endif %}
+  <button class="btn btn-ghost no-print" onclick="window.print()">
+    <i class="bi bi-printer me-1"></i>{% trans "Print" %}
+  </button>
+  <a href="{% url 'purchasing:list' %}" class="btn btn-ghost" data-smooth>{% trans "Back" %}</a>
+{% endblock %}
+
+{% block content %}
+{# nav_active = 'purchases' — spec 6.1 / 6.2 #}
+
+<div class="card-soft mb-3">
+  <div class="card-head">
+    <div class="stat-icon" style="background:var(--purple-50);color:var(--purple-600)">
+      <i class="bi bi-bag-plus"></i>
+    </div>
+    <div>
+      <h3 class="mb-0">{{ invoice.supplier.name }}</h3>
+      <span class="stat-label">{{ invoice.invoice_date|date:"Y-m-d" }}</span>
+    </div>
+    <div class="spacer"></div>
+    {% if invoice.status == 'confirmed' %}
+      <span class="badge-soft badge-success">{% trans "Confirmed" %}</span>
+    {% elif invoice.status == 'cancelled' %}
+      <span class="badge-soft badge-danger">{% trans "Cancelled" %}</span>
+    {% else %}
+      <span class="badge-soft badge-neutral">{% trans "Draft" %}</span>
+    {% endif %}
+  </div>
+
+  <div class="card-pad">
+    <div class="row g-3">
+      <div class="col-6 col-md-3">
+        <div class="stat-label">{% trans "Supplier" %}</div>
+        <div class="fw-bold">{{ invoice.supplier.name }}</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-label">{% trans "Warehouse" %}</div>
+        <div class="fw-bold">{{ invoice.warehouse.name }}</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-label">{% trans "Payment type" %}</div>
+        <div class="fw-bold">{{ invoice.get_payment_type_display }}</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-label">{% trans "Due date" %}</div>
+        <div class="fw-bold">{{ invoice.due_date|date:"Y-m-d"|default:"—" }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card-soft mb-3">
+  <div class="card-head"><h3 class="mb-0">{% trans "Items" %}</h3></div>
+  <div class="table-wrap">
+    <table class="table-erp">
+      <thead>
+        <tr>
+          <th>{% trans "Product" %}</th>
+          <th class="num" style="width:11%">{% trans "Quantity" %}</th>
+          <th class="num" style="width:12%">{% trans "Unit Cost" %}</th>
+          <th class="num" style="width:11%">{% trans "Discount" %}</th>
+          <th class="num" style="width:11%">{% trans "Tax" %}</th>
+          <th class="num" style="width:13%">{% trans "Line Total" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in invoice.items.all %}
+          <tr data-row>
+            <td class="cell-strong">{{ item.product.name }}</td>
+            <td class="num">{{ item.quantity|floatformat:3 }}</td>
+            <td class="num">{{ item.unit_cost|floatformat:3 }}</td>
+            <td class="num">{{ item.discount_amount|floatformat:3 }}</td>
+            <td class="num">{{ item.tax_amount|floatformat:3 }}</td>
+            <td class="num cell-strong">{{ item.line_total|floatformat:3 }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6">
+              <div class="empty-state"><p>{% trans "This invoice has no items." %}</p></div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card-pad">
+    <div class="total-line">
+      <span>{% trans "Subtotal" %}</span><span class="v tnum">{{ invoice.subtotal|floatformat:3 }}</span>
+    </div>
+    <div class="total-line">
+      <span>{% trans "Discount" %}</span><span class="v tnum">{{ invoice.discount_amount|floatformat:3 }}</span>
+    </div>
+    <div class="total-line">
+      <span>{% trans "Tax" %}</span><span class="v tnum">{{ invoice.tax_amount|floatformat:3 }}</span>
+    </div>
+    <div class="total-line">
+      <span>{% trans "Additional expenses" %}</span><span class="v tnum">{{ invoice.additional_expenses|floatformat:3 }}</span>
+    </div>
+    <div class="total-line grand">
+      <span>{% trans "Total" %}</span>
+      <span class="v"><span class="tnum">{{ invoice.total|floatformat:3 }}</span>
+        <small class="text-muted fs-6 fw-normal">{% trans "JOD" %}</small></span>
+    </div>
+    <div class="total-line">
+      <span>{% trans "Paid amount" %}</span><span class="v tnum">{{ invoice.paid_amount|floatformat:3 }}</span>
+    </div>
+  </div>
+</div>
+
+{% if invoice.status == 'draft' %}
+  <div class="card-soft card-pad no-print">
+    <form method="post" action="{% url 'purchasing:confirm' invoice.pk %}">
+      {% csrf_token %}
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary"
+                data-confirm="{% trans "Confirming adds the stock and posts the journal entry. This cannot be undone. Continue?" %}">
+          <i class="bi bi-check2-circle me-1"></i>{% trans "Confirm and post" %}
+        </button>
+        <a href="{% url 'purchasing:edit' invoice.pk %}" class="btn btn-ghost">
+          <i class="bi bi-pencil me-1"></i>{% trans "Edit" %}
+        </a>
+      </div>
+    </form>
+
+    <p class="field-hint mt-3 mb-0">
+      <i class="bi bi-info-circle me-1"></i>
+      {% trans "A cash invoice must be paid in full, and a credit invoice must be confirmed with nothing paid. Use Edit to correct the paid amount." %}
+    </p>
+  </div>
+{% else %}
+  <div class="card-soft card-pad">
+    <div class="d-flex align-items-center gap-3 p-3 rounded-3" style="background:var(--success-bg)">
+      <i class="bi bi-shield-check fs-4" style="color:var(--success)"></i>
+      <div>
+        <div class="fw-bold" style="color:var(--success)">{% trans "This invoice has been confirmed" %}</div>
+        <div class="small text-muted">
+          {% trans "Confirmed documents are locked and cannot be edited." %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}
