@@ -60,7 +60,9 @@
           <a href="{% url 'customers:list' %}" data-smooth class="nav-icon {% if request.resolver_match.namespace == 'customers' %}active{% endif %}"><i class="bi bi-people-fill"></i><span class="nav-label">{% trans "Customers" %}</span></a>
           <a href="{% url 'suppliers:list' %}" data-smooth class="nav-icon {% if request.resolver_match.namespace == 'suppliers' %}active{% endif %}"><i class="bi bi-truck"></i><span class="nav-label">{% trans "Suppliers" %}</span></a>
           <a href="{% url 'inventory:product_list' %}" data-smooth class="nav-icon {% if request.resolver_match.namespace == 'inventory' and 'product' in request.resolver_match.url_name %}active{% endif %}"><i class="bi bi-box-seam-fill"></i><span class="nav-label">{% trans "Items" %}</span></a>
-          <a href="{% url 'inventory:warehouse_list' %}" data-smooth class="nav-icon {% if request.resolver_match.url_name == 'warehouse_list' %}active{% endif %}"><i class="bi bi-building-fill"></i><span class="nav-label">{% trans "Warehouses" %}</span></a>
+          <a href="{% url 'inventory:category_list' %}" data-smooth class="nav-icon {% if 'category' in request.resolver_match.url_name %}active{% endif %}"><i class="bi bi-diagram-3-fill"></i><span class="nav-label">{% trans "Categories" %}</span></a>
+          <a href="{% url 'inventory:unit_list' %}" data-smooth class="nav-icon {% if 'unit' in request.resolver_match.url_name %}active{% endif %}"><i class="bi bi-rulers"></i><span class="nav-label">{% trans "Units" %}</span></a>
+          <a href="{% url 'inventory:warehouse_list' %}" data-smooth class="nav-icon {% if 'warehouse' in request.resolver_match.url_name %}active{% endif %}"><i class="bi bi-building-fill"></i><span class="nav-label">{% trans "Warehouses" %}</span></a>
           {% endif %}
         </div>
       </details>

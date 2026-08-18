@@ -10,8 +10,15 @@ from django.utils.translation import get_language
 
 from core.permissions import accountant_required
 
-from .forms import ProductForm, WarehouseForm, WasteLossForm, WasteLossItemFormSet
-from .models import Category, Product, StockBalance, Warehouse, WasteLoss
+from .forms import (
+    CategoryForm,
+    ProductForm,
+    UnitForm,
+    WarehouseForm,
+    WasteLossForm,
+    WasteLossItemFormSet,
+)
+from .models import Category, Product, StockBalance, Unit, Warehouse, WasteLoss
 from .services import confirm_waste_loss
 
 
@@ -68,14 +75,72 @@ def product_update_view(request, pk):
 
 @login_required
 @accountant_required
-def warehouse_list_view(request):
-    warehouses = Warehouse.objects.order_by("code")
-    form = WarehouseForm(request.POST or None)
+def warehouse_list_view(request, pk=None):
+    """List warehouses. The side panel creates a new one, or edits `pk` when given."""
+    instance = get_object_or_404(Warehouse, pk=pk) if pk else None
+    form = WarehouseForm(request.POST or None, instance=instance)
+
     if request.method == "POST" and form.is_valid():
         form.save()
-        messages.success(request, _("Warehouse created successfully."))
+        if instance:
+            messages.success(request, _("Warehouse updated successfully."))
+        else:
+            messages.success(request, _("Warehouse created successfully."))
         return redirect("inventory:warehouse_list")
-    return render(request, "inventory/warehouse_list.html", {"warehouses": warehouses, "form": form})
+
+    return render(request, "inventory/warehouse_list.html", {
+        "warehouses": Warehouse.objects.order_by("code"),
+        "form": form,
+        "editing": instance,
+    })
+
+
+@login_required
+@accountant_required
+def category_list_view(request, pk=None):
+    """List categories. The side panel creates a new one, or edits `pk` when given."""
+    instance = get_object_or_404(Category, pk=pk) if pk else None
+    form = CategoryForm(request.POST or None, instance=instance)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        if instance:
+            messages.success(request, _("Category updated successfully."))
+        else:
+            messages.success(request, _("Category created successfully."))
+        return redirect("inventory:category_list")
+
+    order_field = "name_ar" if get_language() == "ar" else "name_en"
+
+    return render(request, "inventory/category_list.html", {
+        "categories": Category.objects.select_related("parent").order_by(order_field),
+        "form": form,
+        "editing": instance,
+    })
+
+
+@login_required
+@accountant_required
+def unit_list_view(request, pk=None):
+    """List units of measure. The side panel creates a new one, or edits `pk` when given."""
+    instance = get_object_or_404(Unit, pk=pk) if pk else None
+    form = UnitForm(request.POST or None, instance=instance)
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        if instance:
+            messages.success(request, _("Unit updated successfully."))
+        else:
+            messages.success(request, _("Unit created successfully."))
+        return redirect("inventory:unit_list")
+
+    order_field = "name_ar" if get_language() == "ar" else "name_en"
+
+    return render(request, "inventory/unit_list.html", {
+        "units": Unit.objects.order_by(order_field),
+        "form": form,
+        "editing": instance,
+    })
 
 
 @login_required

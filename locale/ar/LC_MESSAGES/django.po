@@ -2778,3 +2778,107 @@ msgstr "السبب / المرجع"
 
 msgid "Save Movement"
 msgstr "حفظ الحركة"
+
+#: inventory/views.py inventory/models.py templates/inventory/
+msgid "Adjustment"
+msgstr "التسوية"
+
+#: inventory/views.py inventory/models.py templates/inventory/
+msgid "Arabic Name"
+msgstr "الاسم بالعربية"
+
+#: inventory/views.py inventory/models.py templates/inventory/
+msgid "English Name"
+msgstr "الاسم بالإنجليزية"
+
+#: inventory/views.py inventory/models.py templates/inventory/
+msgid "Category created successfully."
+msgstr "تم إنشاء التصنيف بنجاح."
+
+#: inventory/views.py inventory/models.py templates/inventory/
+msgid "Category updated successfully."
+msgstr "تم تحديث التصنيف بنجاح."
+
+#: inventory/views.py inventory/models.py templates/inventory/
+msgid "Unit created successfully."
+msgstr "تم إنشاء الوحدة بنجاح."
+
+#: inventory/views.py inventory/models.py templates/inventory/
+msgid "Unit updated successfully."
+msgstr "تم تحديث الوحدة بنجاح."
+
+#: inventory/views.py inventory/models.py templates/inventory/
+msgid "Warehouse updated successfully."
+msgstr "تم تحديث المستودع بنجاح."
+
+#: inventory/views.py inventory/models.py templates/inventory/
+msgid "Edit category"
+msgstr "تعديل التصنيف"
+
+#: inventory/views.py inventory/models.py templates/inventory/
+msgid "Edit unit"
+msgstr "تعديل الوحدة"
+
+#: inventory/views.py inventory/models.py templates/inventory/
+msgid "Edit warehouse"
+msgstr "تعديل المستودع"
+
+#: inventory/views.py inventory/models.py templates/inventory/
+msgid "New category"
+msgstr "تصنيف جديد"
+
+#: inventory/views.py inventory/models.py templates/inventory/
+msgid "New unit"
+msgstr "وحدة جديدة"
+
+#: inventory/views.py inventory/models.py templates/inventory/
+msgid "Parent category"
+msgstr "التصنيف الأصل"
+
+#: inventory/views.py inventory/models.py templates/inventory/
+msgid "Group items so they are easier to find and report on"
+msgstr "تجميع الأصناف لتسهيل البحث عنها وإعداد التقارير"
+
+#: inventory/views.py inventory/models.py templates/inventory/
+msgid "Leave the parent empty for a top-level category."
+msgstr "اترك التصنيف الأصل فارغاً لإنشاء تصنيف رئيسي."
+
+#: inventory/views.py inventory/models.py templates/inventory/
+msgid "For example: Kilogram (kg), Piece (pc), Carton (ctn)."
+msgstr "مثال: كيلوغرام (كغ)، قطعة (حبة)، كرتونة (كرتون)."
+
+#: inventory/views.py inventory/models.py templates/inventory/
+msgid "Storage locations that hold stock"
+msgstr "مواقع التخزين التي يُحفظ فيها المخزون"
+
+#: inventory/views.py inventory/models.py templates/inventory/
+msgid "Units of measure used when buying and selling items"
+msgstr "وحدات القياس المستخدمة عند شراء وبيع الأصناف"
+
+#: inventory/views.py inventory/models.py templates/inventory/
+msgid "No categories yet. Add the first one using the panel."
+msgstr "لا توجد تصنيفات بعد. أضف الأول من اللوحة الجانبية."
+
+#: inventory/views.py inventory/models.py templates/inventory/
+msgid "No units yet. Add the first one using the panel."
+msgstr "لا توجد وحدات بعد. أضف الأولى من اللوحة الجانبية."
+
+#: inventory/views.py inventory/models.py templates/inventory/
+msgid "No warehouses yet. Add the first one using the panel."
+msgstr "لا توجد مستودعات بعد. أضف الأول من اللوحة الجانبية."
+
+#: inventory/views.py inventory/models.py templates/inventory/
+msgid "Stock Adjustment"
+msgstr "تسوية المخزون"
+
+#: inventory/views.py inventory/models.py templates/inventory/
+msgid "Stock Adjustments"
+msgstr "تسويات المخزون"
+
+#: inventory/views.py inventory/models.py templates/inventory/
+msgid "Stock Adjustment Item"
+msgstr "بند تسوية المخزون"
+
+#: inventory/views.py inventory/models.py templates/inventory/
+msgid "Stock Adjustment Items"
+msgstr "بنود تسوية المخزون"

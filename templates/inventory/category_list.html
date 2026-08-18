@@ -1,15 +1,15 @@
 {% extends "core/base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "Warehouses" %}{% endblock %}
+{% block title %}{% trans "Categories" %}{% endblock %}
 
 {% block page_header %}
-  <h1>{% trans "Warehouses" %}</h1>
-  <p>{% trans "Storage locations that hold stock" %}</p>
+  <h1>{% trans "Categories" %}</h1>
+  <p>{% trans "Group items so they are easier to find and report on" %}</p>
 {% endblock %}
 
 {% block content %}
-{# nav_active = 'warehouses' — signed requirements module 4 #}
+{# nav_active = 'items' — signed requirements module 3 #}
 
 <div class="row g-3">
 
@@ -22,26 +22,26 @@
             <tr>
               <th style="width:16%">{% trans "Code" %}</th>
               <th>{% trans "Name" %}</th>
-              <th style="width:24%">{% trans "Location" %}</th>
+              <th style="width:24%">{% trans "Parent category" %}</th>
               <th style="width:12%">{% trans "Status" %}</th>
               <th style="width:60px"></th>
             </tr>
           </thead>
           <tbody>
-            {% for warehouse in warehouses %}
+            {% for category in categories %}
               <tr data-row>
-                <td class="cell-muted">{{ warehouse.code }}</td>
-                <td class="cell-strong">{{ warehouse.name }}</td>
-                <td>{{ warehouse.location|default:"—" }}</td>
+                <td class="cell-muted">{{ category.code }}</td>
+                <td class="cell-strong">{{ category.name }}</td>
+                <td>{% if category.parent %}{{ category.parent.name }}{% else %}<span class="cell-muted">—</span>{% endif %}</td>
                 <td>
-                  {% if warehouse.is_active %}
+                  {% if category.is_active %}
                     <span class="badge-soft badge-success">{% trans "Active" %}</span>
                   {% else %}
                     <span class="badge-soft badge-neutral">{% trans "Inactive" %}</span>
                   {% endif %}
                 </td>
                 <td>
-                  <a class="btn-icon" href="{% url 'inventory:warehouse_edit' warehouse.pk %}"
+                  <a class="btn-icon" href="{% url 'inventory:category_edit' category.pk %}"
                      aria-label="{% trans "Edit" %}"><i class="bi bi-pencil"></i></a>
                 </td>
               </tr>
@@ -49,8 +49,8 @@
               <tr>
                 <td colspan="5">
                   <div class="empty-state">
-                    <i class="bi bi-building"></i>
-                    <p>{% trans "No warehouses yet. Add the first one using the panel." %}</p>
+                    <i class="bi bi-diagram-3"></i>
+                    <p>{% trans "No categories yet. Add the first one using the panel." %}</p>
                   </div>
                 </td>
               </tr>
@@ -65,19 +65,23 @@
   <div class="col-12 col-lg-4">
     <div class="card-soft card-pad">
       <div class="form-section-title">
-        {% if editing %}{% trans "Edit warehouse" %}{% else %}{% trans "New warehouse" %}{% endif %}
+        {% if editing %}{% trans "Edit category" %}{% else %}{% trans "New category" %}{% endif %}
       </div>
 
       <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
 
+        <p class="field-hint">
+          {% trans "Leave the parent empty for a top-level category." %}
+        </p>
+
         <div class="d-flex gap-2 mt-2">
           <button type="submit" class="btn btn-primary flex-fill">
             <i class="bi bi-check2 me-1"></i>{% trans "Save" %}
           </button>
           {% if editing %}
-            <a class="btn btn-ghost" href="{% url 'inventory:warehouse_list' %}">{% trans "Cancel" %}</a>
+            <a class="btn btn-ghost" href="{% url 'inventory:category_list' %}">{% trans "Cancel" %}</a>
           {% endif %}
         </div>
       </form>

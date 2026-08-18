@@ -56,10 +56,10 @@ class Unit(models.Model):
 class Product(models.Model):
     code = models.CharField(_("Code"), max_length=50, unique=True)
     barcode = models.CharField(_("Barcode"), max_length=100, unique=True, blank=True, null=True)
-    name_en = models.CharField(_("English Name"), max_length=255)
-    name_ar = models.CharField(_("Arabic Name"), max_length=255)
+    name_en = models.CharField(_("English Name"), max_length=255, db_index=True)
+    name_ar = models.CharField(_("Arabic Name"), max_length=255, db_index=True)
     description = models.TextField(_("Description"), blank=True, null=True)
-    
+
     category = models.ForeignKey(
         Category, 
         verbose_name=_("Category"),
@@ -131,7 +131,7 @@ class StockBatch(models.Model):
     warehouse = models.ForeignKey(Warehouse, verbose_name=_("Warehouse"), on_delete=models.PROTECT, related_name='batches')
     batch_number = models.CharField(_("Batch Number"), max_length=100)
     
-    expiration_date = models.DateField(_("Expiration Date"), blank=True, null=True)
+    expiration_date = models.DateField(_("Expiration Date"), blank=True, null=True, db_index=True)
     received_date = models.DateField(_("Received Date"))
     
     unit_cost = models.DecimalField(_("Unit Cost"), max_digits=12, decimal_places=3)
@@ -179,7 +179,7 @@ class StockMovement(models.Model):
     
     notes = models.TextField(_("Notes"), blank=True, null=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_("Created By"), on_delete=models.PROTECT)
-    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True, db_index=True)
 
     class Meta:
         verbose_name = _("Stock Movement")
@@ -280,6 +280,7 @@ class WarehouseTransferItem(models.Model):
         related_name='transfer_items'
     )
     quantity = models.DecimalField(_("Quantity"), max_digits=12, decimal_places=3)
+    unit_cost = models.DecimalField(_("Unit Cost"), max_digits=12, decimal_places=3, default=0.000)
 
     class Meta:
         verbose_name = _("Warehouse Transfer Item")

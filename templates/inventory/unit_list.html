@@ -1,15 +1,15 @@
 {% extends "core/base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "Warehouses" %}{% endblock %}
+{% block title %}{% trans "Units" %}{% endblock %}
 
 {% block page_header %}
-  <h1>{% trans "Warehouses" %}</h1>
-  <p>{% trans "Storage locations that hold stock" %}</p>
+  <h1>{% trans "Units" %}</h1>
+  <p>{% trans "Units of measure used when buying and selling items" %}</p>
 {% endblock %}
 
 {% block content %}
-{# nav_active = 'warehouses' — signed requirements module 4 #}
+{# nav_active = 'items' — signed requirements module 3 #}
 
 <div class="row g-3">
 
@@ -20,37 +20,35 @@
         <table class="table-erp">
           <thead>
             <tr>
-              <th style="width:16%">{% trans "Code" %}</th>
               <th>{% trans "Name" %}</th>
-              <th style="width:24%">{% trans "Location" %}</th>
-              <th style="width:12%">{% trans "Status" %}</th>
+              <th style="width:20%">{% trans "Symbol" %}</th>
+              <th style="width:14%">{% trans "Status" %}</th>
               <th style="width:60px"></th>
             </tr>
           </thead>
           <tbody>
-            {% for warehouse in warehouses %}
+            {% for unit in units %}
               <tr data-row>
-                <td class="cell-muted">{{ warehouse.code }}</td>
-                <td class="cell-strong">{{ warehouse.name }}</td>
-                <td>{{ warehouse.location|default:"—" }}</td>
+                <td class="cell-strong">{{ unit.name }}</td>
+                <td class="cell-muted">{{ unit.symbol|default:"—" }}</td>
                 <td>
-                  {% if warehouse.is_active %}
+                  {% if unit.is_active %}
                     <span class="badge-soft badge-success">{% trans "Active" %}</span>
                   {% else %}
                     <span class="badge-soft badge-neutral">{% trans "Inactive" %}</span>
                   {% endif %}
                 </td>
                 <td>
-                  <a class="btn-icon" href="{% url 'inventory:warehouse_edit' warehouse.pk %}"
+                  <a class="btn-icon" href="{% url 'inventory:unit_edit' unit.pk %}"
                      aria-label="{% trans "Edit" %}"><i class="bi bi-pencil"></i></a>
                 </td>
               </tr>
             {% empty %}
               <tr>
-                <td colspan="5">
+                <td colspan="4">
                   <div class="empty-state">
-                    <i class="bi bi-building"></i>
-                    <p>{% trans "No warehouses yet. Add the first one using the panel." %}</p>
+                    <i class="bi bi-rulers"></i>
+                    <p>{% trans "No units yet. Add the first one using the panel." %}</p>
                   </div>
                 </td>
               </tr>
@@ -65,19 +63,23 @@
   <div class="col-12 col-lg-4">
     <div class="card-soft card-pad">
       <div class="form-section-title">
-        {% if editing %}{% trans "Edit warehouse" %}{% else %}{% trans "New warehouse" %}{% endif %}
+        {% if editing %}{% trans "Edit unit" %}{% else %}{% trans "New unit" %}{% endif %}
       </div>
 
       <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
 
+        <p class="field-hint">
+          {% trans "For example: Kilogram (kg), Piece (pc), Carton (ctn)." %}
+        </p>
+
         <div class="d-flex gap-2 mt-2">
           <button type="submit" class="btn btn-primary flex-fill">
             <i class="bi bi-check2 me-1"></i>{% trans "Save" %}
           </button>
           {% if editing %}
-            <a class="btn btn-ghost" href="{% url 'inventory:warehouse_list' %}">{% trans "Cancel" %}</a>
+            <a class="btn btn-ghost" href="{% url 'inventory:unit_list' %}">{% trans "Cancel" %}</a>
           {% endif %}
         </div>
       </form>
