@@ -358,16 +358,8 @@ def post_purchase_invoice(invoice_id, user):
         Account.AccountType.ASSET,
     )
 
-    if invoice.payment_type == PurchaseInvoice.PaymentType.CASH:
-        credit_account = get_posting_account(
-            "1100",
-            Account.AccountType.ASSET,
-        )
-    else:
-        credit_account = get_posting_account(
-            "2100",
-            Account.AccountType.LIABILITY,
-        )
+    # The settlement accounts are chosen in step 11 from what was actually
+    # paid, not from payment_type alone, so a part payment splits correctly.
 
     # Optional purchase tax account
     purchase_tax_account = None
@@ -472,23 +464,73 @@ def post_purchase_invoice(invoice_id, user):
             credit=invoice.discount_amount,
         )
 
-    # 11. Credit Cash or Accounts Payable
-    JournalEntryLine.objects.create(
-        journal_entry=journal,
-        account=credit_account,
-        supplier=(
-            invoice.supplier
-            if invoice.payment_type == PurchaseInvoice.PaymentType.CREDIT
-            else None
-        ),
-        description=_(
-            "Purchase invoice %(invoice_number)s settlement"
-        ) % {
-            "invoice_number": invoice.invoice_number
-        },
-        debit=Decimal("0.000"),
-        credit=accounting_total,
-    )
+    # 11. Credit what was actually paid, and owe the rest.
+    #
+    # paid_amount used to be ignored entirely: the full total was credited to
+    # Cash on a cash invoice, so a part payment left the outstanding balance
+    # invisible. Now the settlement is split between Cash and Payables.
+    cash_account = get_posting_account("1100", Account.AccountType.ASSET)
+    payable_account = get_posting_account("2100", Account.AccountType.LIABILITY)
+
+    paid = invoice.paid_amount or Decimal("0.000")
+
+    if paid < 0:
+        raise ValidationError(_("Paid amount cannot be negative."))
+
+    if invoice.payment_type == PurchaseInvoice.PaymentType.CASH:
+        # Nothing entered on a cash invoice means paid in full.
+        if paid == 0:
+            paid = accounting_total
+
+        if paid != accounting_total:
+            raise ValidationError(
+                _(
+                    "A cash invoice must be paid in full before it can be "
+                    "confirmed. Paid: %(paid)s, required: %(total)s."
+                ) % {
+                    "paid": paid,
+                    "total": accounting_total,
+                }
+            )
+    else:
+        # A credit invoice is by definition unpaid at confirmation. Settle it
+        # afterwards with a Payment Voucher.
+        if paid != 0:
+            raise ValidationError(
+                _(
+                    "A credit invoice cannot carry a paid amount. Confirm it "
+                    "with zero paid, then settle it using a payment voucher."
+                )
+            )
+
+    outstanding = accounting_total - paid
+
+    if paid > 0:
+        JournalEntryLine.objects.create(
+            journal_entry=journal,
+            account=cash_account,
+            description=_(
+                "Purchase invoice %(invoice_number)s paid"
+            ) % {
+                "invoice_number": invoice.invoice_number
+            },
+            debit=Decimal("0.000"),
+            credit=paid,
+        )
+
+    if outstanding > 0:
+        JournalEntryLine.objects.create(
+            journal_entry=journal,
+            account=payable_account,
+            supplier=invoice.supplier,
+            description=_(
+                "Purchase invoice %(invoice_number)s outstanding balance"
+            ) % {
+                "invoice_number": invoice.invoice_number
+            },
+            debit=Decimal("0.000"),
+            credit=outstanding,
+        )
 
     # 12. Post the journal
     return post_journal_entry(
