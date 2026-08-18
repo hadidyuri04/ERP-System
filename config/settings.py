@@ -59,6 +59,9 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.i18n', # Added for language handling in templates
                 "django.template.context_processors.static",
+                # Supplies unread_count and recent_notifications to the bell
+                # in the header on every page.
+                "notifications.context_processors.notifications",
             ],
         },
     },

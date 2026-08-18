@@ -147,7 +147,17 @@
           </button>
           <ul class="dropdown-menu dropdown-menu-end notification-menu">
             <li class="notification-title"><strong>{% trans "Notifications" %}</strong></li>
-            <li class="notification-empty"><i class="bi bi-bell"></i><span>{% trans "You are all caught up" %}</span></li>
+            {% for note in recent_notifications %}
+              <li class="px-3 py-2" style="border-top:1px solid var(--border)">
+                <div class="fw-bold small">{{ note.title }}</div>
+                <div class="small text-muted">{{ note.message|truncatechars:90 }}</div>
+              </li>
+            {% empty %}
+              <li class="notification-empty"><i class="bi bi-bell"></i><span>{% trans "You are all caught up" %}</span></li>
+            {% endfor %}
+            <li class="px-3 py-2 text-center" style="border-top:1px solid var(--border)">
+              <a href="{% url 'notifications:list' %}" class="small">{% trans "View all notifications" %}</a>
+            </li>
           </ul>
         </div>
 

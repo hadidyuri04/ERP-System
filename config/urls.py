@@ -31,6 +31,7 @@ urlpatterns = [
     path("finance/", include("finance.urls")),
     path("pos/", include("pos.urls")),
     path("quotations/", include("quotations.urls")),
+    path("notifications/", include("notifications.urls")),
 ]
 
 # Serve uploaded files while developing. In production the web server handles

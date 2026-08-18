@@ -3480,3 +3480,59 @@ msgstr "خصم هذه الكمية من الرصيد"
 #: inventory/views.py templates/inventory/product_stock_form.html
 msgid "That would leave a negative balance. Current stock is %(current)s."
 msgstr "هذا سيجعل الرصيد سالباً. الرصيد الحالي %(current)s."
+
+#: notifications/services.py notifications/views.py templates/notifications/
+msgid "Low stock: %(product)s"
+msgstr "مخزون منخفض: %(product)s"
+
+#: notifications/services.py notifications/views.py templates/notifications/
+msgid "%(product)s is down to %(on_hand)s, at or below its minimum of %(minimum)s."
+msgstr "وصل رصيد %(product)s إلى %(on_hand)s، وهو عند الحد الأدنى %(minimum)s أو أقل منه."
+
+#: notifications/services.py notifications/views.py templates/notifications/
+msgid "Expired: %(product)s"
+msgstr "منتهي الصلاحية: %(product)s"
+
+#: notifications/services.py notifications/views.py templates/notifications/
+msgid "Batch %(batch)s of %(product)s in %(warehouse)s expired on %(date)s. %(qty)s remain and cannot be sold. Write it off with a waste document."
+msgstr "الدفعة %(batch)s من %(product)s في %(warehouse)s انتهت صلاحيتها بتاريخ %(date)s. المتبقي %(qty)s ولا يمكن بيعه. سجّل مستند هدر لإخراجه."
+
+#: notifications/services.py notifications/views.py templates/notifications/
+msgid "Expiring soon: %(product)s"
+msgstr "قاربت على الانتهاء: %(product)s"
+
+#: notifications/services.py notifications/views.py templates/notifications/
+msgid "Batch %(batch)s of %(product)s in %(warehouse)s expires on %(date)s. %(qty)s remain."
+msgstr "الدفعة %(batch)s من %(product)s في %(warehouse)s تنتهي صلاحيتها بتاريخ %(date)s. المتبقي %(qty)s."
+
+#: notifications/services.py notifications/views.py templates/notifications/
+msgid "%(count)s notification(s) marked as read."
+msgstr "تم تعليم %(count)s تنبيه كمقروء."
+
+#: notifications/services.py notifications/views.py templates/notifications/
+msgid "Low stock and expiry alerts"
+msgstr "تنبيهات نقص المخزون وانتهاء الصلاحية"
+
+#: notifications/services.py notifications/views.py templates/notifications/
+msgid "Mark all as read"
+msgstr "تعليم الكل كمقروء"
+
+#: notifications/services.py notifications/views.py templates/notifications/
+msgid "Mark as read"
+msgstr "تعليم كمقروء"
+
+#: notifications/services.py notifications/views.py templates/notifications/
+msgid "Unread"
+msgstr "غير مقروء"
+
+#: notifications/services.py notifications/views.py templates/notifications/
+msgid "All"
+msgstr "الكل"
+
+#: notifications/services.py notifications/views.py templates/notifications/
+msgid "View all notifications"
+msgstr "عرض كل التنبيهات"
+
+#: notifications/services.py notifications/views.py templates/notifications/
+msgid "Alerts clear themselves once the stock is topped up or the expired batch is written off."
+msgstr "تختفي التنبيهات تلقائياً بعد تعبئة المخزون أو إخراج الدفعة المنتهية."
