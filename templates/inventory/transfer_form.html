@@ -1,32 +1,36 @@
 {% extends "core/base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "New waste document" %}{% endblock %}
+{% block title %}{% trans "New transfer" %}{% endblock %}
 
 {% block page_header %}
-  <h1>{% trans "New waste document" %}</h1>
-  <p>{% trans "Record expired, damaged or missing stock and its cost" %}</p>
+  <h1>{% trans "New transfer" %}</h1>
+  <p>{% trans "Move stock between warehouses without changing total company stock" %}</p>
 {% endblock %}
 
 {% block topbar_actions %}
   <span class="badge-soft badge-neutral">{% trans "Draft" %}</span>
-  <a href="{% url 'inventory:waste_list' %}" class="btn btn-ghost" data-smooth>{% trans "Cancel" %}</a>
+  <a href="{% url 'inventory:transfer_list' %}" class="btn btn-ghost" data-smooth>{% trans "Cancel" %}</a>
 {% endblock %}
 
 {% block content %}
-{# nav_active = 'waste' — signed requirements module 16, spec 5.5 #}
+{# nav_active = 'transfers' — signed requirements module 5, spec 5.4 #}
 
-<form method="post" id="wasteForm">
+<form method="post" id="transferForm">
   {% csrf_token %}
+
+  {% if form.non_field_errors %}
+    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+  {% endif %}
 
   {# ================= Header ================= #}
   <div class="card-soft card-pad mb-3">
-    <div class="form-section-title">{% trans "Document details" %}</div>
+    <div class="form-section-title">{% trans "Transfer details" %}</div>
     {% include "core/_form_fields.html" with form=form %}
   </div>
 
   {# ================= Line items ================= #}
-  <div class="card-soft mb-3" id="wasteGrid">
+  <div class="card-soft mb-3" id="transferGrid">
     <div class="card-head">
       <h3 class="mb-0">{% trans "Items" %}</h3>
       <div class="spacer"></div>
@@ -39,13 +43,15 @@
       {{ formset.management_form }}
 
       {% if formset.non_form_errors %}
-        <div class="form-error mb-3">{{ formset.non_form_errors|striptags }}</div>
+        <div class="alert alert-danger">{{ formset.non_form_errors }}</div>
       {% endif %}
 
       <div data-formset-rows>
         {% for item_form in formset %}
           <div class="p-3 mb-2 rounded-3 bg-lavender position-relative" data-formset-row>
             {{ item_form.id }}
+
+            {# DELETE is rendered hidden: the trash button removes the row instead. #}
             <div class="d-none">{{ item_form.DELETE }}</div>
 
             <button type="button" class="btn-icon danger position-absolute"
@@ -55,7 +61,7 @@
             </button>
 
             <div class="row g-3">
-              <div class="col-12 col-md-4">
+              <div class="col-12 col-md-5">
                 <label class="form-label" for="{{ item_form.product.id_for_label }}">
                   {% trans "Product" %}<span class="req">*</span>
                 </label>
@@ -65,7 +71,7 @@
                 {% endif %}
               </div>
 
-              <div class="col-12 col-md-3">
+              <div class="col-12 col-md-4">
                 <label class="form-label" for="{{ item_form.batch.id_for_label }}">
                   {% trans "Stock Batch" %}
                 </label>
@@ -75,23 +81,13 @@
                 {% endif %}
               </div>
 
-              <div class="col-6 col-md-2">
+              <div class="col-12 col-md-3">
                 <label class="form-label" for="{{ item_form.quantity.id_for_label }}">
                   {% trans "Quantity" %}<span class="req">*</span>
                 </label>
                 {{ item_form.quantity }}
                 {% if item_form.quantity.errors %}
                   <div class="form-error">{{ item_form.quantity.errors|striptags }}</div>
-                {% endif %}
-              </div>
-
-              <div class="col-6 col-md-3">
-                <label class="form-label" for="{{ item_form.unit_cost.id_for_label }}">
-                  {% trans "Unit Cost" %}<span class="req">*</span>
-                </label>
-                {{ item_form.unit_cost }}
-                {% if item_form.unit_cost.errors %}
-                  <div class="form-error">{{ item_form.unit_cost.errors|striptags }}</div>
                 {% endif %}
               </div>
             </div>
@@ -101,7 +97,7 @@
 
       <p class="field-hint mt-2 mb-0">
         <i class="bi bi-info-circle me-1"></i>
-        {% trans "The line total is calculated as quantity multiplied by unit cost." %}
+        {% trans "Leave the batch empty to let the system pick the batch expiring soonest (FEFO)." %}
       </p>
     </div>
   </div>
@@ -112,11 +108,11 @@
       <button type="submit" class="btn btn-primary">
         <i class="bi bi-check2 me-1"></i>{% trans "Save draft" %}
       </button>
-      <a href="{% url 'inventory:waste_list' %}" class="btn btn-ghost">{% trans "Cancel" %}</a>
+      <a href="{% url 'inventory:transfer_list' %}" class="btn btn-ghost">{% trans "Cancel" %}</a>
     </div>
 
     <p class="field-hint mt-3 mb-0">
-      {% trans "Saving creates a draft. Stock is only reduced once you confirm the document." %}
+      {% trans "Saving creates a draft. Stock only moves once you confirm the transfer." %}
     </p>
   </div>
 </form>
@@ -125,12 +121,15 @@
 {% block extra_js %}
 <script>
   (function () {
-    var grid = document.getElementById('wasteGrid');
+    var grid = document.getElementById('transferGrid');
     if (!grid) return;
 
     var rows = grid.querySelector('[data-formset-rows]');
     var totalForms = document.getElementById('id_items-TOTAL_FORMS');
 
+    // Django identifies formset fields by their index: items-0-product,
+    // items-1-product and so on. Whenever rows are added or removed we
+    // renumber them from zero so there are never any gaps.
     function reindex() {
       var visible = rows.querySelectorAll('[data-formset-row]:not([hidden])');
       visible.forEach(function (row, i) {
@@ -152,6 +151,7 @@
         if (el.type === 'checkbox') el.checked = false;
         else el.value = '';
       });
+      // A cloned row is a brand new record, so it must not carry the original's id.
       var idField = clone.querySelector('input[name$="-id"]');
       if (idField) idField.value = '';
       clone.querySelectorAll('.form-error').forEach(function (e) { e.remove(); });
@@ -169,9 +169,11 @@
       var deleteBox = row.querySelector('input[name$="-DELETE"]');
 
       if (idField && idField.value) {
+        // Already saved: tick DELETE and hide it so Django removes it on save.
         if (deleteBox) deleteBox.checked = true;
         row.hidden = true;
       } else if (rows.querySelectorAll('[data-formset-row]:not([hidden])').length > 1) {
+        // Never saved: drop it entirely. Keep at least one row on screen.
         row.remove();
       } else {
         row.querySelectorAll('input, select').forEach(function (el) {

@@ -1,3 +1,252 @@
-{% extends "core/base.html" %}{% load i18n %}
-{% block title %}{% trans "New purchase invoice" %}{% endblock %}{% block page_header %}<h1>{% trans "New purchase invoice" %}</h1>{% endblock %}
-{% block content %}<form method="post">{% csrf_token %}<div class="card-soft card-pad mb-3">{{ form.as_p }}</div><div class="card-soft card-pad"><h3>{% trans "Items" %}</h3>{{ formset.management_form }}{% for item_form in formset %}<div class="border rounded p-3 mb-2">{{ item_form.as_p }}</div>{% endfor %}<button class="btn btn-primary">{% trans "Save draft" %}</button></div></form>{% endblock %}
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "New purchase invoice" %}{% endblock %}
+
+{% block page_header %}
+  <h1>{% trans "New purchase invoice" %}</h1>
+  <p>{% trans "Record goods received from a supplier" %}</p>
+{% endblock %}
+
+{% block topbar_actions %}
+  <span class="badge-soft badge-neutral">{% trans "Draft" %}</span>
+  <a href="{% url 'purchasing:list' %}" class="btn btn-ghost" data-smooth>{% trans "Cancel" %}</a>
+{% endblock %}
+
+{% block content %}
+{# nav_active = 'purchases' — spec 6.1 / 6.2. Invoice number is generated on save. #}
+
+<form method="post" id="purchaseForm">
+  {% csrf_token %}
+
+  <div class="card-soft card-pad mb-3">
+    <div class="form-section-title">{% trans "Invoice details" %}</div>
+    {% include "core/_form_fields.html" with form=form %}
+
+    <p class="field-hint mb-0">
+      <i class="bi bi-info-circle me-1"></i>
+      {% trans "Discount and tax here apply to the whole invoice and are added on top of any discount or tax entered on the item lines. Leave them at zero if you already entered them per line." %}
+    </p>
+  </div>
+
+  <div class="card-soft mb-3" id="purchaseGrid">
+    <div class="card-head">
+      <h3 class="mb-0">{% trans "Items" %}</h3>
+      <div class="spacer"></div>
+      <button type="button" class="btn btn-soft btn-sm" data-add-row>
+        <i class="bi bi-plus-lg me-1"></i>{% trans "Add line" %}
+      </button>
+    </div>
+
+    <div class="card-pad">
+      {{ formset.management_form }}
+
+      {% if formset.non_form_errors %}
+        <div class="form-error mb-3">{{ formset.non_form_errors|striptags }}</div>
+      {% endif %}
+
+      <div data-formset-rows>
+        {% for item_form in formset %}
+          <div class="p-3 mb-2 rounded-3 bg-lavender position-relative" data-formset-row>
+            {{ item_form.id }}
+            <div class="d-none">{{ item_form.DELETE }}</div>
+
+            <button type="button" class="btn-icon danger position-absolute"
+                    style="inset-inline-end:.75rem; top:.75rem"
+                    data-del-row aria-label="{% trans "Remove line" %}">
+              <i class="bi bi-trash3"></i>
+            </button>
+
+            <div class="row g-3">
+              <div class="col-12 col-md-4">
+                <label class="form-label" for="{{ item_form.product.id_for_label }}">
+                  {% trans "Product" %}<span class="req">*</span>
+                </label>
+                {{ item_form.product }}
+                {% if item_form.product.errors %}<div class="form-error">{{ item_form.product.errors|striptags }}</div>{% endif %}
+              </div>
+
+              <div class="col-6 col-md-2">
+                <label class="form-label" for="{{ item_form.quantity.id_for_label }}">
+                  {% trans "Quantity" %}<span class="req">*</span>
+                </label>
+                {{ item_form.quantity }}
+                {% if item_form.quantity.errors %}<div class="form-error">{{ item_form.quantity.errors|striptags }}</div>{% endif %}
+              </div>
+
+              <div class="col-6 col-md-2">
+                <label class="form-label" for="{{ item_form.unit_cost.id_for_label }}">
+                  {% trans "Unit cost" %}<span class="req">*</span>
+                </label>
+                {{ item_form.unit_cost }}
+                {% if item_form.unit_cost.errors %}<div class="form-error">{{ item_form.unit_cost.errors|striptags }}</div>{% endif %}
+              </div>
+
+              <div class="col-6 col-md-2">
+                <label class="form-label" for="{{ item_form.discount_amount.id_for_label }}">{% trans "Discount" %}</label>
+                {{ item_form.discount_amount }}
+              </div>
+
+              <div class="col-6 col-md-2">
+                <label class="form-label" for="{{ item_form.tax_amount.id_for_label }}">{% trans "Tax" %}</label>
+                {{ item_form.tax_amount }}
+              </div>
+
+              <div class="col-6 col-md-3">
+                <label class="form-label" for="{{ item_form.batch_number.id_for_label }}">{% trans "Batch Number" %}</label>
+                {{ item_form.batch_number }}
+              </div>
+
+              <div class="col-6 col-md-3">
+                <label class="form-label" for="{{ item_form.expiration_date.id_for_label }}">{% trans "Expiration Date" %}</label>
+                {{ item_form.expiration_date }}
+                {% if item_form.expiration_date.errors %}<div class="form-error">{{ item_form.expiration_date.errors|striptags }}</div>{% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <p class="field-hint mt-2 mb-0">
+        <i class="bi bi-info-circle me-1"></i>
+        {% trans "Fill the batch number and expiry date for items that expire." %}
+      </p>
+    </div>
+  </div>
+
+  <div class="card-soft card-pad">
+    {# Live preview using exactly the same arithmetic as purchase_create_view. #}
+    <div class="total-line">
+      <span>{% trans "Subtotal" %}</span>
+      <span class="v tnum" data-out="subtotal">0.000</span>
+    </div>
+    <div class="total-line">
+      <span>{% trans "Discount" %}</span>
+      <span class="v tnum" data-out="discount">0.000</span>
+    </div>
+    <div class="total-line">
+      <span>{% trans "Tax" %}</span>
+      <span class="v tnum" data-out="tax">0.000</span>
+    </div>
+    <div class="total-line">
+      <span>{% trans "Additional expenses" %}</span>
+      <span class="v tnum" data-out="additional">0.000</span>
+    </div>
+    <div class="total-line grand">
+      <span>{% trans "Total" %}</span>
+      <span class="v"><span class="tnum" data-out="total">0.000</span>
+        <small class="text-muted fs-6 fw-normal">{% trans "JOD" %}</small></span>
+    </div>
+
+    <div class="d-flex gap-2 mt-3">
+      <button type="submit" class="btn btn-primary">
+        <i class="bi bi-check2 me-1"></i>{% trans "Save draft" %}
+      </button>
+      <a href="{% url 'purchasing:list' %}" class="btn btn-ghost">{% trans "Cancel" %}</a>
+    </div>
+
+    <p class="field-hint mt-3 mb-0">
+      {% trans "Saving creates a draft. Stock increases only once you confirm the invoice." %}
+    </p>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    var grid = document.getElementById('purchaseGrid');
+    if (!grid) return;
+
+    var rows = grid.querySelector('[data-formset-rows]');
+    var totalForms = document.getElementById('id_items-TOTAL_FORMS');
+
+    function reindex() {
+      var visible = rows.querySelectorAll('[data-formset-row]:not([hidden])');
+      visible.forEach(function (row, i) {
+        row.querySelectorAll('input, select, textarea, label').forEach(function (el) {
+          ['name', 'id', 'for'].forEach(function (attr) {
+            var v = el.getAttribute(attr);
+            if (v) el.setAttribute(attr, v.replace(/items-(\d+|__prefix__)-/, 'items-' + i + '-'));
+          });
+        });
+      });
+      totalForms.value = visible.length;
+    }
+
+    grid.querySelector('[data-add-row]').addEventListener('click', function () {
+      var clone = rows.querySelector('[data-formset-row]').cloneNode(true);
+      clone.removeAttribute('hidden');
+      clone.querySelectorAll('input, select, textarea').forEach(function (el) {
+        if (el.type === 'checkbox') el.checked = false;
+        else el.value = '';
+      });
+      var idField = clone.querySelector('input[name$="-id"]');
+      if (idField) idField.value = '';
+      clone.querySelectorAll('.form-error').forEach(function (e) { e.remove(); });
+      rows.appendChild(clone);
+      reindex();
+    });
+
+    rows.addEventListener('click', function (event) {
+      var button = event.target.closest('[data-del-row]');
+      if (!button) return;
+
+      var row = button.closest('[data-formset-row]');
+      var idField = row.querySelector('input[name$="-id"]');
+      var deleteBox = row.querySelector('input[name$="-DELETE"]');
+
+      if (idField && idField.value) {
+        if (deleteBox) deleteBox.checked = true;
+        row.hidden = true;
+      } else if (rows.querySelectorAll('[data-formset-row]:not([hidden])').length > 1) {
+        row.remove();
+      } else {
+        row.querySelectorAll('input, select').forEach(function (el) {
+          if (el.type !== 'checkbox' && !el.name.endsWith('-id')) el.value = '';
+        });
+      }
+
+      reindex();
+      recalc();
+    });
+
+    // ---- Live totals ----------------------------------------------------
+    // Mirrors purchase_create_view exactly:
+    //   subtotal = sum(qty * unit_cost)
+    //   discount = header discount + sum(line discounts)
+    //   tax      = header tax      + sum(line taxes)
+    //   total    = subtotal + tax + additional - discount
+    function num(el) {
+      return el ? (parseFloat(el.value) || 0) : 0;
+    }
+
+    function recalc() {
+      var subtotal = 0, lineDiscount = 0, lineTax = 0;
+
+      rows.querySelectorAll('[data-formset-row]:not([hidden])').forEach(function (row) {
+        var qty  = num(row.querySelector('input[name$="-quantity"]'));
+        var cost = num(row.querySelector('input[name$="-unit_cost"]'));
+        subtotal     += qty * cost;
+        lineDiscount += num(row.querySelector('input[name$="-discount_amount"]'));
+        lineTax      += num(row.querySelector('input[name$="-tax_amount"]'));
+      });
+
+      var discount   = num(document.getElementById('id_discount_amount')) + lineDiscount;
+      var tax        = num(document.getElementById('id_tax_amount')) + lineTax;
+      var additional = num(document.getElementById('id_additional_expenses'));
+      var total      = subtotal + tax + additional - discount;
+
+      var out = {subtotal: subtotal, discount: discount, tax: tax,
+                 additional: additional, total: total};
+      Object.keys(out).forEach(function (key) {
+        var el = document.querySelector('[data-out="' + key + '"]');
+        if (el) el.textContent = out[key].toFixed(3);
+      });
+    }
+
+    document.getElementById('purchaseForm').addEventListener('input', recalc);
+    recalc();
+  })();
+</script>
+{% endblock %}

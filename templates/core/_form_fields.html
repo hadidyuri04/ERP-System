@@ -1,0 +1,43 @@
+{% load i18n %}
+{% comment %}
+Renders any Django form using the ERP design system.
+
+Use this instead of form.as_p, which stacks a checkbox under its label and
+looks broken. Checkboxes get the label beside the box; everything else gets
+the label above.
+
+Include it with:  form=form
+
+Note: this block must be {% comment %}, not the {# #} style. The short style
+only comments out a single line, so a multi-line version leaves any template
+tags inside it live -- which is how this file once managed to include itself.
+{% endcomment %}
+
+{% for field in form.hidden_fields %}{{ field }}{% endfor %}
+
+{% for field in form.visible_fields %}
+
+  {% if field.field.widget.input_type == 'checkbox' %}
+    <div class="form-check mb-3">
+      {{ field }}
+      <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {% if field.help_text %}<div class="field-hint">{{ field.help_text }}</div>{% endif %}
+      {% if field.errors %}<div class="form-error">{{ field.errors|striptags }}</div>{% endif %}
+    </div>
+
+  {% else %}
+    <div class="mb-3">
+      <label class="form-label" for="{{ field.id_for_label }}">
+        {{ field.label }}{% if field.field.required %}<span class="req">*</span>{% endif %}
+      </label>
+      {{ field }}
+      {% if field.help_text %}<div class="field-hint">{{ field.help_text }}</div>{% endif %}
+      {% if field.errors %}<div class="form-error">{{ field.errors|striptags }}</div>{% endif %}
+    </div>
+  {% endif %}
+
+{% endfor %}
+
+{% if form.non_field_errors %}
+  <div class="form-error mb-3">{{ form.non_field_errors|striptags }}</div>
+{% endif %}

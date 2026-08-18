@@ -1,0 +1,70 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Warehouse transfers" %}{% endblock %}
+
+{% block page_header %}
+  <h1>{% trans "Warehouse transfers" %}</h1>
+  <p>{% trans "Move stock between warehouses without changing total company stock" %}</p>
+{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{% url 'inventory:transfer_create' %}" class="btn btn-primary" data-smooth>
+    <i class="bi bi-plus-lg me-1"></i>{% trans "New transfer" %}
+  </a>
+{% endblock %}
+
+{% block content %}
+{# nav_active = 'transfers' — signed requirements module 5, spec 5.4 #}
+
+<div class="card-soft" data-table-card>
+  <div class="table-wrap">
+    <table class="table-erp">
+      <thead>
+        <tr>
+          <th style="width:18%">{% trans "Transfer Number" %}</th>
+          <th style="width:12%">{% trans "Date" %}</th>
+          <th>{% trans "Source Warehouse" %}</th>
+          <th>{% trans "Destination Warehouse" %}</th>
+          <th style="width:12%">{% trans "Status" %}</th>
+          <th style="width:60px"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for transfer in transfers %}
+          <tr data-row>
+            <td class="cell-strong">
+              <a href="{% url 'inventory:transfer_detail' transfer.pk %}">{{ transfer.transfer_number }}</a>
+            </td>
+            <td class="cell-muted">{{ transfer.date|date:"Y-m-d" }}</td>
+            <td>{{ transfer.source_warehouse.name }}</td>
+            <td>{{ transfer.destination_warehouse.name }}</td>
+            <td>
+              {% if transfer.status == 'COMPLETED' %}
+                <span class="badge-soft badge-success">{% trans "Completed" %}</span>
+              {% elif transfer.status == 'CANCELLED' %}
+                <span class="badge-soft badge-danger">{% trans "Cancelled" %}</span>
+              {% else %}
+                <span class="badge-soft badge-neutral">{% trans "Draft" %}</span>
+              {% endif %}
+            </td>
+            <td>
+              <a class="btn-icon" href="{% url 'inventory:transfer_detail' transfer.pk %}"
+                 aria-label="{% trans "View" %}"><i class="bi bi-eye"></i></a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6">
+              <div class="empty-state">
+                <i class="bi bi-arrow-left-right"></i>
+                <p>{% trans "No transfers yet." %}</p>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -70,7 +70,7 @@
 
       <form method="post">
         {% csrf_token %}
-        {{ form.as_p }}
+        {% include "core/_form_fields.html" with form=form %}
 
         <div class="d-flex gap-2 mt-2">
           <button type="submit" class="btn btn-primary flex-fill">

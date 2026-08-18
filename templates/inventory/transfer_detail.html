@@ -1,36 +1,36 @@
 {% extends "core/base.html" %}
 {% load i18n %}
 
-{% block title %}{{ waste.document_number }}{% endblock %}
+{% block title %}{{ transfer.transfer_number }}{% endblock %}
 
 {% block page_header %}
-  <h1>{{ waste.document_number }}</h1>
-  <p>{% trans "Waste & Loss" %}</p>
+  <h1>{{ transfer.transfer_number }}</h1>
+  <p>{% trans "Warehouse transfer" %}</p>
 {% endblock %}
 
 {% block topbar_actions %}
   <button class="btn btn-ghost no-print" onclick="window.print()">
     <i class="bi bi-printer me-1"></i>{% trans "Print" %}
   </button>
-  <a href="{% url 'inventory:waste_list' %}" class="btn btn-ghost" data-smooth>{% trans "Back" %}</a>
+  <a href="{% url 'inventory:transfer_list' %}" class="btn btn-ghost" data-smooth>{% trans "Back" %}</a>
 {% endblock %}
 
 {% block content %}
-{# nav_active = 'waste' — spec 5.5, signed requirements module 16 #}
+{# nav_active = 'transfers' — signed requirements module 5, spec 5.4 #}
 
 <div class="card-soft mb-3">
   <div class="card-head">
-    <div class="stat-icon" style="background:var(--danger-bg);color:var(--danger)">
-      <i class="bi bi-trash3"></i>
+    <div class="stat-icon" style="background:var(--purple-50);color:var(--purple-600)">
+      <i class="bi bi-arrow-left-right"></i>
     </div>
     <div>
-      <h3 class="mb-0">{{ waste.warehouse.name }}</h3>
-      <span class="stat-label">{{ waste.date|date:"Y-m-d" }}</span>
+      <h3 class="mb-0">{{ transfer.source_warehouse.name }} → {{ transfer.destination_warehouse.name }}</h3>
+      <span class="stat-label">{{ transfer.date|date:"Y-m-d" }}</span>
     </div>
     <div class="spacer"></div>
-    {% if waste.status == 'CONFIRMED' %}
-      <span class="badge-soft badge-success">{% trans "Confirmed" %}</span>
-    {% elif waste.status == 'CANCELLED' %}
+    {% if transfer.status == 'COMPLETED' %}
+      <span class="badge-soft badge-success">{% trans "Completed" %}</span>
+    {% elif transfer.status == 'CANCELLED' %}
       <span class="badge-soft badge-danger">{% trans "Cancelled" %}</span>
     {% else %}
       <span class="badge-soft badge-neutral">{% trans "Draft" %}</span>
@@ -40,31 +40,32 @@
   <div class="card-pad">
     <div class="row g-3">
       <div class="col-6 col-md-3">
-        <div class="stat-label">{% trans "Warehouse" %}</div>
-        <div class="fw-bold">{{ waste.warehouse.name }}</div>
+        <div class="stat-label">{% trans "Source Warehouse" %}</div>
+        <div class="fw-bold">{{ transfer.source_warehouse.name }}</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-label">{% trans "Destination Warehouse" %}</div>
+        <div class="fw-bold">{{ transfer.destination_warehouse.name }}</div>
       </div>
       <div class="col-6 col-md-3">
         <div class="stat-label">{% trans "Date" %}</div>
-        <div class="fw-bold">{{ waste.date|date:"Y-m-d" }}</div>
-      </div>
-      <div class="col-6 col-md-3">
-        <div class="stat-label">{% trans "Reason" %}</div>
-        <div class="fw-bold">{{ waste.get_reason_display }}</div>
+        <div class="fw-bold">{{ transfer.date|date:"Y-m-d" }}</div>
       </div>
       <div class="col-6 col-md-3">
         <div class="stat-label">{% trans "Created By" %}</div>
-        <div class="fw-bold">{{ waste.created_by }}</div>
+        <div class="fw-bold">{{ transfer.created_by }}</div>
       </div>
-      {% if waste.notes %}
+      {% if transfer.notes %}
         <div class="col-12">
           <div class="stat-label">{% trans "Notes" %}</div>
-          <div>{{ waste.notes }}</div>
+          <div>{{ transfer.notes }}</div>
         </div>
       {% endif %}
     </div>
   </div>
 </div>
 
+{# ---------------- Items ---------------- #}
 <div class="card-soft mb-3">
   <div class="card-head"><h3 class="mb-0">{% trans "Items" %}</h3></div>
   <div class="table-wrap">
@@ -72,26 +73,26 @@
       <thead>
         <tr>
           <th>{% trans "Product" %}</th>
-          <th style="width:18%">{% trans "Stock Batch" %}</th>
+          <th style="width:20%">{% trans "Stock Batch" %}</th>
           <th class="num" style="width:14%">{% trans "Quantity" %}</th>
           <th class="num" style="width:14%">{% trans "Unit Cost" %}</th>
-          <th class="num" style="width:14%">{% trans "Total Cost" %}</th>
         </tr>
       </thead>
       <tbody>
-        {% for item in waste.items.all %}
+        {% for item in transfer.items.all %}
           <tr data-row>
             <td class="cell-strong">{{ item.product.name }}</td>
-            <td class="cell-muted">{% if item.batch %}{{ item.batch.batch_number }}{% else %}—{% endif %}</td>
+            <td class="cell-muted">
+              {% if item.batch %}{{ item.batch.batch_number }}{% else %}{% trans "FEFO" %}{% endif %}
+            </td>
             <td class="num">{{ item.quantity|floatformat:3 }}</td>
             <td class="num">{{ item.unit_cost|floatformat:3 }}</td>
-            <td class="num cell-strong">{{ item.total_cost|floatformat:3 }}</td>
           </tr>
         {% empty %}
           <tr>
-            <td colspan="5">
+            <td colspan="4">
               <div class="empty-state">
-                <p>{% trans "This document has no items." %}</p>
+                <p>{% trans "This transfer has no items." %}</p>
               </div>
             </td>
           </tr>
@@ -101,21 +102,20 @@
   </div>
 </div>
 
-{# Status values on WasteLoss are UPPERCASE. Comparing against 'draft' here
-   silently hides the button, which is exactly what used to happen. #}
-{% if waste.status == 'DRAFT' %}
+{# ---------------- Confirm ---------------- #}
+{% if transfer.status == 'DRAFT' %}
   <div class="card-soft card-pad no-print">
-    <form method="post" action="{% url 'inventory:waste_confirm' waste.pk %}">
+    <form method="post" action="{% url 'inventory:transfer_confirm' transfer.pk %}">
       {% csrf_token %}
       <button type="submit" class="btn btn-primary"
-              data-confirm="{% trans "Confirming removes the stock and posts the loss. This cannot be undone. Continue?" %}">
-        <i class="bi bi-check2-circle me-1"></i>{% trans "Confirm and post" %}
+              data-confirm="{% trans "Confirming moves the stock and cannot be undone. Continue?" %}">
+        <i class="bi bi-check2-circle me-1"></i>{% trans "Confirm transfer" %}
       </button>
     </form>
 
     <p class="field-hint mt-3 mb-0">
       <i class="bi bi-info-circle me-1"></i>
-      {% trans "On confirmation the system records a WASTE stock movement, reduces the batch and balance, and posts the loss against the inventory account." %}
+      {% trans "On confirmation the system records a TRANSFER_OUT from the source and a matching TRANSFER_IN at the destination. Total company stock does not change." %}
     </p>
   </div>
 {% else %}
@@ -123,9 +123,9 @@
     <div class="d-flex align-items-center gap-3 p-3 rounded-3" style="background:var(--success-bg)">
       <i class="bi bi-shield-check fs-4" style="color:var(--success)"></i>
       <div>
-        <div class="fw-bold" style="color:var(--success)">{% trans "This document has been confirmed" %}</div>
+        <div class="fw-bold" style="color:var(--success)">{% trans "This transfer has been completed" %}</div>
         <div class="small text-muted">
-          {% trans "Confirmed documents are locked and cannot be edited." %}
+          {% trans "Confirmed documents are locked. Use a new transfer to move stock back." %}
         </div>
       </div>
     </div>

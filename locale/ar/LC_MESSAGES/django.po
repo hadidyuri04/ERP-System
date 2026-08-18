@@ -2882,3 +2882,345 @@ msgstr "بند تسوية المخزون"
 #: inventory/views.py inventory/models.py templates/inventory/
 msgid "Stock Adjustment Items"
 msgstr "بنود تسوية المخزون"
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "A transfer must contain at least one item."
+msgstr "يجب أن يحتوي التحويل على صنف واحد على الأقل."
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Back"
+msgstr "رجوع"
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Batch %(batch)s only has %(available)s remaining."
+msgstr "الدفعة %(batch)s متبقٍ منها %(available)s فقط."
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Confirm transfer"
+msgstr "تأكيد التحويل"
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Confirmed documents are locked. Use a new transfer to move stock back."
+msgstr "المستندات المؤكدة مقفلة. استخدم تحويلاً جديداً لإرجاع المخزون."
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Confirming moves the stock and cannot be undone. Continue?"
+msgstr "التأكيد ينقل المخزون فعلياً ولا يمكن التراجع عنه. هل تريد المتابعة؟"
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "FEFO"
+msgstr "الأقرب انتهاءً"
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Insufficient unexpired stock for product %(product)s. Short by %(short)s."
+msgstr "لا يوجد مخزون صالح كافٍ من %(product)s. النقص %(short)s."
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Leave the batch empty to let the system pick the batch expiring soonest (FEFO)."
+msgstr "اترك الدفعة فارغة ليختار النظام الدفعة الأقرب لانتهاء الصلاحية تلقائياً."
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Move stock between warehouses without changing total company stock"
+msgstr "نقل المخزون بين المستودعات دون تغيير إجمالي مخزون الشركة"
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Negative stock rule enforced: Cannot remove %(qty)s of %(product)s. Available: %(available)s."
+msgstr "لا يسمح النظام برصيد سالب: لا يمكن سحب %(qty)s من %(product)s. المتاح: %(available)s."
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "New transfer"
+msgstr "تحويل جديد"
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "No transfers yet."
+msgstr "لا توجد تحويلات بعد."
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Not enough stock of %(product)s in %(warehouse)s. Available: %(available)s."
+msgstr "لا يوجد مخزون كافٍ من %(product)s في %(warehouse)s. المتاح: %(available)s."
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "On confirmation the system records a TRANSFER_OUT from the source and a matching TRANSFER_IN at the destination. Total company stock does not change."
+msgstr "عند التأكيد يسجل النظام حركة إخراج من المستودع المصدر وحركة إدخال مقابلة لها في المستودع الوجهة. إجمالي مخزون الشركة لا يتغير."
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Only draft transfers can be confirmed."
+msgstr "يمكن تأكيد التحويلات المسودة فقط."
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Print"
+msgstr "طباعة"
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Saving creates a draft. Stock only moves once you confirm the transfer."
+msgstr "الحفظ ينشئ مسودة. لا ينتقل المخزون إلا بعد تأكيد التحويل."
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "The selected batch is not stored in the source warehouse."
+msgstr "الدفعة المختارة غير موجودة في المستودع المصدر."
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "The source and destination warehouses must be different."
+msgstr "يجب أن يكون المستودع المصدر مختلفاً عن المستودع الوجهة."
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "This transfer has been completed"
+msgstr "تم تنفيذ هذا التحويل"
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "This transfer has no items."
+msgstr "لا توجد أصناف في هذا التحويل."
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Transfer confirmed. Stock has moved between warehouses."
+msgstr "تم تأكيد التحويل وانتقل المخزون بين المستودعات."
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Transfer details"
+msgstr "بيانات التحويل"
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Transfer quantity must be greater than zero."
+msgstr "يجب أن تكون كمية التحويل أكبر من صفر."
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Transfer saved as draft."
+msgstr "تم حفظ التحويل كمسودة."
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "View"
+msgstr "عرض"
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Warehouse transfer"
+msgstr "تحويل بين المستودعات"
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Warehouse transfers"
+msgstr "التحويلات بين المستودعات"
+
+#: templates/inventory/product_form.html
+msgid "Item details, pricing and stock settings"
+msgstr "بيانات الصنف والأسعار وإعدادات المخزون"
+
+#: templates/inventory/waste_loss_form.html
+msgid "Record expired, damaged or missing stock and its cost"
+msgstr "تسجيل المخزون المنتهي أو التالف أو المفقود وتكلفته"
+
+#: templates/inventory/waste_loss_form.html
+msgid "Document details"
+msgstr "بيانات المستند"
+
+#: templates/inventory/waste_loss_form.html
+msgid "The line total is calculated as quantity multiplied by unit cost."
+msgstr "يُحتسب إجمالي البند بضرب الكمية في تكلفة الوحدة."
+
+#: templates/inventory/waste_loss_form.html
+msgid "Saving creates a draft. Stock is only reduced once you confirm the document."
+msgstr "الحفظ ينشئ مسودة. لا يُخصم المخزون إلا بعد تأكيد المستند."
+
+#: templates/purchasing/purchase_invoice_form.html
+msgid "Fill the batch number and expiry date for items that expire."
+msgstr "املأ رقم الدفعة وتاريخ انتهاء الصلاحية للأصناف التي تنتهي صلاحيتها."
+
+#: templates/purchasing/purchase_invoice_form.html
+msgid "Saving creates a draft. Stock increases only once you confirm the invoice."
+msgstr "الحفظ ينشئ مسودة. لا يزيد المخزون إلا بعد تأكيد الفاتورة."
+
+#: templates/
+msgid "34% more than last month"
+msgstr "٣٤٪ أكثر من الشهر الماضي"
+
+#: templates/
+msgid "Cash In/Out"
+msgstr "إدخال / إخراج نقدية"
+
+#: templates/
+msgid "Cash In (Add money)"
+msgstr "إدخال نقدية (إضافة مبلغ)"
+
+#: templates/
+msgid "Cash Out (Remove money)"
+msgstr "إخراج نقدية (سحب مبلغ)"
+
+#: templates/
+msgid "Cash movement recorded successfully."
+msgstr "تم تسجيل الحركة النقدية بنجاح."
+
+#: templates/
+msgid "Close & Reconcile Register (Shift #"
+msgstr "إغلاق ومطابقة الصندوق (وردية رقم "
+
+#: templates/
+msgid "Confirm & Close Register"
+msgstr "تأكيد وإغلاق الصندوق"
+
+#: templates/
+msgid "Could not save cash movement."
+msgstr "تعذّر حفظ الحركة النقدية."
+
+#: templates/
+msgid "Count the physical cash in the drawer and enter the total below to close out your shift."
+msgstr "عُدّ النقد الموجود فعلياً في الدرج وأدخل الإجمالي أدناه لإغلاق ورديتك."
+
+#: templates/
+msgid "Finance, inventory, sales, and purchasing—all working together in one secure workspace."
+msgstr "المالية والمخزون والمبيعات والمشتريات، كلها تعمل معاً في مساحة عمل واحدة آمنة."
+
+#: templates/
+msgid "Invoice details"
+msgstr "بيانات الفاتورة"
+
+#: templates/
+msgid "Manage sales, stock, purchases, and finance from one connected workspace."
+msgstr "أدر المبيعات والمخزون والمشتريات والمالية من مساحة عمل واحدة مترابطة."
+
+#: templates/
+msgid "Record cash added to or removed from the cash drawer during your shift."
+msgstr "سجّل المبالغ المضافة إلى درج النقد أو المسحوبة منه خلال ورديتك."
+
+#: templates/
+msgid "Record goods received from a supplier"
+msgstr "تسجيل البضاعة المستلمة من مورد"
+
+#: templates/
+msgid "Register Cash In / Out"
+msgstr "إدخال / إخراج نقدية من الصندوق"
+
+#: inventory/views.py templates/inventory/expiry_watchlist.html
+msgid "Expiry watchlist"
+msgstr "مراقبة الصلاحية"
+
+#: inventory/views.py templates/inventory/expiry_watchlist.html
+msgid "Expiring soon"
+msgstr "قاربت على الانتهاء"
+
+#: inventory/views.py templates/inventory/expiry_watchlist.html
+msgid "Expired stock cannot be sold. Write it off with a waste document to remove it from inventory and record the loss."
+msgstr "لا يمكن بيع المخزون المنتهي. سجّل مستند هدر لإخراجه من المخزون وقيد الخسارة."
+
+#: inventory/views.py templates/inventory/expiry_watchlist.html
+msgid "Nothing is expired or close to expiring."
+msgstr "لا يوجد مخزون منتهٍ أو قارب على الانتهاء."
+
+#: inventory/views.py templates/inventory/expiry_watchlist.html
+msgid "The warning window is set by Expiration Warning Days in company settings."
+msgstr "تُضبط فترة التنبيه من خلال \"أيام التنبيه قبل انتهاء الصلاحية\" في إعدادات الشركة."
+
+#: inventory/views.py templates/inventory/expiry_watchlist.html
+msgid "%(count)s batch(es) have just been marked as expired."
+msgstr "تم تعليم %(count)s دفعة كمنتهية الصلاحية."
+
+#: templates/inventory/expiry_watchlist.html
+msgid "Batches already expired, plus anything expiring within %(warning_days)s days"
+msgstr "دفعات منتهية الصلاحية، بالإضافة إلى ما ستنتهي صلاحيته خلال %(warning_days)s يوماً"
+
+#: templates/inventory/expiry_watchlist.html
+msgid "%(counter)s batch has expired"
+msgid_plural "%(counter)s batches have expired"
+msgstr[0] "لا توجد دفعات منتهية"
+msgstr[1] "دفعة واحدة منتهية الصلاحية"
+msgstr[2] "دفعتان منتهيتا الصلاحية"
+msgstr[3] "%(counter)s دفعات منتهية الصلاحية"
+msgstr[4] "%(counter)s دفعة منتهية الصلاحية"
+msgstr[5] "%(counter)s دفعة منتهية الصلاحية"
+
+#: inventory/services.py templates/purchasing/purchase_invoice_form.html
+msgid "Discount and tax here apply to the whole invoice and are added on top of any discount or tax entered on the item lines. Leave them at zero if you already entered them per line."
+msgstr "الخصم والضريبة هنا تُطبّق على الفاتورة كاملة وتُضاف فوق أي خصم أو ضريبة مُدخلة على بنود الأصناف. اتركها صفراً إذا أدخلتها على مستوى البنود."
+
+#: inventory/services.py templates/purchasing/purchase_invoice_form.html
+msgid "The selected batch is not stored in this warehouse."
+msgstr "الدفعة المختارة غير موجودة في هذا المستودع."
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Correct the system quantity to match a physical count"
+msgstr "تصحيح كمية النظام لتطابق الجرد الفعلي"
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "New adjustment"
+msgstr "تسوية جديدة"
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "No adjustments yet."
+msgstr "لا توجد تسويات بعد."
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Adjustment details"
+msgstr "بيانات التسوية"
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Adjustment saved as draft."
+msgstr "تم حفظ التسوية كمسودة."
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Adjustment confirmed. Stock now matches the count."
+msgstr "تم تأكيد التسوية، وأصبح المخزون مطابقاً للجرد."
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Only draft adjustments can be confirmed."
+msgstr "يمكن تأكيد التسويات المسودة فقط."
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "An adjustment must contain at least one item."
+msgstr "يجب أن تحتوي التسوية على صنف واحد على الأقل."
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Counted quantity cannot be negative."
+msgstr "لا يمكن أن تكون الكمية المجرودة سالبة."
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Confirm adjustment"
+msgstr "تأكيد التسوية"
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Confirming changes the stock on hand and cannot be undone. Continue?"
+msgstr "التأكيد يغيّر الرصيد الفعلي ولا يمكن التراجع عنه. هل تريد المتابعة؟"
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "This adjustment has been confirmed"
+msgstr "تم تأكيد هذه التسوية"
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "This adjustment has no items."
+msgstr "لا توجد أصناف في هذه التسوية."
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Confirmed documents are locked. Create another adjustment to correct the stock again."
+msgstr "المستندات المؤكدة مقفلة. أنشئ تسوية أخرى لتصحيح المخزون مرة ثانية."
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Enter the quantity you actually counted. The system works out the difference by itself."
+msgstr "أدخل الكمية التي جردتها فعلياً، والنظام بيحسب الفرق لحاله."
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "Saving creates a draft. Stock only changes once you confirm the adjustment."
+msgstr "الحفظ ينشئ مسودة. لا يتغير المخزون إلا بعد تأكيد التسوية."
+
+#: inventory/services.py inventory/views.py templates/inventory/
+msgid "The system re-reads the current quantity when you confirm, so a shortage records ADJUSTMENT_OUT and a surplus records ADJUSTMENT_IN against today's real balance."
+msgstr "يقرأ النظام الرصيد الحالي من جديد عند التأكيد، فيسجل حركة إخراج عند النقص وحركة إدخال عند الزيادة مقابل الرصيد الفعلي اليوم."
+
+#: templates/purchasing/purchase_invoice_form.html
+msgid "Additional expenses"
+msgstr "مصاريف إضافية"
+
+#: templates/inventory/waste_loss_detail.html
+msgid "Confirming removes the stock and posts the loss. This cannot be undone. Continue?"
+msgstr "التأكيد يخصم المخزون ويقيّد الخسارة، ولا يمكن التراجع عنه. هل تريد المتابعة؟"
+
+#: templates/inventory/waste_loss_detail.html
+msgid "On confirmation the system records a WASTE stock movement, reduces the batch and balance, and posts the loss against the inventory account."
+msgstr "عند التأكيد يسجل النظام حركة هدر، وينقص الدفعة والرصيد، ويقيّد الخسارة مقابل حساب المخزون."
+
+#: templates/inventory/waste_loss_detail.html
+msgid "This document has been confirmed"
+msgstr "تم تأكيد هذا المستند"
+
+#: templates/inventory/waste_loss_detail.html
+msgid "This document has no items."
+msgstr "لا توجد أصناف في هذا المستند."
+
+#: templates/inventory/waste_loss_detail.html
+msgid "Confirmed documents are locked and cannot be edited."
+msgstr "المستندات المؤكدة مقفلة ولا يمكن تعديلها."

@@ -1,64 +1,62 @@
 {% extends "core/base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "Waste & Loss" %}{% endblock %}
+{% block title %}{% trans "Stock Adjustments" %}{% endblock %}
 
 {% block page_header %}
-  <h1>{% trans "Waste & Loss" %}</h1>
-  <p>{% trans "Record expired, damaged or missing stock and its cost" %}</p>
+  <h1>{% trans "Stock Adjustments" %}</h1>
+  <p>{% trans "Correct the system quantity to match a physical count" %}</p>
 {% endblock %}
 
 {% block topbar_actions %}
-  <a class="btn btn-primary" href="{% url 'inventory:waste_create' %}" data-smooth>
-    <i class="bi bi-plus-lg me-1"></i>{% trans "New document" %}
+  <a href="{% url 'inventory:adjustment_create' %}" class="btn btn-primary" data-smooth>
+    <i class="bi bi-plus-lg me-1"></i>{% trans "New adjustment" %}
   </a>
 {% endblock %}
 
 {% block content %}
-{# nav_active = 'waste' — spec 5.5, signed requirements module 16 #}
+{# nav_active = 'adjustments' — spec 10, corrections use adjustment workflow #}
 
 <div class="card-soft" data-table-card>
   <div class="table-wrap">
     <table class="table-erp">
       <thead>
         <tr>
-          <th style="width:16%">{% trans "Number" %}</th>
+          <th style="width:20%">{% trans "Adjustment Number" %}</th>
           <th style="width:12%">{% trans "Date" %}</th>
           <th>{% trans "Warehouse" %}</th>
-          <th style="width:16%">{% trans "Reason" %}</th>
           <th style="width:14%">{% trans "Status" %}</th>
           <th style="width:60px"></th>
         </tr>
       </thead>
       <tbody>
-        {% for waste in documents %}
+        {% for adjustment in adjustments %}
           <tr data-row>
             <td class="cell-strong">
-              <a href="{% url 'inventory:waste_detail' waste.pk %}">{{ waste.document_number }}</a>
+              <a href="{% url 'inventory:adjustment_detail' adjustment.pk %}">{{ adjustment.adjustment_number }}</a>
             </td>
-            <td class="cell-muted">{{ waste.date|date:"Y-m-d" }}</td>
-            <td>{{ waste.warehouse.name }}</td>
-            <td>{{ waste.get_reason_display }}</td>
+            <td class="cell-muted">{{ adjustment.date|date:"Y-m-d" }}</td>
+            <td>{{ adjustment.warehouse.name }}</td>
             <td>
-              {% if waste.status == 'CONFIRMED' %}
+              {% if adjustment.status == 'CONFIRMED' %}
                 <span class="badge-soft badge-success">{% trans "Confirmed" %}</span>
-              {% elif waste.status == 'CANCELLED' %}
+              {% elif adjustment.status == 'CANCELLED' %}
                 <span class="badge-soft badge-danger">{% trans "Cancelled" %}</span>
               {% else %}
                 <span class="badge-soft badge-neutral">{% trans "Draft" %}</span>
               {% endif %}
             </td>
             <td>
-              <a class="btn-icon" href="{% url 'inventory:waste_detail' waste.pk %}"
+              <a class="btn-icon" href="{% url 'inventory:adjustment_detail' adjustment.pk %}"
                  aria-label="{% trans "View" %}"><i class="bi bi-eye"></i></a>
             </td>
           </tr>
         {% empty %}
           <tr>
-            <td colspan="6">
+            <td colspan="5">
               <div class="empty-state">
-                <i class="bi bi-trash3"></i>
-                <p>{% trans "No documents found." %}</p>
+                <i class="bi bi-clipboard-check"></i>
+                <p>{% trans "No adjustments yet." %}</p>
               </div>
             </td>
           </tr>

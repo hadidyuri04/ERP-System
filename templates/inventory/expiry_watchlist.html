@@ -1,0 +1,88 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Expiry watchlist" %}{% endblock %}
+
+{% block page_header %}
+  <h1>{% trans "Expiry watchlist" %}</h1>
+  <p>{% blocktrans %}Batches already expired, plus anything expiring within {{ warning_days }} days{% endblocktrans %}</p>
+{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{% url 'inventory:waste_create' %}" class="btn btn-primary" data-smooth>
+    <i class="bi bi-trash3 me-1"></i>{% trans "New waste document" %}
+  </a>
+{% endblock %}
+
+{% block content %}
+{# nav_active = 'waste' — spec 5.6, signed requirements module 17 #}
+
+{% if expired_count %}
+  <div class="card-soft card-pad mb-3">
+    <div class="d-flex align-items-center gap-3 p-3 rounded-3" style="background:var(--danger-bg)">
+      <i class="bi bi-exclamation-triangle fs-4" style="color:var(--danger)"></i>
+      <div>
+        <div class="fw-bold" style="color:var(--danger)">
+          {% blocktrans count counter=expired_count %}{{ counter }} batch has expired{% plural %}{{ counter }} batches have expired{% endblocktrans %}
+        </div>
+        <div class="small text-muted">
+          {% trans "Expired stock cannot be sold. Write it off with a waste document to remove it from inventory and record the loss." %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+<div class="card-soft" data-table-card>
+  <div class="table-wrap">
+    <table class="table-erp">
+      <thead>
+        <tr>
+          <th>{% trans "Product" %}</th>
+          <th style="width:14%">{% trans "Warehouse" %}</th>
+          <th style="width:14%">{% trans "Batch Number" %}</th>
+          <th style="width:12%">{% trans "Expiration Date" %}</th>
+          <th class="num" style="width:11%">{% trans "Quantity Remaining" %}</th>
+          <th class="num" style="width:11%">{% trans "Unit Cost" %}</th>
+          <th style="width:13%">{% trans "Status" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for batch in batches %}
+          <tr data-row>
+            <td class="cell-strong">{{ batch.product.name }}</td>
+            <td>{{ batch.warehouse.name }}</td>
+            <td class="cell-muted">{{ batch.batch_number }}</td>
+            <td class="cell-muted">{{ batch.expiration_date|date:"Y-m-d" }}</td>
+            <td class="num">{{ batch.quantity_remaining|floatformat:3 }}</td>
+            <td class="num">{{ batch.unit_cost|floatformat:3 }}</td>
+            <td>
+              {% if batch.expiration_date < today %}
+                <span class="badge-soft badge-danger">{% trans "Expired" %}</span>
+              {% elif batch.status == 'BLOCKED' %}
+                <span class="badge-soft badge-neutral">{% trans "Blocked" %}</span>
+              {% else %}
+                <span class="badge-soft badge-warning">{% trans "Expiring soon" %}</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="7">
+              <div class="empty-state">
+                <i class="bi bi-shield-check"></i>
+                <p>{% trans "Nothing is expired or close to expiring." %}</p>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<p class="field-hint mt-3">
+  <i class="bi bi-info-circle me-1"></i>
+  {% trans "The warning window is set by Expiration Warning Days in company settings." %}
+</p>
+{% endblock %}

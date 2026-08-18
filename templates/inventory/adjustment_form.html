@@ -1,32 +1,30 @@
 {% extends "core/base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "New waste document" %}{% endblock %}
+{% block title %}{% trans "New adjustment" %}{% endblock %}
 
 {% block page_header %}
-  <h1>{% trans "New waste document" %}</h1>
-  <p>{% trans "Record expired, damaged or missing stock and its cost" %}</p>
+  <h1>{% trans "New adjustment" %}</h1>
+  <p>{% trans "Correct the system quantity to match a physical count" %}</p>
 {% endblock %}
 
 {% block topbar_actions %}
   <span class="badge-soft badge-neutral">{% trans "Draft" %}</span>
-  <a href="{% url 'inventory:waste_list' %}" class="btn btn-ghost" data-smooth>{% trans "Cancel" %}</a>
+  <a href="{% url 'inventory:adjustment_list' %}" class="btn btn-ghost" data-smooth>{% trans "Cancel" %}</a>
 {% endblock %}
 
 {% block content %}
-{# nav_active = 'waste' — signed requirements module 16, spec 5.5 #}
+{# nav_active = 'adjustments' — spec 10 #}
 
-<form method="post" id="wasteForm">
+<form method="post" id="adjustmentForm">
   {% csrf_token %}
 
-  {# ================= Header ================= #}
   <div class="card-soft card-pad mb-3">
-    <div class="form-section-title">{% trans "Document details" %}</div>
+    <div class="form-section-title">{% trans "Adjustment details" %}</div>
     {% include "core/_form_fields.html" with form=form %}
   </div>
 
-  {# ================= Line items ================= #}
-  <div class="card-soft mb-3" id="wasteGrid">
+  <div class="card-soft mb-3" id="adjustmentGrid">
     <div class="card-head">
       <h3 class="mb-0">{% trans "Items" %}</h3>
       <div class="spacer"></div>
@@ -55,44 +53,28 @@
             </button>
 
             <div class="row g-3">
-              <div class="col-12 col-md-4">
+              <div class="col-12 col-md-5">
                 <label class="form-label" for="{{ item_form.product.id_for_label }}">
                   {% trans "Product" %}<span class="req">*</span>
                 </label>
                 {{ item_form.product }}
-                {% if item_form.product.errors %}
-                  <div class="form-error">{{ item_form.product.errors|striptags }}</div>
-                {% endif %}
+                {% if item_form.product.errors %}<div class="form-error">{{ item_form.product.errors|striptags }}</div>{% endif %}
               </div>
 
-              <div class="col-12 col-md-3">
+              <div class="col-12 col-md-4">
                 <label class="form-label" for="{{ item_form.batch.id_for_label }}">
                   {% trans "Stock Batch" %}
                 </label>
                 {{ item_form.batch }}
-                {% if item_form.batch.errors %}
-                  <div class="form-error">{{ item_form.batch.errors|striptags }}</div>
-                {% endif %}
+                {% if item_form.batch.errors %}<div class="form-error">{{ item_form.batch.errors|striptags }}</div>{% endif %}
               </div>
 
-              <div class="col-6 col-md-2">
-                <label class="form-label" for="{{ item_form.quantity.id_for_label }}">
-                  {% trans "Quantity" %}<span class="req">*</span>
+              <div class="col-12 col-md-3">
+                <label class="form-label" for="{{ item_form.counted_quantity.id_for_label }}">
+                  {% trans "Counted Quantity" %}<span class="req">*</span>
                 </label>
-                {{ item_form.quantity }}
-                {% if item_form.quantity.errors %}
-                  <div class="form-error">{{ item_form.quantity.errors|striptags }}</div>
-                {% endif %}
-              </div>
-
-              <div class="col-6 col-md-3">
-                <label class="form-label" for="{{ item_form.unit_cost.id_for_label }}">
-                  {% trans "Unit Cost" %}<span class="req">*</span>
-                </label>
-                {{ item_form.unit_cost }}
-                {% if item_form.unit_cost.errors %}
-                  <div class="form-error">{{ item_form.unit_cost.errors|striptags }}</div>
-                {% endif %}
+                {{ item_form.counted_quantity }}
+                {% if item_form.counted_quantity.errors %}<div class="form-error">{{ item_form.counted_quantity.errors|striptags }}</div>{% endif %}
               </div>
             </div>
           </div>
@@ -101,22 +83,21 @@
 
       <p class="field-hint mt-2 mb-0">
         <i class="bi bi-info-circle me-1"></i>
-        {% trans "The line total is calculated as quantity multiplied by unit cost." %}
+        {% trans "Enter the quantity you actually counted. The system works out the difference by itself." %}
       </p>
     </div>
   </div>
 
-  {# ================= Save ================= #}
   <div class="card-soft card-pad">
     <div class="d-flex gap-2">
       <button type="submit" class="btn btn-primary">
         <i class="bi bi-check2 me-1"></i>{% trans "Save draft" %}
       </button>
-      <a href="{% url 'inventory:waste_list' %}" class="btn btn-ghost">{% trans "Cancel" %}</a>
+      <a href="{% url 'inventory:adjustment_list' %}" class="btn btn-ghost">{% trans "Cancel" %}</a>
     </div>
 
     <p class="field-hint mt-3 mb-0">
-      {% trans "Saving creates a draft. Stock is only reduced once you confirm the document." %}
+      {% trans "Saving creates a draft. Stock only changes once you confirm the adjustment." %}
     </p>
   </div>
 </form>
@@ -125,7 +106,7 @@
 {% block extra_js %}
 <script>
   (function () {
-    var grid = document.getElementById('wasteGrid');
+    var grid = document.getElementById('adjustmentGrid');
     if (!grid) return;
 
     var rows = grid.querySelector('[data-formset-rows]');
@@ -146,7 +127,6 @@
 
     grid.querySelector('[data-add-row]').addEventListener('click', function () {
       var clone = rows.querySelector('[data-formset-row]').cloneNode(true);
-
       clone.removeAttribute('hidden');
       clone.querySelectorAll('input, select, textarea').forEach(function (el) {
         if (el.type === 'checkbox') el.checked = false;
@@ -155,7 +135,6 @@
       var idField = clone.querySelector('input[name$="-id"]');
       if (idField) idField.value = '';
       clone.querySelectorAll('.form-error').forEach(function (e) { e.remove(); });
-
       rows.appendChild(clone);
       reindex();
     });

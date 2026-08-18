@@ -1,3 +1,31 @@
-{% extends "core/base.html" %}{% load i18n %}
-{% block title %}{{ title }}{% endblock %}{% block page_header %}<h1>{{ title }}</h1>{% endblock %}
-{% block content %}<div class="card-soft card-pad"><form method="post">{% csrf_token %}{{ form.as_p }}<button class="btn btn-primary">{% trans "Save" %}</button> <a class="btn btn-ghost" href="{% url 'inventory:product_list' %}">{% trans "Cancel" %}</a></form></div>{% endblock %}
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block page_header %}
+  <h1>{{ title }}</h1>
+  <p>{% trans "Item details, pricing and stock settings" %}</p>
+{% endblock %}
+
+{% block content %}
+{# nav_active = 'items' — signed requirements module 3 #}
+
+<div class="row g-3 justify-content-center">
+  <div class="col-12 col-xl-9">
+    <div class="card-soft card-pad">
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% include "core/_form_fields.html" with form=form %}
+
+        <div class="d-flex gap-2 mt-3">
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check2 me-1"></i>{% trans "Save" %}
+          </button>
+          <a class="btn btn-ghost" href="{% url 'inventory:product_list' %}">{% trans "Cancel" %}</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

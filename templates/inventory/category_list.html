@@ -70,7 +70,7 @@
 
       <form method="post">
         {% csrf_token %}
-        {{ form.as_p }}
+        {% include "core/_form_fields.html" with form=form %}
 
         <p class="field-hint">
           {% trans "Leave the parent empty for a top-level category." %}

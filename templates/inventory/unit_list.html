@@ -68,7 +68,7 @@
 
       <form method="post">
         {% csrf_token %}
-        {{ form.as_p }}
+        {% include "core/_form_fields.html" with form=form %}
 
         <p class="field-hint">
           {% trans "For example: Kilogram (kg), Piece (pc), Carton (ctn)." %}

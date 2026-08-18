@@ -1,0 +1,122 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{{ adjustment.adjustment_number }}{% endblock %}
+
+{% block page_header %}
+  <h1>{{ adjustment.adjustment_number }}</h1>
+  <p>{% trans "Stock Adjustment" %}</p>
+{% endblock %}
+
+{% block topbar_actions %}
+  <button class="btn btn-ghost no-print" onclick="window.print()">
+    <i class="bi bi-printer me-1"></i>{% trans "Print" %}
+  </button>
+  <a href="{% url 'inventory:adjustment_list' %}" class="btn btn-ghost" data-smooth>{% trans "Back" %}</a>
+{% endblock %}
+
+{% block content %}
+{# nav_active = 'adjustments' — spec 10 #}
+
+<div class="card-soft mb-3">
+  <div class="card-head">
+    <div class="stat-icon" style="background:var(--purple-50);color:var(--purple-600)">
+      <i class="bi bi-clipboard-check"></i>
+    </div>
+    <div>
+      <h3 class="mb-0">{{ adjustment.warehouse.name }}</h3>
+      <span class="stat-label">{{ adjustment.date|date:"Y-m-d" }}</span>
+    </div>
+    <div class="spacer"></div>
+    {% if adjustment.status == 'CONFIRMED' %}
+      <span class="badge-soft badge-success">{% trans "Confirmed" %}</span>
+    {% elif adjustment.status == 'CANCELLED' %}
+      <span class="badge-soft badge-danger">{% trans "Cancelled" %}</span>
+    {% else %}
+      <span class="badge-soft badge-neutral">{% trans "Draft" %}</span>
+    {% endif %}
+  </div>
+
+  {% if adjustment.notes %}
+    <div class="card-pad">
+      <div class="stat-label">{% trans "Reason / Notes" %}</div>
+      <div>{{ adjustment.notes }}</div>
+    </div>
+  {% endif %}
+</div>
+
+<div class="card-soft mb-3">
+  <div class="card-head"><h3 class="mb-0">{% trans "Items" %}</h3></div>
+  <div class="table-wrap">
+    <table class="table-erp">
+      <thead>
+        <tr>
+          <th>{% trans "Product" %}</th>
+          <th style="width:18%">{% trans "Stock Batch" %}</th>
+          <th class="num" style="width:14%">{% trans "System Quantity" %}</th>
+          <th class="num" style="width:14%">{% trans "Counted Quantity" %}</th>
+          <th class="num" style="width:14%">{% trans "Variance" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in adjustment.items.all %}
+          <tr data-row>
+            <td class="cell-strong">{{ item.product.name }}</td>
+            <td class="cell-muted">
+              {% if item.batch %}{{ item.batch.batch_number }}{% else %}—{% endif %}
+            </td>
+            <td class="num">{{ item.system_quantity|floatformat:3 }}</td>
+            <td class="num cell-strong">{{ item.counted_quantity|floatformat:3 }}</td>
+            <td class="num">
+              {% if item.variance > 0 %}
+                <span style="color:var(--success)">+{{ item.variance|floatformat:3 }}</span>
+              {% elif item.variance < 0 %}
+                <span style="color:var(--danger)">{{ item.variance|floatformat:3 }}</span>
+              {% else %}
+                <span class="cell-muted">0.000</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="5">
+              <div class="empty-state">
+                <p>{% trans "This adjustment has no items." %}</p>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if adjustment.status == 'DRAFT' %}
+  <div class="card-soft card-pad no-print">
+    <form method="post" action="{% url 'inventory:adjustment_confirm' adjustment.pk %}">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-primary"
+              data-confirm="{% trans "Confirming changes the stock on hand and cannot be undone. Continue?" %}">
+        <i class="bi bi-check2-circle me-1"></i>{% trans "Confirm adjustment" %}
+      </button>
+    </form>
+
+    <p class="field-hint mt-3 mb-0">
+      <i class="bi bi-info-circle me-1"></i>
+      {% trans "The system re-reads the current quantity when you confirm, so a shortage records ADJUSTMENT_OUT and a surplus records ADJUSTMENT_IN against today's real balance." %}
+    </p>
+  </div>
+{% else %}
+  <div class="card-soft card-pad">
+    <div class="d-flex align-items-center gap-3 p-3 rounded-3" style="background:var(--success-bg)">
+      <i class="bi bi-shield-check fs-4" style="color:var(--success)"></i>
+      <div>
+        <div class="fw-bold" style="color:var(--success)">{% trans "This adjustment has been confirmed" %}</div>
+        <div class="small text-muted">
+          {% trans "Confirmed documents are locked. Create another adjustment to correct the stock again." %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}
