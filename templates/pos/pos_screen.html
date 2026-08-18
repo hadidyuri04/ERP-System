@@ -1,4 +1,5 @@
-{% extends "core/base.html" %}{% load i18n %}
+{% extends "core/base.html" %}
+{% load i18n %}
 {% block title %}{% trans "Point of sale" %}{% endblock %}
 
 {% block page_header %}
@@ -14,7 +15,7 @@
         <div class="text-end">
             {% blocktrans with session_num=active_session.session_number float_amt=active_session.opening_balance %}
             <span class="badge bg-success mb-0" style="font-size: 0.7rem;">SHIFT #{{ session_num }}</span>
-            <div class="small fw-bold text-dark">${{ float_amt }} Float</div>
+            <div class="small fw-bold text-dark"></div>
             {% endblocktrans %}
         </div>
         <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="collapse" data-bs-target="#terminalCloseSessionCard">
@@ -26,7 +27,12 @@
 {% endblock %}
 
 {% block topbar_actions %}
-<a class="btn btn-soft" href="{% url 'pos:sale_list' %}"><i class="bi bi-receipt me-1"></i>{% trans "Sales history" %}</a>
+<div class="d-flex align-items-center gap-2">
+    <button type="button" class="btn btn-soft text-success fw-bold" data-bs-toggle="modal" data-bs-target="#cashMovementModal" data-bs-backdrop="false">
+        <i class="bi bi-cash-stack me-1"></i>{% trans "Cash In/Out" %}
+    </button>
+    <a class="btn btn-soft" href="{% url 'pos:sale_list' %}"><i class="bi bi-receipt me-1"></i>{% trans "Sales history" %}</a>
+</div>
 {% endblock %}
 
 {% block content %}
@@ -62,22 +68,139 @@
 
 <div class="pos-layout">
   <section>
-    <div class="pos-search mb-3"><i class="bi bi-search text-purple"></i><input id="product-search" type="search" placeholder="{% trans 'Search products by name or code...' %}" autocomplete="off"><span id="product-count" class="badge-soft badge-info">{{ products|length }} {% trans "items" %}</span></div>
+    <div class="pos-search mb-3">
+      <i class="bi bi-search text-purple"></i>
+      <input id="product-search" type="search" placeholder="{% trans 'Search products by name or code...' %}" autocomplete="off">
+      <span id="product-count" class="badge-soft badge-info">{{ products|length }} {% trans "items" %}</span>
+    </div>
     <div class="pos-product-grid" id="product-grid">
-      {% for product in products %}<button type="button" class="pos-tile product-button" data-id="{{ product.pk }}" data-code="{{ product.code }}" data-name="{{ product.name }}" data-price="{{ product.selling_price }}">
-        <span class="t-thumb"><i class="bi bi-box-seam"></i></span><span class="t-stock">{{ product.code }} · {{ product.available_stock|default:0|floatformat:3 }} {% trans "in stock" %}</span><span class="t-name">{{ product.name }}</span><span class="t-price">{{ product.selling_price|floatformat:3 }}</span>
-      </button>{% empty %}<div class="empty-state"><i class="bi bi-box-seam"></i><p>{% trans "No active products are available." %}</p></div>{% endfor %}
+      {% for product in products %}
+      <button type="button" class="pos-tile product-button" data-id="{{ product.pk }}" data-code="{{ product.code }}" data-barcode="{{ product.barcode|default:'' }}" data-name="{{ product.name }}" data-price="{{ product.selling_price }}" data-stock="{{ product.available_stock|default:0 }}">
+        <span class="t-thumb"><i class="bi bi-box-seam"></i></span>
+        <span class="t-stock">{{ product.code }} · {{ product.available_stock|default:0|floatformat:3 }} {% trans "in stock" %}</span>
+        <span class="t-name">{{ product.name }}</span>
+        <span class="t-price">{{ product.selling_price|floatformat:3 }}</span>
+      </button>
+      {% empty %}
+      <div class="empty-state">
+        <i class="bi bi-box-seam"></i>
+        <p>{% trans "No active products are available." %}</p>
+      </div>
+      {% endfor %}
     </div>
   </section>
+  
   <aside class="card-soft pos-cart">
-    <div class="card-head"><div><span class="section-kicker">{% trans "Current order" %}</span><h3>{% trans "Cart" %} <span id="cart-count" class="cart-count">0</span></h3></div><button id="clear-cart" type="button" class="btn btn-ghost btn-sm">{% trans "Clear" %}</button></div>
-    <div class="pos-order-fields"><div><label for="warehouse">{% trans "Warehouse" %}</label><select id="warehouse" required><option value="">{% trans "Select warehouse" %}</option>{% for warehouse in warehouses %}<option value="{{ warehouse.pk }}">{{ warehouse }}</option>{% endfor %}</select></div><div><label for="customer">{% trans "Customer" %}</label><select id="customer"><option value="">{% trans "Walk-in customer" %}</option>{% for customer in customers %}<option value="{{ customer.pk }}">{{ customer }}</option>{% endfor %}</select></div></div>
-    <div id="cart-empty" class="empty-state cart-empty"><i class="bi bi-bag"></i><strong>{% trans "Your cart is empty" %}</strong><p>{% trans "Choose a product to start a sale." %}</p></div>
+    <div class="card-head">
+      <div>
+        <span class="section-kicker">{% trans "Current order" %}</span>
+        <h3>{% trans "Cart" %} <span id="cart-count" class="cart-count">0</span></h3>
+      </div>
+      <button id="clear-cart" type="button" class="btn btn-ghost btn-sm">{% trans "Clear" %}</button>
+    </div>
+    
+    <div class="pos-order-fields">
+      <div>
+        <label for="warehouse">{% trans "Warehouse" %}</label>
+        <select id="warehouse" required>
+          <option value="">{% trans "Select warehouse" %}</option>
+          {% for warehouse in warehouses %}
+          <option value="{{ warehouse.pk }}">{{ warehouse }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="customer">{% trans "Customer" %}</label>
+        <select id="customer">
+          <option value="">{% trans "Walk-in customer" %}</option>
+          {% for customer in customers %}
+          <option value="{{ customer.pk }}">{{ customer }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    
+    <div id="cart-empty" class="empty-state cart-empty">
+      <i class="bi bi-bag"></i>
+      <strong>{% trans "Your cart is empty" %}</strong>
+      <p>{% trans "Choose a product to start a sale." %}</p>
+    </div>
+    
     <div id="cart" class="pos-cart-items"></div>
-    <div class="pos-payment"><label for="payment-method">{% trans "Payment method" %}</label><select id="payment-method"><option value="cash">{% trans "Cash" %}</option><option value="card">{% trans "Card" %}</option><option value="bank">{% trans "Bank transfer" %}</option><option value="credit">{% trans "Customer credit" %}</option></select></div>
-    <div class="pos-totals"><div class="total-line"><span>{% trans "Items" %}</span><span id="quantity-total">0</span></div><div class="total-line grand"><span>{% trans "Total" %}</span><span><span id="total">0.000</span> <small>{% trans "JOD" %}</small></span></div><button id="complete" class="btn btn-primary btn-lg w-100" disabled><i class="bi bi-check2-circle me-1"></i>{% trans "Complete sale" %}</button></div>
+    
+    <div class="pos-payment">
+      <label for="payment-method">{% trans "Payment method" %}</label>
+      <select id="payment-method">
+        <option value="cash">{% trans "Cash" %}</option>
+        <option value="card">{% trans "Card" %}</option>
+        <option value="bank">{% trans "Bank transfer" %}</option>
+        <option value="credit">{% trans "Customer credit" %}</option>
+      </select>
+    </div>
+    
+    <div class="pos-totals">
+      <div class="total-line">
+        <span>{% trans "Items" %}</span>
+        <span id="quantity-total">0</span>
+      </div>
+      <div class="total-line grand">
+        <span>{% trans "Total" %}</span>
+        <span><span id="total">0.000</span> <small>{% trans "JOD" %}</small></span>
+      </div>
+      <button id="complete" class="btn btn-primary btn-lg w-100" disabled>
+        <i class="bi bi-check2-circle me-1"></i>{% trans "Complete sale" %}
+      </button>
+    </div>
   </aside>
 </div>
+
+<!-- Cash In/Out Modal -->
+{% if active_session %}
+<div class="modal fade" id="cashMovementModal" tabindex="-1" aria-labelledby="cashMovementModalLabel" aria-hidden="true" data-bs-backdrop="false">
+  <div class="modal-dialog">
+    <div class="modal-content shadow">
+      <form id="cashMovementForm" method="post" action="{% url 'pos:cash_transaction' active_session.pk %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold" id="cashMovementModalLabel">
+            <i class="bi bi-cash-stack me-2 text-success"></i>{% trans "Register Cash In / Out" %}
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted small">{% trans "Record cash added to or removed from the cash drawer during your shift." %}</p>
+          
+          <div class="mb-3">
+            <label for="id_transaction_type" class="form-label fw-bold">{% trans "Type" %}</label>
+            <select name="transaction_type" id="id_transaction_type" class="form-select" required>
+              <option value="IN">{% trans "Cash In (Add money)" %}</option>
+              <option value="OUT">{% trans "Cash Out (Remove money)" %}</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="id_movement_amount" class="form-label fw-bold">{% trans "Amount" %}</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input type="number" step="0.001" name="amount" id="id_movement_amount" class="form-control" placeholder="0.000" required>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="id_movement_reason" class="form-label fw-bold">{% trans "Reason / Notes" %}</label>
+            <textarea name="reason" id="id_movement_reason" class="form-control" rows="3" placeholder="{% trans 'e.g., Petty cash expense, change float added...' %}" required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+          <button type="submit" id="saveCashMovementBtn" class="btn btn-success px-4">{% trans "Save Movement" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 <script>
 (() => {
   const cart = new Map();
@@ -89,14 +212,36 @@
   const productGrid = document.getElementById('product-grid');
   
   const money = value => Number(value).toFixed(3);
-  function notify(message, type='warning') { if (window.ERP?.toast?.[type]) ERP.toast[type](message); else alert(message); }
+  function notify(message, type='warning') { 
+    if (window.ERP?.toast?.[type]) ERP.toast[type](message); 
+    else alert(message); 
+  }
 
   function draw() {
-    cartRoot.innerHTML = ''; let total = 0; let quantity = 0;
+    cartRoot.innerHTML = ''; 
+    let total = 0; 
+    let quantity = 0;
+    
     for (const item of cart.values()) {
-      total += item.quantity * item.unit_price; quantity += item.quantity;
-      const row = document.createElement('div'); row.className = 'cart-row';
-      row.innerHTML = '<div class="flex-grow-1 min-w-0"><p class="c-name text-truncate"></p><span class="c-meta"></span></div><div class="qty-stepper"><button type="button" data-action="minus"><i class="bi bi-dash"></i></button><span class="q"></span><button type="button" data-action="plus"><i class="bi bi-plus"></i></button></div><span class="c-total"></span><button type="button" class="btn-icon danger" data-action="remove"><i class="bi bi-x-lg"></i></button>';
+      total += item.quantity * item.unit_price; 
+      quantity += item.quantity;
+      
+      const row = document.createElement('div'); 
+      row.className = 'cart-row';
+      row.innerHTML = `
+        <div class="flex-grow-1 min-w-0">
+          <p class="c-name text-truncate"></p>
+          <span class="c-meta"></span>
+        </div>
+        <div class="qty-stepper">
+          <button type="button" data-action="minus"><i class="bi bi-dash"></i></button>
+          <span class="q"></span>
+          <button type="button" data-action="plus"><i class="bi bi-plus"></i></button>
+        </div>
+        <span class="c-total"></span>
+        <button type="button" class="btn-icon danger" data-action="remove"><i class="bi bi-x-lg"></i></button>
+      `;
+      
       row.querySelector('.c-name').textContent = item.name; 
       row.querySelector('.c-meta').textContent = money(item.unit_price) + ' × ' + item.quantity; 
       row.querySelector('.q').textContent = item.quantity; 
@@ -105,6 +250,7 @@
       row.addEventListener('click', event => { 
         const action = event.target.closest('[data-action]')?.dataset.action; 
         if (!action) return; 
+        
         if (action === 'plus') {
           if (item.quantity < item.available_stock) {
             item.quantity += 1;
@@ -112,12 +258,17 @@
             notify('{% trans "Cannot exceed available stock in selected warehouse." %}');
           }
         }
-        if (action === 'minus') item.quantity -= 1; 
-        if (action === 'remove' || item.quantity <= 0) cart.delete(item.product_id); 
+        if (action === 'minus') {
+          item.quantity -= 1;
+        }
+        if (action === 'remove' || item.quantity <= 0) {
+          cart.delete(item.product_id);
+        }
         draw(); 
       }); 
       cartRoot.appendChild(row);
     }
+    
     document.getElementById('total').textContent = money(total); 
     document.getElementById('quantity-total').textContent = quantity; 
     document.getElementById('cart-count').textContent = cart.size; 
@@ -128,7 +279,6 @@
   // Bind click events to existing product buttons
   function bindProductButtons() {
     document.querySelectorAll('.product-button').forEach(button => {
-      // Prevent duplicate event listeners binding
       if (button.dataset.bound) return;
       button.dataset.bound = "true";
       
@@ -173,10 +323,9 @@
   async function performSearch(query) {
     const warehouseId = warehouseSelect.value;
     if (!warehouseId) {
-      // Fallback to client-side filtering if warehouse not chosen yet
       let visible = 0;
       document.querySelectorAll('.product-button').forEach(button => {
-        const match = !query || (button.dataset.name + ' ' + button.dataset.code).toLowerCase().includes(query);
+        const match = !query || (button.dataset.name + ' ' + button.dataset.code + ' ' + (button.dataset.barcode || '')).toLowerCase().includes(query);
         button.hidden = !match;
         if (match) visible += 1;
       });
@@ -185,14 +334,13 @@
     }
 
     if (!query) {
-      // Reset grid visibility if search query is cleared
       document.querySelectorAll('.product-button').forEach(b => b.hidden = false);
       return;
     }
 
     try {
-      const response = `{% url 'pos:search_product' %}?q=${encodeURIComponent(query)}&warehouse_id=${warehouseId}`;
-      const res = await fetch(response);
+      const responseUrl = `{% url 'pos:search_product' %}?q=${encodeURIComponent(query)}&warehouse_id=${warehouseId}`;
+      const res = await fetch(responseUrl);
       const data = await res.json();
       
       if (data.ok && data.results) {
@@ -206,7 +354,6 @@
           
           if (isMatch) {
             visible += 1;
-            // Update stock display dynamically from server response
             const matchedProduct = data.results.find(r => r.id === id);
             if (matchedProduct) {
               button.dataset.stock = matchedProduct.available_stock;
@@ -221,7 +368,7 @@
         document.getElementById('product-count').textContent = visible + ' {% trans "items" %}';
 
         // Fast Barcode Supermarket Shortcut: If exact barcode match returns 1 item, auto-add to cart
-        if (data.results.length === 1 && data.results[0].barcode === query.trim()) {
+        if (data.results.length === 1 && String(data.results[0].barcode || '').trim() === query.trim()) {
           const prod = data.results[0];
           if (Number(prod.available_stock) > 0) {
             const id = prod.id;
@@ -296,6 +443,44 @@
       complete.classList.remove('is-loading'); 
     } 
   });
+
+  // Handle Cash In/Out Form via AJAX to prevent page redirect errors
+  const cashMovementForm = document.getElementById('cashMovementForm');
+  if (cashMovementForm) {
+    cashMovementForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('saveCashMovementBtn');
+      submitBtn.disabled = true;
+
+      try {
+        const formData = new URLSearchParams(new FormData(cashMovementForm));
+        const response = await fetch(cashMovementForm.action, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: formData
+        });
+        const data = await response.json();
+
+        if (data.ok) {
+          notify('{% trans "Cash movement recorded successfully." %}', 'success');
+          cashMovementForm.reset();
+          const modalEl = document.getElementById('cashMovementModal');
+          const modalInstance = bootstrap.Modal.getInstance(modalEl);
+          if (modalInstance) modalInstance.hide();
+        } else {
+          notify(data.error || '{% trans "Could not save cash movement." %}', 'error');
+        }
+      } catch (error) {
+        notify('{% trans "Could not connect to the server." %}', 'error');
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  }
 
   // Initialize bindings on load
   bindProductButtons();

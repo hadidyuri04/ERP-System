@@ -10,6 +10,7 @@ from django.views.decorators.http import require_POST, require_GET
 from django.utils.translation import gettext as _
 from django.utils import timezone
 
+
 from core.permissions import cashier_required
 from customers.models import Customer
 from inventory.models import Product, Warehouse, StockBalance
