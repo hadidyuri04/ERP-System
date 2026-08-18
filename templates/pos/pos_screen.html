@@ -75,12 +75,25 @@
     </div>
     <div class="pos-product-grid" id="product-grid">
       {% for product in products %}
-      <button type="button" class="pos-tile product-button" data-id="{{ product.pk }}" data-code="{{ product.code }}" data-barcode="{{ product.barcode|default:'' }}" data-name="{{ product.name }}" data-price="{{ product.selling_price }}" data-stock="{{ product.available_stock|default:0 }}">
-        <span class="t-thumb"><i class="bi bi-box-seam"></i></span>
-        <span class="t-stock">{{ product.code }} · {{ product.available_stock|default:0|floatformat:3 }} {% trans "in stock" %}</span>
-        <span class="t-name">{{ product.name }}</span>
-        <span class="t-price">{{ product.selling_price|floatformat:3 }}</span>
-      </button>
+        <button type="button" class="pos-tile product-button {% if product.available_stock <= 0 %}opacity-50{% endif %}" 
+          data-id="{{ product.pk }}" 
+          data-code="{{ product.code }}" 
+          data-barcode="{{ product.barcode|default:'' }}" 
+          data-name="{{ product.name }}" 
+          data-price="{{ product.selling_price }}" 
+          data-stock="{{ product.available_stock|default:0 }}">
+          <span class="t-thumb"><i class="bi bi-box-seam"></i></span>
+          <span class="t-stock {% if product.available_stock <= 0 %}text-danger fw-bold{% endif %}">
+            {{ product.code }} · 
+            {% if product.available_stock <= 0 %}
+              {% trans "Out of stock" %}
+            {% else %}
+              {{ product.available_stock|default:0|floatformat:3 }} {% trans "in stock" %}
+            {% endif %}
+          </span>
+          <span class="t-name">{{ product.name }}</span>
+          <span class="t-price">{{ product.selling_price|floatformat:3 }}</span>
+        </button>
       {% empty %}
       <div class="empty-state">
         <i class="bi bi-box-seam"></i>
@@ -102,12 +115,8 @@
     <div class="pos-order-fields">
       <div>
         <label for="warehouse">{% trans "Warehouse" %}</label>
-        <select id="warehouse" required>
-          <option value="">{% trans "Select warehouse" %}</option>
-          {% for warehouse in warehouses %}
-          <option value="{{ warehouse.pk }}">{{ warehouse }}</option>
-          {% endfor %}
-        </select>
+        <input type="hidden" id="warehouse" value="{{ active_session.warehouse.pk }}">
+        <input type="text" class="form-control" value="{{ active_session.warehouse.name }}" disabled>
       </div>
       <div>
         <label for="customer">{% trans "Customer" %}</label>
@@ -359,7 +368,13 @@
               button.dataset.stock = matchedProduct.available_stock;
               const stockSpan = button.querySelector('.t-stock');
               if (stockSpan) {
-                stockSpan.textContent = matchedProduct.code + ' · ' + Number(matchedProduct.available_stock).toFixed(3) + ' {% trans "in stock" %}';
+                if (Number(matchedProduct.available_stock) <= 0) {
+                  stockSpan.innerHTML = matchedProduct.code + ' · <span class="text-danger fw-bold">{% trans "Out of stock" %}</span>';
+                  button.classList.add('opacity-50');
+                } else {
+                  stockSpan.textContent = matchedProduct.code + ' · ' + Number(matchedProduct.available_stock).toFixed(3) + ' {% trans "in stock" %}';
+                  button.classList.remove('opacity-50');
+                }
               }
             }
           }

@@ -33,12 +33,24 @@ def pos_terminal(request):
     if not active_session:
         return redirect("pos:session_list")
 
+    # NEW LOGIC: Fetch products and map real-time stock for the active session's warehouse
+    from inventory.models import Product, StockBalance
+    
+    products = list(Product.objects.filter(is_active=True))
+    stock_balances = StockBalance.objects.filter(warehouse=active_session.warehouse)
+    
+    # Calculate true available stock (Quantity - Reserved)
+    stock_dict = {sb.product_id: (sb.quantity - sb.reserved_quantity) for sb in stock_balances}
+
+    for p in products:
+        p.available_stock = stock_dict.get(p.id, 0)
+
     return render(request, "pos/pos_screen.html", {
         "active_session": active_session,
+        "products": products,  # Now passing the populated products list to the template
         "customers": Customer.objects.filter(is_active=True).order_by("name"),
-        "warehouses": Warehouse.objects.filter(is_active=True).order_by("name"),
+        # "warehouses" query is removed as it's no longer needed
     })
-
 
 @login_required
 @cashier_required
