@@ -6,6 +6,7 @@ from django.db.models import Q, Sum
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
+from django.utils.translation import get_language
 
 from core.permissions import accountant_required
 
@@ -20,14 +21,24 @@ def product_list_view(request):
     products = Product.objects.select_related("category", "unit").annotate(
         stock_quantity=Sum("balances__quantity")
     ).order_by("code")
+    
     query = request.GET.get("q", "").strip()
     if query:
+        # Search across both English and Arabic names
         products = products.filter(
-            Q(code__icontains=query) | Q(barcode__icontains=query) | Q(name__icontains=query)
+            Q(code__icontains=query) | 
+            Q(barcode__icontains=query) | 
+            Q(name_en__icontains=query) | 
+            Q(name_ar__icontains=query)
         )
+        
+    # Order categories safely based on the active language
+    lang = get_language()
+    category_order_field = "name_ar" if lang == "ar" else "name_en"
+
     return render(request, "inventory/product_list.html", {
         "products": products,
-        "categories": Category.objects.filter(is_active=True).order_by("name"),
+        "categories": Category.objects.filter(is_active=True).order_by(category_order_field),
         "query": query,
     })
 
