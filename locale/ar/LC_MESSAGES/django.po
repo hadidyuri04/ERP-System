@@ -3448,3 +3448,35 @@ msgstr "فاتورة الكاش يجب أن تُدفع بالكامل، والف
 #: purchasing/views.py templates/purchasing/
 msgid "Discount and tax are not entered here: both are totalled from the item lines, and tax comes from each item's tax rate."
 msgstr "الخصم والضريبة لا تُدخل هنا، بل تُجمع من بنود الأصناف، والضريبة تُحتسب من نسبة ضريبة كل صنف."
+
+#: templates/pos/pos_screen.html
+msgid "Out of stock"
+msgstr "نفد المخزون"
+
+#: inventory/views.py templates/inventory/product_stock_form.html
+msgid "What do you want to do?"
+msgstr "ماذا تريد أن تفعل؟"
+
+#: inventory/views.py templates/inventory/product_stock_form.html
+msgid "Set the stock to this number"
+msgstr "تعيين الرصيد على هذا الرقم"
+
+#: inventory/views.py templates/inventory/product_stock_form.html
+msgid "For stock-taking: type what you counted on the shelf."
+msgstr "للجرد: اكتب الكمية التي عددتها فعلياً على الرف."
+
+#: inventory/views.py templates/inventory/product_stock_form.html
+msgid "Add this much to the stock"
+msgstr "إضافة هذه الكمية إلى الرصيد"
+
+#: inventory/views.py templates/inventory/product_stock_form.html
+msgid "For goods received outside a purchase invoice."
+msgstr "للبضاعة المستلمة خارج فاتورة شراء."
+
+#: inventory/views.py templates/inventory/product_stock_form.html
+msgid "Subtract this much from the stock"
+msgstr "خصم هذه الكمية من الرصيد"
+
+#: inventory/views.py templates/inventory/product_stock_form.html
+msgid "That would leave a negative balance. Current stock is %(current)s."
+msgstr "هذا سيجعل الرصيد سالباً. الرصيد الحالي %(current)s."

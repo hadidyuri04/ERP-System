@@ -29,6 +29,14 @@
 
     {# Stock lives on batches and balances, not on the product, so it gets its
        own panel and its own document rather than a field on this form. #}
+    {% if product and product.image %}
+      <div class="card-soft card-pad mt-3">
+        <div class="form-section-title">{% trans "Product Image" %}</div>
+        <img src="{{ product.image.url }}" alt="{{ product.name }}"
+             style="max-width:220px;border-radius:14px;border:1px solid var(--border)">
+      </div>
+    {% endif %}
+
     {% if product %}
       <div class="card-soft mt-3">
         <div class="card-head">

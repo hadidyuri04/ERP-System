@@ -106,6 +106,13 @@ USE_TZ = True
 
 # Static files
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# Uploaded files: product images and the company logo.
+# Without MEDIA_ROOT, upload_to='products/' writes into the project root and the
+# files can never be served, so uploads appear to work but nothing displays.
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = "accounts.User"

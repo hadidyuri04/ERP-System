@@ -201,18 +201,36 @@ def product_stock_set_view(request, pk):
         warehouse_id = request.POST.get("warehouse")
         raw_quantity = (request.POST.get("counted_quantity") or "").strip()
         note = (request.POST.get("notes") or "").strip()
+        mode = request.POST.get("mode") or "set"
 
         warehouse = warehouses.filter(pk=warehouse_id).first()
 
         try:
-            counted = Decimal(raw_quantity)
+            amount = Decimal(raw_quantity)
         except (InvalidOperation, TypeError):
-            counted = None
+            amount = None
+
+        counted = None
+        if warehouse is not None and amount is not None:
+            current = balances.get(warehouse.id, Decimal("0.000"))
+            if mode == "add":
+                counted = current + amount
+            elif mode == "subtract":
+                counted = current - amount
+            else:
+                counted = amount
 
         if warehouse is None:
             messages.error(request, _("Select a warehouse."))
-        elif counted is None or counted < 0:
+        elif amount is None or amount < 0:
             messages.error(request, _("Enter a quantity of zero or more."))
+        elif counted < 0:
+            messages.error(
+                request,
+                _("That would leave a negative balance. Current stock is %(current)s.") % {
+                    "current": balances.get(warehouse.id, Decimal("0.000")),
+                },
+            )
         else:
             stamp = timezone.now().strftime("%Y%m%d%H%M%S%f")
             adjustment = StockAdjustment.objects.create(

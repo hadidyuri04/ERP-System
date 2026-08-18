@@ -36,11 +36,38 @@ def pos_terminal(request):
     # NEW LOGIC: Fetch products and map real-time stock for the active session's warehouse
     from inventory.models import Product, StockBalance
     
-    products = list(Product.objects.filter(is_active=True))
+    # Only sellable items reach the till, so a cashier cannot add something
+    # that checkout would refuse.
+    products = list(
+        Product.objects
+        .select_related("tax_rate")
+        .filter(is_active=True, is_sellable=True)
+    )
     stock_balances = StockBalance.objects.filter(warehouse=active_session.warehouse)
-    
-    # Calculate true available stock (Quantity - Reserved)
-    stock_dict = {sb.product_id: (sb.quantity - sb.reserved_quantity) for sb in stock_balances}
+    reserved = {sb.product_id: sb.reserved_quantity for sb in stock_balances}
+
+    # Availability must come from the batches, because that is what the sale
+    # actually draws from. Reading StockBalance here made items look in stock
+    # and then fail at checkout with "insufficient unexpired stock".
+    from inventory.models import StockBatch
+
+    today = timezone.now().date()
+    sellable = (
+        StockBatch.objects
+        .filter(
+            warehouse=active_session.warehouse,
+            status=StockBatch.BatchStatus.ACTIVE,
+            quantity_remaining__gt=0,
+        )
+        .filter(Q(expiration_date__isnull=True) | Q(expiration_date__gte=today))
+        .values("product_id")
+        .annotate(total=Sum("quantity_remaining"))
+    )
+
+    stock_dict = {
+        row["product_id"]: row["total"] - reserved.get(row["product_id"], 0)
+        for row in sellable
+    }
 
     for p in products:
         p.available_stock = stock_dict.get(p.id, 0)
@@ -67,14 +94,22 @@ def search_product(request):
         return JsonResponse({"ok": False, "error": str(_("Search query and warehouse ID are required."))}, status=400)
 
     # 1. Prioritize Exact Barcode Match
-    products = Product.objects.filter(barcode=query, is_active=True)
+    products = Product.objects.filter(
+        barcode=query, is_active=True, is_sellable=True
+    ).select_related("tax_rate")
 
     # 2. Fallback to Name or Product Code
+    #
+    # Product.name is a Python property, not a column, so filtering on "name"
+    # raises FieldError. The searchable columns are name_en and name_ar.
     if not products.exists():
         products = Product.objects.filter(
-            Q(name__icontains=query) | Q(code__icontains=query),
-            is_active=True
-        )[:20]
+            Q(name_en__icontains=query)
+            | Q(name_ar__icontains=query)
+            | Q(code__icontains=query),
+            is_active=True,
+            is_sellable=True,
+        ).select_related("tax_rate")[:20]
 
     results = []
     for product in products:
@@ -86,8 +121,14 @@ def search_product(request):
             "name": product.name,
             "code": product.code,
             "barcode": product.barcode,
+            # str() on a Decimal is deliberate: it never localises, so the
+            # browser always receives "0.350" and never "0,350".
             "selling_price": str(product.selling_price),
-            "tax_rate": "0.00",
+            "tax_rate": str(
+                product.tax_rate.rate
+                if product.tax_rate and product.tax_rate.subject_to_tax
+                else "0.000"
+            ),
             "available_stock": str(available_qty),
             "track_expiration": product.track_expiration
         })
