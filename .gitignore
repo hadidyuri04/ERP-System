@@ -12,6 +12,15 @@ __pycache__/
 *.log
 db.sqlite3
 
+# Uploaded files (product images, company logo) belong to the running site,
+# not to the source code. Never commit customer data.
+media/
+staticfiles/
+
+# Stray uploads from before MEDIA_ROOT was configured
+/products/
+/company_logo/
+
 # IDE
 .vscode/
 .idea/

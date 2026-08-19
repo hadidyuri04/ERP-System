@@ -1,5 +1,5 @@
 {% extends "core/base.html" %}
-{% load i18n %}
+{% load i18n l10n %}
 {% block title %}{% trans "Point of sale" %}{% endblock %}
 
 {% block page_header %}
@@ -102,8 +102,11 @@
           data-code="{{ product.code }}" 
           data-barcode="{{ product.barcode|default:'' }}" 
           data-name="{{ product.name }}" 
-          data-price="{{ product.selling_price }}" 
-          data-stock="{{ product.available_stock|default:0 }}">
+          {# unlocalize is essential: in Arabic Django renders 0.350 as "0,350"
+             and JavaScript's Number() turns that into NaN. #}
+          data-price="{{ product.selling_price|unlocalize }}"
+          data-stock="{{ product.available_stock|default:0|unlocalize }}"
+          data-tax-rate="{% if product.tax_rate and product.tax_rate.subject_to_tax %}{{ product.tax_rate.rate|unlocalize }}{% else %}0{% endif %}">
           <span class="t-thumb"><i class="bi bi-box-seam"></i></span>
           <span class="t-stock {% if product.available_stock <= 0 %}text-danger fw-bold{% endif %}">
             {{ product.code }} · 
@@ -173,6 +176,14 @@
       <div class="total-line">
         <span>{% trans "Items" %}</span>
         <span id="quantity-total">0</span>
+      </div>
+      <div class="total-line">
+        <span>{% trans "Subtotal" %}</span>
+        <span id="pos-subtotal">0.000</span>
+      </div>
+      <div class="total-line">
+        <span>{% trans "Tax" %}</span>
+        <span id="pos-tax">0.000</span>
       </div>
       <div class="total-line grand">
         <span>{% trans "Total" %}</span>
@@ -295,13 +306,24 @@
     else alert(message); 
   }
 
+  // Matches finance/TaxRate.tax_for() on the server: round half up to 3 dp.
+  function lineTax(item) {
+    const rate = Number(item.tax_rate) || 0;
+    if (!rate) return 0;
+    // amount * rate / 100, rounded half up to 3 decimals:
+    //   (amount * rate / 100) * 1000  ==  amount * rate * 10
+    return Math.round(item.quantity * item.unit_price * rate * 10) / 1000;
+  }
+
   function draw() {
-    cartRoot.innerHTML = ''; 
-    let total = 0; 
+    cartRoot.innerHTML = '';
+    let subtotal = 0;
+    let taxTotal = 0;
     let quantity = 0;
-    
+
     for (const item of cart.values()) {
-      total += item.quantity * item.unit_price; 
+      subtotal += item.quantity * item.unit_price;
+      taxTotal += lineTax(item);
       quantity += item.quantity;
       
       const row = document.createElement('div'); 
@@ -347,8 +369,12 @@
       cartRoot.appendChild(row);
     }
     
-    document.getElementById('total').textContent = money(total); 
-    document.getElementById('quantity-total').textContent = quantity; 
+    // The server recomputes tax from each product's rate, so these three must
+    // agree with it or the payment check rejects the sale.
+    document.getElementById('pos-subtotal').textContent = money(subtotal);
+    document.getElementById('pos-tax').textContent = money(taxTotal);
+    document.getElementById('total').textContent = money(subtotal + taxTotal);
+    document.getElementById('quantity-total').textContent = quantity;
     document.getElementById('cart-count').textContent = cart.size; 
     empty.hidden = cart.size > 0; 
     complete.disabled = cart.size === 0;
@@ -390,6 +416,7 @@
             name: button.dataset.name, 
             quantity: 1, 
             unit_price: Number(button.dataset.price),
+            tax_rate: Number(button.dataset.taxRate) || 0,
             available_stock: stock
           });
         }
@@ -466,6 +493,7 @@
                 name: prod.name,
                 quantity: 1,
                 unit_price: Number(prod.selling_price),
+                tax_rate: Number(prod.tax_rate) || 0,
                 available_stock: Number(prod.available_stock)
               });
             }

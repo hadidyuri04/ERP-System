@@ -1,0 +1,95 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Notifications" %}{% endblock %}
+
+{% block page_header %}
+  <h1>{% trans "Notifications" %}</h1>
+  <p>{% trans "Low stock and expiry alerts" %}</p>
+{% endblock %}
+
+{% block topbar_actions %}
+  {% if unread_total %}
+    <form method="post" action="{% url 'notifications:mark_all_read' %}" class="d-inline">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-soft">
+        <i class="bi bi-check2-all me-1"></i>{% trans "Mark all as read" %}
+      </button>
+    </form>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+{# signed requirements module 17 #}
+
+<div class="card-soft">
+  <div class="filter-bar">
+    <a href="?show=unread" class="btn btn-sm {% if show == 'unread' %}btn-primary{% else %}btn-ghost{% endif %}">
+      {% trans "Unread" %}{% if unread_total %} ({{ unread_total }}){% endif %}
+    </a>
+    <a href="?show=all" class="btn btn-sm {% if show == 'all' %}btn-primary{% else %}btn-ghost{% endif %}">
+      {% trans "All" %}
+    </a>
+  </div>
+
+  <div class="table-wrap">
+    <table class="table-erp">
+      <thead>
+        <tr>
+          <th style="width:15%">{% trans "Notification Type" %}</th>
+          <th>{% trans "Title" %}</th>
+          <th style="width:14%">{% trans "Created At" %}</th>
+          <th style="width:60px"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for note in notifications %}
+          <tr data-row {% if note.is_read %}class="cell-muted"{% endif %}>
+            <td>
+              {% if note.notification_type == 'EXPIRED' %}
+                <span class="badge-soft badge-danger">{{ note.get_notification_type_display }}</span>
+              {% elif note.notification_type == 'EXPIRING_SOON' %}
+                <span class="badge-soft badge-warning">{{ note.get_notification_type_display }}</span>
+              {% elif note.notification_type == 'LOW_STOCK' %}
+                <span class="badge-soft badge-info">{{ note.get_notification_type_display }}</span>
+              {% else %}
+                <span class="badge-soft badge-neutral">{{ note.get_notification_type_display }}</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="{% if not note.is_read %}cell-strong{% endif %}">{{ note.title }}</div>
+              <div class="small text-muted">{{ note.message }}</div>
+            </td>
+            <td class="cell-muted">{{ note.created_at|date:"Y-m-d H:i" }}</td>
+            <td>
+              {% if not note.is_read %}
+                <form method="post" action="{% url 'notifications:mark_read' note.pk %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                  <button type="submit" class="btn-icon" aria-label="{% trans "Mark as read" %}">
+                    <i class="bi bi-check2"></i>
+                  </button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="4">
+              <div class="empty-state">
+                <i class="bi bi-bell"></i>
+                <p>{% trans "You are all caught up" %}</p>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<p class="field-hint mt-3">
+  <i class="bi bi-info-circle me-1"></i>
+  {% trans "Alerts clear themselves once the stock is topped up or the expired batch is written off." %}
+</p>
+{% endblock %}
