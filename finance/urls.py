@@ -48,6 +48,11 @@ urlpatterns = [
         name="balance_sheet",
     ),
     path(
+        "reports/cash-flow/",
+        views.cash_flow_statement_view,
+        name="cash_flow_statement",
+    ),
+    path(
         "periods/",
         views.fiscal_period_list_view,
         name="fiscal_period_list",

@@ -156,12 +156,14 @@ class AccountAdmin(admin.ModelAdmin):
         "name",
         "account_type",
         "parent",
+        "is_cash_equivalent",
         "allow_posting",
         "is_active",
     )
 
     list_filter = (
         "account_type",
+        "is_cash_equivalent",
         "allow_posting",
         "is_active",
     )
@@ -228,6 +230,7 @@ class JournalEntryAdmin(admin.ModelAdmin):
         "entry_number",
         "date",
         "source_type",
+        "cash_flow_activity",
         "status",
         "created_by",
         "approved_by",
@@ -236,6 +239,7 @@ class JournalEntryAdmin(admin.ModelAdmin):
     list_filter = (
         "status",
         "source_type",
+        "cash_flow_activity",
         "date",
     )
 
@@ -259,6 +263,7 @@ class JournalEntryAdmin(admin.ModelAdmin):
                 "description",
                 "source_type",
                 "source_id",
+                "cash_flow_activity",
                 "status",
                 "created_by",
                 "approved_by",

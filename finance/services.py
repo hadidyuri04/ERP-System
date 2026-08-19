@@ -132,6 +132,11 @@ def validate_cash_bank_account(account):
             _("The selected cash or bank account does not allow posting.")
         )
 
+    if not account.is_cash_equivalent:
+        raise ValidationError(
+            _("The selected account is not marked as cash or a cash equivalent.")
+        )
+
 
 @transaction.atomic
 def post_journal_entry(entry_id, user):
@@ -178,6 +183,14 @@ def post_journal_entry(entry_id, user):
 
         total_debit += line.debit
         total_credit += line.credit
+
+    if (
+        any(line.account.is_cash_equivalent for line in lines)
+        and entry.cash_flow_activity == JournalEntry.CashFlowActivity.NONE
+    ):
+        raise ValidationError(
+            _("Select a cash-flow activity before posting a journal that changes cash.")
+        )
 
     # 4. Debit must equal credit
     if total_debit != total_credit:
@@ -250,6 +263,7 @@ def post_receipt_voucher(voucher_id, user):
         description=f"Receipt Voucher {voucher.voucher_number}",
         source_type=JournalEntry.SourceType.RECEIPT,
         source_id=voucher.id,
+        cash_flow_activity=JournalEntry.CashFlowActivity.OPERATING,
         status=JournalEntry.Status.DRAFT,
         created_by=user,
     )
@@ -337,6 +351,7 @@ def post_payment_voucher(voucher_id, user):
         description=f"Payment Voucher {voucher.voucher_number}",
         source_type=JournalEntry.SourceType.PAYMENT,
         source_id=voucher.id,
+        cash_flow_activity=JournalEntry.CashFlowActivity.OPERATING,
         status=JournalEntry.Status.DRAFT,
         created_by=user,
     )
@@ -472,6 +487,7 @@ def post_purchase_invoice(invoice_id, user):
         },
         source_type=JournalEntry.SourceType.PURCHASE,
         source_id=invoice.id,
+        cash_flow_activity=JournalEntry.CashFlowActivity.OPERATING,
         status=JournalEntry.Status.DRAFT,
         created_by=user,
     )
@@ -682,6 +698,7 @@ def post_pos_sale(sale_id, user):
         },
         source_type=JournalEntry.SourceType.POS_SALE,
         source_id=sale.id,
+        cash_flow_activity=JournalEntry.CashFlowActivity.OPERATING,
         status=JournalEntry.Status.DRAFT,
         created_by=user,
     )
@@ -972,6 +989,7 @@ def reverse_journal_entry(entry_id, user, reason):
         },
         source_type=JournalEntry.SourceType.REVERSAL,
         source_id=original.pk,
+        cash_flow_activity=original.cash_flow_activity,
         status=JournalEntry.Status.DRAFT,
         created_by=user,
         reversal_of=original,

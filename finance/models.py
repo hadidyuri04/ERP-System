@@ -227,6 +227,11 @@ class Account(models.Model):
 
     allow_posting = models.BooleanField(_("Allow Posting"), default=True)
     is_active = models.BooleanField(_("Is Active"), default=True)
+    is_cash_equivalent = models.BooleanField(
+        _("Cash or Cash Equivalent"),
+        default=False,
+        help_text=_("Include this account in the cash-flow statement."),
+    )
 
     created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
     updated_at = models.DateTimeField(_("Updated At"), auto_now=True)
@@ -255,6 +260,12 @@ class JournalEntry(models.Model):
         SALES_RETURN = "sales_return", _("Sales Return")
         REVERSAL = "reversal", _("Journal Reversal")
 
+    class CashFlowActivity(models.TextChoices):
+        NONE = "none", _("No Cash-Flow Effect")
+        OPERATING = "operating", _("Operating Activity")
+        INVESTING = "investing", _("Investing Activity")
+        FINANCING = "financing", _("Financing Activity")
+
     entry_number = models.CharField(
         _("Entry Number"),
         max_length=30,
@@ -276,6 +287,14 @@ class JournalEntry(models.Model):
         _("Source ID"),
         null=True,
         blank=True,
+    )
+
+    cash_flow_activity = models.CharField(
+        _("Cash-Flow Activity"),
+        max_length=20,
+        choices=CashFlowActivity.choices,
+        default=CashFlowActivity.NONE,
+        help_text=_("Required when this journal changes cash or bank balances."),
     )
 
     status = models.CharField(

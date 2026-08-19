@@ -41,6 +41,7 @@ from .models import (
 )
 from .reports import (
     generate_balance_sheet,
+    generate_cash_flow_statement,
     generate_customer_statement,
     generate_income_statement,
     generate_payables_aging,
@@ -95,6 +96,7 @@ class ManualJournalViewTests(TestCase):
             "entry_number": "MJE-001",
             "date": date.today().isoformat(),
             "description": "Manual journal test",
+            "cash_flow_activity": JournalEntry.CashFlowActivity.NONE,
             "lines-TOTAL_FORMS": "2",
             "lines-INITIAL_FORMS": "0",
             "lines-MIN_NUM_FORMS": "0",
@@ -176,7 +178,12 @@ class FinancePostingTests(TestCase):
             "6300": ("Waste expense", Account.AccountType.EXPENSE),
         }
         self.accounts = {
-            code: Account.objects.create(code=code, name=name, account_type=account_type)
+            code: Account.objects.create(
+                code=code,
+                name=name,
+                account_type=account_type,
+                is_cash_equivalent=code in {"1100", "1200", "1210"},
+            )
             for code, (name, account_type) in account_data.items()
         }
 
@@ -197,6 +204,7 @@ class FinancePostingTests(TestCase):
         journal = JournalEntry.objects.create(
             entry_number="JE-001",
             date=date.today(),
+            cash_flow_activity=JournalEntry.CashFlowActivity.OPERATING,
             created_by=self.user,
         )
         JournalEntryLine.objects.create(
@@ -282,6 +290,11 @@ class FinancePostingTests(TestCase):
         self.assertEqual(
             JournalEntry.objects.filter(status=JournalEntry.Status.POSTED).count(),
             2,
+        )
+        self.assertFalse(
+            JournalEntry.objects.filter(
+                cash_flow_activity=JournalEntry.CashFlowActivity.NONE,
+            ).exists()
         )
 
     def test_source_can_only_be_posted_once(self):
@@ -1802,6 +1815,7 @@ class AgingReportTests(TestCase):
             code="1100",
             name="Cash",
             account_type=Account.AccountType.ASSET,
+            is_cash_equivalent=True,
         )
         self.customer = Customer.objects.create(
             code="AGE-C001",
@@ -2040,3 +2054,198 @@ class AgingReportTests(TestCase):
         self.client.force_login(self.cashier)
         self.assertEqual(self.client.get(receivables_url).status_code, 403)
         self.assertEqual(self.client.get(payables_url).status_code, 403)
+
+
+class CashFlowStatementTests(TestCase):
+    def setUp(self):
+        self.accountant = get_user_model().objects.create_user(
+            username="cashflow-accountant",
+            password="test-password",
+            role="accountant",
+        )
+        self.cashier = get_user_model().objects.create_user(
+            username="cashflow-cashier",
+            password="test-password",
+            role="cashier",
+        )
+        create_required_fiscal_years(2026, date.today().year)
+        self.cash = Account.objects.create(
+            code="CF1100",
+            name="Cash-flow cash",
+            account_type=Account.AccountType.ASSET,
+            is_cash_equivalent=True,
+        )
+        self.counterpart = Account.objects.create(
+            code="CF3000",
+            name="Cash-flow counterpart",
+            account_type=Account.AccountType.EQUITY,
+        )
+
+    def create_cash_journal(
+        self,
+        number,
+        journal_date,
+        amount,
+        activity,
+        *,
+        inflow=True,
+        status=JournalEntry.Status.POSTED,
+    ):
+        journal = JournalEntry.objects.create(
+            entry_number=number,
+            date=journal_date,
+            description=number,
+            cash_flow_activity=activity,
+            status=status,
+            created_by=self.accountant,
+            approved_by=(
+                self.accountant if status == JournalEntry.Status.POSTED else None
+            ),
+        )
+        JournalEntryLine.objects.create(
+            journal_entry=journal,
+            account=self.cash,
+            debit=amount if inflow else Decimal("0.000"),
+            credit=Decimal("0.000") if inflow else amount,
+        )
+        JournalEntryLine.objects.create(
+            journal_entry=journal,
+            account=self.counterpart,
+            debit=Decimal("0.000") if inflow else amount,
+            credit=amount if inflow else Decimal("0.000"),
+        )
+        return journal
+
+    def test_cash_flow_groups_activities_and_reconciles_cash(self):
+        self.create_cash_journal(
+            "CF-OPEN",
+            date(2026, 1, 1),
+            Decimal("100.000"),
+            JournalEntry.CashFlowActivity.FINANCING,
+        )
+        self.create_cash_journal(
+            "CF-OPERATING-IN",
+            date(2026, 2, 5),
+            Decimal("50.000"),
+            JournalEntry.CashFlowActivity.OPERATING,
+        )
+        self.create_cash_journal(
+            "CF-OPERATING-OUT",
+            date(2026, 2, 6),
+            Decimal("20.000"),
+            JournalEntry.CashFlowActivity.OPERATING,
+            inflow=False,
+        )
+        self.create_cash_journal(
+            "CF-INVESTING",
+            date(2026, 2, 7),
+            Decimal("30.000"),
+            JournalEntry.CashFlowActivity.INVESTING,
+            inflow=False,
+        )
+        self.create_cash_journal(
+            "CF-FINANCING",
+            date(2026, 2, 8),
+            Decimal("40.000"),
+            JournalEntry.CashFlowActivity.FINANCING,
+        )
+        self.create_cash_journal(
+            "CF-DRAFT",
+            date(2026, 2, 9),
+            Decimal("999.000"),
+            JournalEntry.CashFlowActivity.OPERATING,
+            status=JournalEntry.Status.DRAFT,
+        )
+
+        statement = generate_cash_flow_statement(
+            start_date=date(2026, 2, 1),
+            end_date=date(2026, 2, 28),
+        )
+
+        self.assertEqual(statement["opening_cash"], Decimal("100.000"))
+        self.assertEqual(statement["operating_total"], Decimal("30.000"))
+        self.assertEqual(statement["investing_total"], Decimal("-30.000"))
+        self.assertEqual(statement["financing_total"], Decimal("40.000"))
+        self.assertEqual(statement["total_inflows"], Decimal("90.000"))
+        self.assertEqual(statement["total_outflows"], Decimal("50.000"))
+        self.assertEqual(statement["net_change"], Decimal("40.000"))
+        self.assertEqual(statement["closing_cash"], Decimal("140.000"))
+        self.assertTrue(statement["is_reconciled"])
+
+    def test_cash_journal_requires_activity_before_posting(self):
+        journal = self.create_cash_journal(
+            "CF-VALIDATION",
+            date.today(),
+            Decimal("25.000"),
+            JournalEntry.CashFlowActivity.NONE,
+            status=JournalEntry.Status.DRAFT,
+        )
+
+        with self.assertRaisesMessage(ValidationError, "cash-flow activity"):
+            post_journal_entry(journal.pk, self.accountant)
+
+        journal.cash_flow_activity = JournalEntry.CashFlowActivity.INVESTING
+        journal.save(update_fields=["cash_flow_activity"])
+        post_journal_entry(journal.pk, self.accountant)
+        journal.refresh_from_db()
+        self.assertEqual(journal.status, JournalEntry.Status.POSTED)
+
+    def test_reversal_cancels_cash_flow_and_keeps_classification(self):
+        original = self.create_cash_journal(
+            "CF-REVERSE",
+            date.today(),
+            Decimal("35.000"),
+            JournalEntry.CashFlowActivity.OPERATING,
+        )
+
+        reversal = reverse_journal_entry(
+            original.pk,
+            self.accountant,
+            "Incorrect cash receipt",
+        )
+        statement = generate_cash_flow_statement(
+            start_date=date.today(),
+            end_date=date.today(),
+        )
+
+        self.assertEqual(
+            reversal.cash_flow_activity,
+            JournalEntry.CashFlowActivity.OPERATING,
+        )
+        self.assertEqual(statement["operating_total"], Decimal("0.000"))
+        self.assertEqual(statement["net_change"], Decimal("0.000"))
+
+    def test_cash_flow_page_validates_dates_and_permissions(self):
+        url = reverse("finance:cash_flow_statement")
+        self.client.force_login(self.accountant)
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Cash-flow statement")
+
+        invalid = self.client.get(
+            url,
+            {"start_date": "2026-03-01", "end_date": "2026-02-01"},
+        )
+        self.assertContains(
+            invalid,
+            "The start date cannot be later than the end date.",
+        )
+
+        self.client.force_login(self.cashier)
+        self.assertEqual(self.client.get(url).status_code, 403)
+
+    def test_unclassified_entry_links_to_journal_detail(self):
+        journal = self.create_cash_journal(
+            "CF-UNCLASSIFIED",
+            date.today(),
+            Decimal("15.000"),
+            JournalEntry.CashFlowActivity.NONE,
+        )
+        self.client.force_login(self.accountant)
+
+        response = self.client.get(reverse("finance:cash_flow_statement"))
+
+        detail_url = reverse("finance:journal_detail", args=[journal.pk])
+        self.assertContains(response, f'href="{detail_url}"')
+        self.assertContains(response, "CF-UNCLASSIFIED")

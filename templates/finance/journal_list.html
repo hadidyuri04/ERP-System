@@ -28,11 +28,11 @@
   </form>
   <div class="table-wrap">
     <table class="table-erp">
-      <thead><tr><th>{% trans "Number" %}</th><th>{% trans "Date" %}</th><th>{% trans "Description" %}</th><th>{% trans "Source" %}</th><th>{% trans "Status" %}</th></tr></thead>
+      <thead><tr><th>{% trans "Number" %}</th><th>{% trans "Date" %}</th><th>{% trans "Description" %}</th><th>{% trans "Source" %}</th><th>{% trans "Cash-flow activity" %}</th><th>{% trans "Status" %}</th></tr></thead>
       <tbody>
       {% for entry in entries %}
-      <tr><td><a class="record-link" href="{% url 'finance:journal_detail' entry.pk %}">{{ entry.entry_number }}</a></td><td>{{ entry.date }}</td><td>{{ entry.description|default:"—"|truncatechars:55 }}</td><td>{{ entry.get_source_type_display }}</td><td><span class="badge-soft {% if entry.status == 'posted' %}badge-success{% elif entry.status == 'reversed' %}badge-danger{% else %}badge-warning{% endif %}">{{ entry.get_status_display }}</span></td></tr>
-      {% empty %}<tr><td colspan="5"><div class="empty-inline"><i class="bi bi-journal-text"></i>{% trans "No journal entries." %}</div></td></tr>{% endfor %}
+      <tr><td><a class="record-link" href="{% url 'finance:journal_detail' entry.pk %}">{{ entry.entry_number }}</a></td><td>{{ entry.date }}</td><td>{{ entry.description|default:"-"|truncatechars:55 }}</td><td>{{ entry.get_source_type_display }}</td><td>{{ entry.get_cash_flow_activity_display }}</td><td><span class="badge-soft {% if entry.status == 'posted' %}badge-success{% elif entry.status == 'reversed' %}badge-danger{% else %}badge-warning{% endif %}">{{ entry.get_status_display }}</span></td></tr>
+      {% empty %}<tr><td colspan="6"><div class="empty-inline"><i class="bi bi-journal-text"></i>{% trans "No journal entries." %}</div></td></tr>{% endfor %}
       </tbody>
     </table>
   </div>
