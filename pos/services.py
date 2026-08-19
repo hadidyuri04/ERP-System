@@ -8,20 +8,21 @@ from inventory.services import remove_stock, get_available_stock
 from .models import POSSale, POSSaleItem, POSPayment
 
 @transaction.atomic
-def complete_sale(warehouse, cashier, items_data, payments_data, customer=None, notes="", session=None):
+def complete_sale(warehouse, cashier, items_data, payments_data, customer=None, notes="", session=None, discount_code_obj=None):
     """
     Completes a POS sale:
     1. Validates available stock and expiry.
-    2. Creates POSSale and POSSaleItems.
-    3. Triggers FEFO stock removal and stock movements.
-    4. Records POSPayments.
+    2. Applies item discounts & optional DiscountCode header discount.
+    3. Creates POSSale and POSSaleItems.
+    4. Triggers FEFO stock removal and stock movements.
+    5. Records POSPayments and increments DiscountCode usage counter.
     """
     if not items_data:
         raise ValidationError(_("Cannot complete a sale with an empty cart."))
 
     # Calculate totals
-    subtotal = Decimal('0.000')        # goods value before tax and discount
-    total_discount = Decimal('0.000')
+    subtotal = Decimal('0.000')
+    line_discounts_total = Decimal('0.000')
     total_tax = Decimal('0.000')
     sale_items_to_create = []
 
@@ -31,8 +32,6 @@ def complete_sale(warehouse, cashier, items_data, payments_data, customer=None, 
         unit_price = Decimal(str(item_data['unit_price']))
         discount_amount = Decimal(str(item_data.get('discount_amount', '0.000')))
 
-        # Tax is derived from the product's tax rate, never taken from the
-        # client payload, so a tampered request cannot understate VAT.
         tax_amount = product.tax_for((quantity * unit_price) - discount_amount)
 
         if not product.is_sellable:
@@ -52,7 +51,6 @@ def complete_sale(warehouse, cashier, items_data, payments_data, customer=None, 
                     }
                 )
 
-        # Check available stock before committing
         available = get_available_stock(product, warehouse)
         if available < quantity:
             raise ValidationError(
@@ -66,7 +64,7 @@ def complete_sale(warehouse, cashier, items_data, payments_data, customer=None, 
         line_total = (quantity * unit_price) - discount_amount + tax_amount
 
         subtotal += quantity * unit_price
-        total_discount += discount_amount
+        line_discounts_total += discount_amount
         total_tax += tax_amount
 
         sale_items_to_create.append({
@@ -78,12 +76,19 @@ def complete_sale(warehouse, cashier, items_data, payments_data, customer=None, 
             'line_total': line_total
         })
 
-    grand_total = subtotal - total_discount + total_tax
+    # Validate and process header Discount Code if supplied
+    header_code_discount = Decimal('0.000')
+    if discount_code_obj:
+        is_valid, err_msg = discount_code_obj.is_valid(subtotal)
+        if not is_valid:
+            raise ValidationError(err_msg)
+        header_code_discount = Decimal(str(discount_code_obj.calculate_discount(subtotal)))
 
-    # Validate payments match total (or handle credit logic)
+    total_discount = line_discounts_total + header_code_discount
+    grand_total = max(Decimal('0.000'), subtotal - total_discount + total_tax)
+
     total_paid = sum(Decimal(str(p['amount'])) for p in payments_data)
     
-    # Create POSSale header
     sale_number = f"POS-{timezone.now().strftime('%Y%m%d%H%M%S')}"
     sale = POSSale.objects.create(
         session=session,
@@ -91,6 +96,7 @@ def complete_sale(warehouse, cashier, items_data, payments_data, customer=None, 
         customer=customer,
         warehouse=warehouse,
         cashier=cashier,
+        discount_code=discount_code_obj,
         date=timezone.now(),
         status=POSSale.SaleStatus.COMPLETED,
         subtotal=subtotal,
@@ -102,12 +108,15 @@ def complete_sale(warehouse, cashier, items_data, payments_data, customer=None, 
         notes=notes
     )
 
+    if discount_code_obj:
+        discount_code_obj.used_count += 1
+        discount_code_obj.save(update_fields=['used_count'])
+
     # Process items and inventory removal (FEFO)
     for item_data in sale_items_to_create:
         product = item_data['product']
         quantity = item_data['quantity']
         
-        # Remove stock using inventory service FEFO logic
         removed_cost = remove_stock(
             product=product,
             warehouse=warehouse,
@@ -129,7 +138,6 @@ def complete_sale(warehouse, cashier, items_data, payments_data, customer=None, 
             line_total=item_data['line_total']
         )
 
-    # Record Payments
     for payment_data in payments_data:
         POSPayment.objects.create(
             sale=sale,

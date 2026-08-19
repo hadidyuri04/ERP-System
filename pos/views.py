@@ -14,12 +14,44 @@ from django.core.paginator import Paginator
 from core.permissions import cashier_required
 from customers.models import Customer
 from inventory.models import Product, Warehouse, StockBalance
-from .models import POSSession, POSCashTransaction, POSSale, POSPayment
+from .models import POSSession, POSCashTransaction, POSSale, POSPayment, DiscountCode
 from .services import complete_sale, hold_sale
 
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 
+@login_required
+@cashier_required
+@require_GET
+def validate_discount(request):
+    """API endpoint to validate a coupon/discount code and return calculated discount."""
+    code_str = request.GET.get("code", "").strip().upper()
+    subtotal_str = request.GET.get("subtotal", "0.000")
+
+    if not code_str:
+        return JsonResponse({"ok": False, "error": str(_("Please enter a discount code."))}, status=400)
+
+    try:
+        subtotal = Decimal(subtotal_str)
+        discount_obj = DiscountCode.objects.get(code__iexact=code_str)
+        
+        is_valid, err_msg = discount_obj.is_valid(subtotal)
+        if not is_valid:
+            return JsonResponse({"ok": False, "error": str(err_msg)}, status=400)
+
+        discount_val = discount_obj.calculate_discount(subtotal)
+        return JsonResponse({
+            "ok": True,
+            "code": discount_obj.code,
+            "discount_amount": str(discount_val),
+            "discount_type": discount_obj.discount_type,
+            "value": str(discount_obj.value)
+        })
+    except DiscountCode.DoesNotExist:
+        return JsonResponse({"ok": False, "error": str(_("Invalid discount code."))}, status=404)
+    except Exception as e:
+        return JsonResponse({"ok": False, "error": str(e)}, status=400)
+    
 @login_required
 @cashier_required
 @require_POST
@@ -287,9 +319,7 @@ def sale_detail(request, pk):
 @cashier_required
 @require_POST
 def complete_sale_view(request):
-    """Handles checkout payload, links active session, processes services, and returns receipt metadata."""
     try:
-        # Locate cashier's active session
         active_session = POSSession.objects.filter(
             cashier=request.user,
             status=POSSession.SessionStatus.OPEN
@@ -306,7 +336,12 @@ def complete_sale_view(request):
         warehouse = Warehouse.objects.get(pk=warehouse_id, is_active=True)
         customer_id = payload.get("customer_id")
         customer = Customer.objects.get(pk=customer_id, is_active=True) if customer_id else None
-        
+
+        discount_code_str = payload.get("discount_code", "").strip()
+        discount_code_obj = None
+        if discount_code_str:
+            discount_code_obj = DiscountCode.objects.filter(code__iexact=discount_code_str).first()
+
         items_data = []
         for item in payload.get("items", []):
             product = Product.objects.get(pk=item["product_id"], is_active=True)
@@ -329,11 +364,12 @@ def complete_sale_view(request):
         sale = complete_sale(
             warehouse=warehouse,
             cashier=request.user,
-            session=active_session,  # Pass active session instance to service
+            session=active_session,
             items_data=items_data,
             payments_data=payments_data,
             customer=customer,
             notes=payload.get("notes", ""),
+            discount_code_obj=discount_code_obj
         )
         return JsonResponse({
             "ok": True,

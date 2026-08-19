@@ -1,8 +1,74 @@
 from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 
+class DiscountCode(models.Model):
+    """Stores promotional and coupon discount codes for POS checkout."""
+    class DiscountType(models.TextChoices):
+        PERCENTAGE = 'PERCENTAGE', _('Percentage (%)')
+        FIXED = 'FIXED', _('Fixed Amount')
 
+    code = models.CharField(_("Code"), max_length=50, unique=True)
+    discount_type = models.CharField(
+        _("Discount Type"),
+        max_length=20,
+        choices=DiscountType.choices,
+        default=DiscountType.PERCENTAGE
+    )
+    value = models.DecimalField(_("Discount Value"), max_digits=12, decimal_places=3)
+    max_discount_amount = models.DecimalField(
+        _("Max Discount Amount"), max_digits=12, decimal_places=3, blank=True, null=True
+    )
+    min_order_amount = models.DecimalField(
+        _("Minimum Order Amount"), max_digits=12, decimal_places=3, default=0.000
+    )
+    usage_limit = models.PositiveIntegerField(_("Usage Limit"), blank=True, null=True)
+    used_count = models.PositiveIntegerField(_("Times Used"), default=0)
+    valid_from = models.DateTimeField(_("Valid From"), blank=True, null=True)
+    valid_to = models.DateTimeField(_("Valid To"), blank=True, null=True)
+    is_active = models.BooleanField(_("Is Active"), default=True)
+
+    class Meta:
+        verbose_name = _("Discount Code")
+        verbose_name_plural = _("Discount Codes")
+
+    def __str__(self):
+        return f"{self.code} ({self.get_discount_type_display()} - {self.value})"
+
+    def is_valid(self, subtotal):
+        """Validates expiry dates, active flag, usage limits, and order minimums."""
+        if not self.is_active:
+            return False, _("This discount code is inactive.")
+        
+        now = timezone.now()
+        if self.valid_from and now < self.valid_from:
+            return False, _("This discount code is not yet active.")
+        if self.valid_to and now > self.valid_to:
+            return False, _("This discount code has expired.")
+            
+        if self.usage_limit is not None and self.used_count >= self.usage_limit:
+            return False, _("This discount code has reached its maximum usage limit.")
+            
+        if subtotal < self.min_order_amount:
+            return False, _("Subtotal must be at least %(min_amt)s to use this code.") % {'min_amt': self.min_order_amount}
+
+        return True, ""
+
+    def calculate_discount(self, subtotal):
+        """Calculates exact discount value capped by max_discount_amount if specified."""
+        if subtotal < self.min_order_amount:
+            return 0.000
+
+        if self.discount_type == self.DiscountType.PERCENTAGE:
+            discount = (subtotal * self.value) / 100
+            if self.max_discount_amount and discount > self.max_discount_amount:
+                discount = self.max_discount_amount
+        else:
+            discount = min(self.value, subtotal)
+
+        return round(discount, 3)
+    
 class POSSession(models.Model):
     """Tracks a cashier's daily register session/shift from opening to closing float reconciliation."""
     class SessionStatus(models.TextChoices):

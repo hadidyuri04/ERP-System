@@ -9,7 +9,6 @@
         <h1>{% trans "Point of sale" %}</h1>
         <p>{% trans "Select products, review the order, and complete payment." %}</p>
     </div>
-    <!-- Active Session Badge & Quick Close Trigger -->
     {% if active_session %}
     <div class="d-flex align-items-center gap-2 bg-body-tertiary px-3 py-2 rounded border shadow-sm">
         <div class="text-end">
@@ -28,7 +27,6 @@
 
 {% block topbar_actions %}
 <div class="d-flex align-items-center gap-2">
-    <!-- HELD ORDERS MODAL TRIGGER BUTTON -->
     <button type="button" class="btn btn-soft text-warning fw-bold" id="btn-held-modal" data-bs-toggle="modal" data-bs-target="#heldOrdersModal">
         <i class="bi bi-pause-circle me-1"></i>{% trans "Held Orders" %}
         <span id="held-orders-badge" class="badge bg-warning text-dark ms-1">0</span>
@@ -42,7 +40,6 @@
 
 {% block content %}
 <style>
-  /* Bulletproof POS Cart Layout: Internal scrolling, totals always visible at bottom of card */
   .pos-cart {
     position: sticky !important;
     top: 85px !important;
@@ -50,7 +47,6 @@
     flex-direction: column !important;
   }
 
-  /* Scrollable items list with a safe max-height */
   .pos-cart-items {
     max-height: 380px !important;
     overflow-y: auto !important;
@@ -68,7 +64,6 @@
     border-radius: 3px;
   }
 
-  /* Pinned bottom totals footer */
   .pos-totals {
     margin-top: auto !important;
     background-color: var(--bs-body-bg, #ffffff) !important;
@@ -82,7 +77,6 @@
   }
 </style>
 
-<!-- Collapsible Close Session Card for POS Screen -->
 {% if active_session %}
 <div class="collapse mb-4" id="terminalCloseSessionCard">
     <div class="card border-0 shadow-sm bg-body-tertiary border-start border-4 border-danger">
@@ -151,7 +145,6 @@
       </div>
     </div>
 
-    <!-- Pagination Controls Bar -->
     {% if products.paginator.num_pages > 1 %}
     <nav class="mt-3 d-flex justify-content-center" aria-label="Product Grid Navigation">
       <ul class="pagination pagination-sm mb-0">
@@ -212,6 +205,17 @@
     </div>
     
     <div id="cart" class="pos-cart-items"></div>
+
+    <!-- DISCOUNT CODE SECTION -->
+    <div class="pos-discount mb-2">
+      <label for="discount-code-input">{% trans "Discount Code" %}</label>
+      <div class="input-group">
+        <input type="text" id="discount-code-input" class="form-control text-uppercase" placeholder="{% trans 'PROMO20' %}">
+        <button type="button" id="apply-discount-btn" class="btn btn-outline-primary">{% trans "Apply" %}</button>
+        <button type="button" id="remove-discount-btn" class="btn btn-outline-danger d-none"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div id="discount-feedback" class="small mt-1 d-none"></div>
+    </div>
     
     <div class="pos-payment mb-2">
       <label for="payment-method">{% trans "Payment method" %}</label>
@@ -232,6 +236,10 @@
         <span>{% trans "Subtotal" %}</span>
         <span id="pos-subtotal">0.000</span>
       </div>
+      <div class="total-line text-success d-none" id="discount-total-row">
+        <span>{% trans "Discount" %}</span>
+        <span>-<span id="pos-discount">0.000</span></span>
+      </div>
       <div class="total-line">
         <span>{% trans "Tax" %}</span>
         <span id="pos-tax">0.000</span>
@@ -240,7 +248,6 @@
         <span>{% trans "Total" %}</span>
         <span><span id="total">0.000</span> <small>{% trans "JOD" %}</small></span>
       </div>
-      <!-- HOLD ORDER BUTTON -->
       <button id="hold-order" class="btn btn-outline-warning btn-lg w-100 mb-2 mt-2" disabled>
         <i class="bi bi-pause-circle me-1"></i>{% trans "Hold order" %}
       </button>
@@ -251,7 +258,6 @@
   </aside>
 </div>
 
-<!-- Cash In/Out Modal -->
 {% if active_session %}
 <div class="modal fade" id="cashMovementModal" tabindex="-1" aria-labelledby="cashMovementModalLabel" aria-hidden="true" data-bs-backdrop="false">
   <div class="modal-dialog">
@@ -298,7 +304,6 @@
 </div>
 {% endif %}
 
-<!-- HELD ORDERS MODAL MARKUP -->
 <div class="modal fade" id="heldOrdersModal" tabindex="-1" aria-labelledby="heldOrdersModalLabel" aria-hidden="true" data-bs-backdrop="false">
   <div class="modal-dialog modal-lg">
     <div class="modal-content shadow">
@@ -344,12 +349,21 @@
   const complete = document.getElementById('complete');
   const warehouseSelect = document.getElementById('warehouse');
   const searchInput = document.getElementById('product-search');
-  const productGrid = document.getElementById('product-grid');
   
-  // HELD ORDERS ELEMENTS
   const holdBtn = document.getElementById('hold-order');
   const heldModalEl = document.getElementById('heldOrdersModal');
   const heldBadge = document.getElementById('held-orders-badge');
+
+  // DISCOUNT CODE JS ELEMENTS
+  const discountInput = document.getElementById('discount-code-input');
+  const applyDiscountBtn = document.getElementById('apply-discount-btn');
+  const removeDiscountBtn = document.getElementById('remove-discount-btn');
+  const discountFeedback = document.getElementById('discount-feedback');
+  const discountTotalRow = document.getElementById('discount-total-row');
+  const posDiscountSpan = document.getElementById('pos-discount');
+
+  let activeDiscountCode = null;
+  let activeDiscountAmount = 0;
 
   const money = value => Number(value).toFixed(3);
   function notify(message, type='warning') { 
@@ -361,6 +375,17 @@
     const rate = Number(item.tax_rate) || 0;
     if (!rate) return 0;
     return Math.round(item.quantity * item.unit_price * rate * 10) / 1000;
+  }
+
+  function resetDiscountState() {
+    activeDiscountCode = null;
+    activeDiscountAmount = 0;
+    discountInput.value = '';
+    discountInput.disabled = false;
+    applyDiscountBtn.classList.remove('d-none');
+    removeDiscountBtn.classList.add('d-none');
+    discountFeedback.classList.add('d-none');
+    discountTotalRow.classList.add('d-none');
   }
 
   function draw() {
@@ -416,16 +441,88 @@
       }); 
       cartRoot.appendChild(row);
     }
+
+    if (activeDiscountCode && subtotal > 0) {
+      if (activeDiscountType === 'PERCENTAGE') {
+        let calculated = (subtotal * activeDiscountValue) / 100;
+        if (activeMaxDiscount && calculated > activeMaxDiscount) calculated = activeMaxDiscount;
+        activeDiscountAmount = calculated;
+      } else {
+        activeDiscountAmount = Math.min(activeDiscountValue, subtotal);
+      }
+    } else {
+      activeDiscountAmount = 0;
+    }
     
+    const finalTotal = Math.max(0, subtotal - activeDiscountAmount + taxTotal);
+
     document.getElementById('pos-subtotal').textContent = money(subtotal);
+    posDiscountSpan.textContent = money(activeDiscountAmount);
+    discountTotalRow.classList.toggle('d-none', activeDiscountAmount <= 0);
+
     document.getElementById('pos-tax').textContent = money(taxTotal);
-    document.getElementById('total').textContent = money(subtotal + taxTotal);
+    document.getElementById('total').textContent = money(finalTotal);
     document.getElementById('quantity-total').textContent = quantity;
     document.getElementById('cart-count').textContent = cart.size; 
     empty.hidden = cart.size > 0; 
     complete.disabled = cart.size === 0;
     holdBtn.disabled = cart.size === 0;
+
+    if (cart.size === 0 && activeDiscountCode) {
+      resetDiscountState();
+    }
   }
+
+  let activeDiscountType = null;
+  let activeDiscountValue = 0;
+  let activeMaxDiscount = null;
+
+  applyDiscountBtn.addEventListener('click', async () => {
+    const code = discountInput.value.trim();
+    const subtotal = Number(document.getElementById('pos-subtotal').textContent);
+
+    if (!code) {
+      notify('{% trans "Please enter a discount code." %}');
+      return;
+    }
+    if (subtotal <= 0) {
+      notify('{% trans "Cart subtotal must be greater than zero." %}');
+      return;
+    }
+
+    try {
+      const res = await fetch(`{% url "pos:validate_discount" %}?code=${encodeURIComponent(code)}&subtotal=${subtotal}`);
+      const data = await res.json();
+
+      if (res.ok && data.ok) {
+        activeDiscountCode = data.code;
+        activeDiscountAmount = Number(data.discount_amount);
+        activeDiscountType = data.discount_type;
+        activeDiscountValue = Number(data.value);
+
+        discountInput.disabled = true;
+        applyDiscountBtn.classList.add('d-none');
+        removeDiscountBtn.classList.remove('d-none');
+
+        discountFeedback.className = 'small mt-1 text-success fw-bold';
+        discountFeedback.textContent = '{% trans "Discount applied successfully!" %}';
+        discountFeedback.classList.remove('d-none');
+
+        draw();
+      } else {
+        discountFeedback.className = 'small mt-1 text-danger';
+        discountFeedback.textContent = data.error || '{% trans "Invalid discount code." %}';
+        discountFeedback.classList.remove('d-none');
+      }
+    } catch (e) {
+      notify('{% trans "Error validating discount code." %}', 'error');
+    }
+  });
+
+  removeDiscountBtn.addEventListener('click', () => {
+    resetDiscountState();
+    draw();
+  });
 
   function bindProductButtons() {
     document.querySelectorAll('.product-button').forEach(button => {
@@ -557,6 +654,7 @@
 
   document.getElementById('clear-cart').addEventListener('click', () => { 
     cart.clear(); 
+    resetDiscountState();
     draw(); 
   });
 
@@ -579,6 +677,7 @@
         body: JSON.stringify({
           warehouse_id: warehouse, 
           customer_id: document.getElementById('customer').value || null, 
+          discount_code: activeDiscountCode || '',
           items: [...cart.values()], 
           payments: [{
             payment_method: document.getElementById('payment-method').value, 
@@ -670,7 +769,6 @@
               </button>
             </td>
           </tr>
-          <!-- Hidden details row for items -->
           <tr id="held-details-${s.id}" class="d-none bg-light">
             <td colspan="6" class="p-3 border-bottom">
               <div class="fw-bold mb-2 text-secondary" style="font-size: 0.85rem;">{% trans "Order Items:" %}</div>
@@ -707,6 +805,7 @@
       const data = await res.json();
       if (data.ok) {
         cart.clear();
+        resetDiscountState();
         draw();
         fetchHeldOrders();
         notify('{% trans "Order placed on hold." %}', 'success');
@@ -733,6 +832,7 @@
       const data = await res.json();
       if (data.ok) {
         cart.clear();
+        resetDiscountState();
         data.items.forEach(item => {
           cart.set(item.product_id, {
             product_id: item.product_id,
