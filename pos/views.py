@@ -1,4 +1,5 @@
 import json
+from .forms import DiscountCodeForm
 from decimal import Decimal
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
@@ -19,6 +20,42 @@ from .services import complete_sale, hold_sale
 
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
+
+@login_required
+def discount_code_list(request):
+    """List all discount codes and handle the creation of new discount codes."""
+    if not (request.user.is_superuser or getattr(request.user, 'role', '') == 'admin'):
+        messages.error(request, _("You do not have permission to access discount code management."))
+        return redirect("pos:terminal")
+
+    if request.method == "POST":
+        form = DiscountCodeForm(request.POST)
+        if form.is_valid():
+            discount_code = form.save()
+            messages.success(request, _("Discount code '%(code)s' created successfully.") % {'code': discount_code.code})
+            return redirect("pos:discount_code_list")
+        else:
+            messages.error(request, _("Please correct the errors below."))
+    else:
+        form = DiscountCodeForm()
+
+    discount_codes = DiscountCode.objects.all().order_by('-id')
+    return render(request, "pos/discount_code_list.html", {
+        "discount_codes": discount_codes,
+        "form": form,
+    })
+
+@login_required
+@require_POST
+def toggle_discount_code_status(request, pk):
+    """Toggle the active status of a discount code."""
+    if not (request.user.is_superuser or getattr(request.user, 'role', '') == 'admin'):
+        return JsonResponse({"ok": False, "error": str(_("Unauthorized"))}, status=403)
+
+    discount = get_object_or_404(DiscountCode, pk=pk)
+    discount.is_active = not discount.is_active
+    discount.save(update_fields=['is_active'])
+    return JsonResponse({"ok": True, "is_active": discount.is_active})
 
 @login_required
 @cashier_required
@@ -45,7 +82,9 @@ def validate_discount(request):
             "code": discount_obj.code,
             "discount_amount": str(discount_val),
             "discount_type": discount_obj.discount_type,
-            "value": str(discount_obj.value)
+            "value": str(discount_obj.value),
+            "min_order_amount": str(discount_obj.min_order_amount),
+            "max_discount_amount": str(discount_obj.max_discount_amount) if discount_obj.max_discount_amount else None
         })
     except DiscountCode.DoesNotExist:
         return JsonResponse({"ok": False, "error": str(_("Invalid discount code."))}, status=404)

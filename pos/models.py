@@ -42,9 +42,19 @@ class DiscountCode(models.Model):
             return False, _("This discount code is inactive.")
         
         now = timezone.now()
-        if self.valid_from and now < self.valid_from:
+        
+        # Make valid_from and valid_to timezone aware if they are naive
+        valid_from = self.valid_from
+        if valid_from and timezone.is_naive(valid_from):
+            valid_from = timezone.make_aware(valid_from, timezone.get_current_timezone())
+
+        valid_to = self.valid_to
+        if valid_to and timezone.is_naive(valid_to):
+            valid_to = timezone.make_aware(valid_to, timezone.get_current_timezone())
+
+        if valid_from and now < valid_from:
             return False, _("This discount code is not yet active.")
-        if self.valid_to and now > self.valid_to:
+        if valid_to and now > valid_to:
             return False, _("This discount code has expired.")
             
         if self.usage_limit is not None and self.used_count >= self.usage_limit:
@@ -54,7 +64,6 @@ class DiscountCode(models.Model):
             return False, _("Subtotal must be at least %(min_amt)s to use this code.") % {'min_amt': self.min_order_amount}
 
         return True, ""
-
     def calculate_discount(self, subtotal):
         """Calculates exact discount value capped by max_discount_amount if specified."""
         if subtotal < self.min_order_amount:
@@ -151,6 +160,12 @@ class POSCashTransaction(models.Model):
 
 class POSSale(models.Model):
     """Represents a Point of Sale transaction ticket."""
+    discount_code = models.ForeignKey(
+        'DiscountCode', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True
+    )
     class SaleStatus(models.TextChoices):
         DRAFT = 'DRAFT', _('Draft')
         HELD = 'HELD', _('On Hold')

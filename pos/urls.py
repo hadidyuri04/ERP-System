@@ -21,4 +21,8 @@ urlpatterns = [
     path("held-sales/", views.list_held_sales_view, name="list_held_sales"),
     path("held-sales/<int:pk>/recall/", views.recall_held_sale_view, name="recall_held_sale"),
     path("held-sales/<int:pk>/cancel/", views.cancel_held_sale_view, name="cancel_held_sale"),
+
+    # Discount Code Management Routes
+    path("discounts/", views.discount_code_list, name="discount_code_list"),
+    path("discounts/<int:pk>/toggle/", views.toggle_discount_code_status, name="toggle_discount_code"),
 ]

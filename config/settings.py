@@ -102,7 +102,7 @@ LOCALE_PATHS = [
 ]
 
 STATICFILES_DIRS = [BASE_DIR / "static"]
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Amman'
 
 USE_I18N = True
 USE_TZ = True

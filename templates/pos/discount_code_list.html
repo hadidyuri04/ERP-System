@@ -1,0 +1,268 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Discount Codes" %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 mb-0">{% trans "Discount Codes" %}</h1>
+      <p class="text-muted mb-0">{% trans "Create and manage promotional discounts for POS checkout" %}</p>
+    </div>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createDiscountModal">
+      <i class="bi bi-plus-lg me-1"></i> {% trans "Create Discount Code" %}
+    </button>
+  </div>
+
+  <!-- Discount Codes Table -->
+  <div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>{% trans "Code" %}</th>
+              <th>{% trans "Type" %}</th>
+              <th>{% trans "Value" %}</th>
+              <th>{% trans "Min Order" %}</th>
+              <th>{% trans "Max Discount" %}</th>
+              <th>{% trans "Usage" %}</th>
+              <th>{% trans "Validity Period" %}</th>
+              <th>{% trans "Status" %}</th>
+              <th>{% trans "Activity Actions" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for code in discount_codes %}
+            <tr>
+              <td><strong class="font-monospace">{{ code.code }}</strong></td>
+              <td>{{ code.get_discount_type_display }}</td>
+              <td>
+                {% if code.discount_type == 'PERCENTAGE' %}
+                  {{ code.value }}%
+                {% else %}
+                  ${{ code.value }}
+                {% endif %}
+              </td>
+              <td>${{ code.min_order_amount }}</td>
+              <td>{% if code.max_discount_amount %}${{ code.max_discount_amount }}{% else %}&mdash;{% endif %}</td>
+              <td>
+                {{ code.used_count }} / {% if code.usage_limit %}{{ code.usage_limit }}{% else %}&infin;{% endif %}
+              </td>
+              <td>
+                <small class="text-muted d-block">
+                  <i class="bi bi-calendar-event me-1"></i>
+                  {% if code.valid_from %}{{ code.valid_from|date:"Y-m-d H:i" }}{% else %}{% trans "Always" %}{% endif %}
+                </small>
+                <small class="text-muted d-block">
+                  <i class="bi bi-calendar-x me-1"></i>
+                  {% if code.valid_to %}{{ code.valid_to|date:"Y-m-d H:i" }}{% else %}{% trans "No expiry" %}{% endif %}
+                </small>
+              </td>
+              <td>
+                {% if code.is_active %}
+                  <span class="badge bg-success-subtle text-success">{% trans "Active" %}</span>
+                {% else %}
+                  <span class="badge bg-secondary-subtle text-secondary">{% trans "Inactive" %}</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <button class="btn btn-sm btn-outline-secondary toggle-status-btn me-1" data-id="{{ code.id }}">
+                  {% trans "Toggle" %}
+                </button>
+                <button class="btn btn-sm btn-outline-info view-details-btn" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#viewDiscountModal"
+                        data-code="{{ code.code }}"
+                        data-type="{{ code.get_discount_type_display }}"
+                        data-value="{% if code.discount_type == 'PERCENTAGE' %}{{ code.value }}%{% else %}${{ code.value }}{% endif %}"
+                        data-min-order="${{ code.min_order_amount }}"
+                        data-max-discount="{% if code.max_discount_amount %}${{ code.max_discount_amount }}{% else %}{% trans 'None' %}{% endif %}"
+                        data-usage="{{ code.used_count }} / {% if code.usage_limit %}{{ code.usage_limit }}{% else %}&infin;{% endif %}"
+                        data-valid-from="{% if code.valid_from %}{{ code.valid_from|date:'Y-m-d H:i' }}{% else %}{% trans 'Not set' %}{% endif %}"
+                        data-valid-to="{% if code.valid_to %}{{ code.valid_to|date:'Y-m-d H:i' }}{% else %}{% trans 'Not set' %}{% endif %}"
+                        data-status="{% if code.is_active %}{% trans 'Active' %}{% else %}{% trans 'Inactive' %}{% endif %}">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="9" class="text-center py-4 text-muted">
+                {% trans "No discount codes found. Click above to create one." %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- View Details Modal -->
+<div class="modal fade" id="viewDiscountModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{% trans "Discount Code Details" %}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
+      </div>
+      <div class="modal-body">
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span class="text-muted">{% trans "Code" %}</span>
+            <strong id="modal-code" class="font-monospace"></strong>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span class="text-muted">{% trans "Discount Type" %}</span>
+            <span id="modal-type"></span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span class="text-muted">{% trans "Value" %}</span>
+            <span id="modal-value" class="fw-bold text-success"></span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span class="text-muted">{% trans "Minimum Order Amount" %}</span>
+            <span id="modal-min-order"></span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span class="text-muted">{% trans "Max Discount Cap" %}</span>
+            <span id="modal-max-discount"></span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span class="text-muted">{% trans "Usage Count / Limit" %}</span>
+            <span id="modal-usage"></span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span class="text-muted">{% trans "Valid From" %}</span>
+            <span id="modal-valid-from"></span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span class="text-muted">{% trans "Valid To" %}</span>
+            <span id="modal-valid-to"></span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span class="text-muted">{% trans "Status" %}</span>
+            <span id="modal-status"></span>
+          </li>
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Close" %}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Discount Code Modal -->
+<div class="modal fade" id="createDiscountModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <form method="post" action="{% url 'pos:discount_code_list' %}">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">{% trans "Create Discount Code" %}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">{% trans "Code" %}</label>
+              {{ form.code }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">{% trans "Discount Type" %}</label>
+              {{ form.discount_type }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">{% trans "Value" %}</label>
+              {{ form.value }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">{% trans "Max Discount Amount" %}</label>
+              {{ form.max_discount_amount }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">{% trans "Minimum Order Amount" %}</label>
+              {{ form.min_order_amount }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">{% trans "Usage Limit" %}</label>
+              {{ form.usage_limit }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">{% trans "Valid From" %}</label>
+              {{ form.valid_from }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">{% trans "Valid To" %}</label>
+              {{ form.valid_to }}
+            </div>
+            <div class="col-12">
+              <div class="form-check">
+                {{ form.is_active }}
+                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">{% trans "Is Active" %}</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+          <button type="submit" class="btn btn-primary">{% trans "Save Discount Code" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // 1. Move modals directly into the <body> to fix the dimming/z-index issue
+    const createModal = document.getElementById('createDiscountModal');
+    if (createModal) {
+        document.body.appendChild(createModal);
+    }
+    const viewModal = document.getElementById('viewDiscountModal');
+    if (viewModal) {
+        document.body.appendChild(viewModal);
+    }
+
+    // 2. Populate View Details Modal data dynamically
+    document.querySelectorAll('.view-details-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.getElementById('modal-code').textContent = this.dataset.code;
+        document.getElementById('modal-type').textContent = this.dataset.type;
+        document.getElementById('modal-value').textContent = this.dataset.value;
+        document.getElementById('modal-min-order').textContent = this.dataset.minOrder;
+        document.getElementById('modal-max-discount').textContent = this.dataset.maxDiscount;
+        document.getElementById('modal-usage').textContent = this.dataset.usage;
+        document.getElementById('modal-valid-from').textContent = this.dataset.validFrom;
+        document.getElementById('modal-valid-to').textContent = this.dataset.validTo;
+        document.getElementById('modal-status').textContent = this.dataset.status;
+      });
+    });
+});
+
+// 3. Existing toggle status logic
+document.querySelectorAll('.toggle-status-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const codeId = this.dataset.id;
+    fetch(`/pos/discounts/${codeId}/toggle/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': '{{ csrf_token }}',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      if(data.ok) location.reload();
+    });
+  });
+});
+</script>
+{% endblock %}

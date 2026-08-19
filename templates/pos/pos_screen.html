@@ -364,6 +364,10 @@
 
   let activeDiscountCode = null;
   let activeDiscountAmount = 0;
+  let activeDiscountType = null;
+  let activeDiscountValue = 0;
+  let activeMaxDiscount = null;
+  let activeMinOrderAmount = 0;
 
   const money = value => Number(value).toFixed(3);
   function notify(message, type='warning') { 
@@ -380,6 +384,10 @@
   function resetDiscountState() {
     activeDiscountCode = null;
     activeDiscountAmount = 0;
+    activeDiscountType = null;
+    activeDiscountValue = 0;
+    activeMaxDiscount = null;
+    activeMinOrderAmount = 0;
     discountInput.value = '';
     discountInput.disabled = false;
     applyDiscountBtn.classList.remove('d-none');
@@ -442,7 +450,7 @@
       cartRoot.appendChild(row);
     }
 
-    if (activeDiscountCode && subtotal > 0) {
+    if (activeDiscountCode && subtotal >= activeMinOrderAmount && subtotal > 0) {
       if (activeDiscountType === 'PERCENTAGE') {
         let calculated = (subtotal * activeDiscountValue) / 100;
         if (activeMaxDiscount && calculated > activeMaxDiscount) calculated = activeMaxDiscount;
@@ -473,10 +481,6 @@
     }
   }
 
-  let activeDiscountType = null;
-  let activeDiscountValue = 0;
-  let activeMaxDiscount = null;
-
   applyDiscountBtn.addEventListener('click', async () => {
     const code = discountInput.value.trim();
     const subtotal = Number(document.getElementById('pos-subtotal').textContent);
@@ -499,6 +503,8 @@
         activeDiscountAmount = Number(data.discount_amount);
         activeDiscountType = data.discount_type;
         activeDiscountValue = Number(data.value);
+        activeMinOrderAmount = Number(data.min_order_amount || 0);
+        activeMaxDiscount = data.max_discount_amount ? Number(data.max_discount_amount) : null;
 
         discountInput.disabled = true;
         applyDiscountBtn.classList.add('d-none');
