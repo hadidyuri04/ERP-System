@@ -15,4 +15,9 @@ urlpatterns = [
     path("sessions/open/", views.open_session, name="open_session"),
     path("sessions/<int:pk>/close/", views.close_session, name="close_session"),
     path("sessions/<int:pk>/cash-transaction/", views.cash_transaction, name="cash_transaction"),
+
+    path("hold/", views.hold_sale_view, name="hold_sale"),
+    path("held-sales/", views.list_held_sales_view, name="list_held_sales"),
+    path("held-sales/<int:pk>/recall/", views.recall_held_sale_view, name="recall_held_sale"),
+    path("held-sales/<int:pk>/cancel/", views.cancel_held_sale_view, name="cancel_held_sale"),
 ]

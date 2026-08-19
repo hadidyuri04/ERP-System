@@ -87,6 +87,7 @@ class POSSale(models.Model):
     """Represents a Point of Sale transaction ticket."""
     class SaleStatus(models.TextChoices):
         DRAFT = 'DRAFT', _('Draft')
+        HELD = 'HELD', _('On Hold')
         COMPLETED = 'COMPLETED', _('Completed')
         CANCELLED = 'CANCELLED', _('Cancelled')
 

@@ -144,3 +144,68 @@ def complete_sale(warehouse, cashier, items_data, payments_data, customer=None, 
     post_pos_sale(sale.id, cashier)
 
     return sale
+@transaction.atomic
+def hold_sale(warehouse, cashier, items_data, customer=None, notes="", session=None):
+    """
+    Saves an active cart state as a held sale order without deducting stock or creating finance entries.
+    """
+    if not items_data:
+        raise ValidationError(_("Cannot hold an empty cart."))
+
+    subtotal = Decimal('0.000')
+    total_discount = Decimal('0.000')
+    total_tax = Decimal('0.000')
+    sale_items_to_create = []
+
+    for item_data in items_data:
+        product = item_data['product']
+        quantity = Decimal(str(item_data['quantity']))
+        unit_price = Decimal(str(item_data['unit_price']))
+        discount_amount = Decimal(str(item_data.get('discount_amount', '0.000')))
+        tax_amount = product.tax_for((quantity * unit_price) - discount_amount)
+
+        line_total = (quantity * unit_price) - discount_amount + tax_amount
+        subtotal += quantity * unit_price
+        total_discount += discount_amount
+        total_tax += tax_amount
+
+        sale_items_to_create.append({
+            'product': product,
+            'quantity': quantity,
+            'unit_price': unit_price,
+            'discount_amount': discount_amount,
+            'tax_amount': tax_amount,
+            'line_total': line_total
+        })
+
+    grand_total = subtotal - total_discount + total_tax
+    sale_number = f"HOLD-{timezone.now().strftime('%Y%m%d%H%M%S')}"
+
+    sale = POSSale.objects.create(
+        session=session,
+        sale_number=sale_number,
+        customer=customer,
+        warehouse=warehouse,
+        cashier=cashier,
+        date=timezone.now(),
+        status=POSSale.SaleStatus.HELD,
+        subtotal=subtotal,
+        discount_amount=total_discount,
+        tax_amount=total_tax,
+        total=grand_total,
+        notes=notes
+    )
+
+    for item in sale_items_to_create:
+        POSSaleItem.objects.create(
+            sale=sale,
+            product=item['product'],
+            quantity=item['quantity'],
+            unit_price=item['unit_price'],
+            unit_cost=getattr(item['product'], 'cost_price', Decimal('0.000')),
+            discount_amount=item['discount_amount'],
+            tax_amount=item['tax_amount'],
+            line_total=item['line_total']
+        )
+
+    return sale

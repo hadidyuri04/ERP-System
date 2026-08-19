@@ -9,15 +9,112 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST, require_GET
 from django.utils.translation import gettext as _
 from django.utils import timezone
-
+from django.contrib import messages
 
 from core.permissions import cashier_required
 from customers.models import Customer
 from inventory.models import Product, Warehouse, StockBalance
 from .models import POSSession, POSCashTransaction, POSSale, POSPayment
-from .services import complete_sale
+from .services import complete_sale, hold_sale
+
+from django.shortcuts import render, redirect
+from django.http import JsonResponse
+
+@login_required
+@cashier_required
+@require_POST
+def hold_sale_view(request):
+    try:
+        payload = json.loads(request.body or "{}")
+        warehouse = Warehouse.objects.get(pk=payload["warehouse_id"], is_active=True)
+        customer_id = payload.get("customer_id")
+        customer = Customer.objects.get(pk=customer_id, is_active=True) if customer_id else None
+
+        active_session = POSSession.objects.filter(
+            cashier=request.user,
+            status=POSSession.SessionStatus.OPEN
+        ).first()
+
+        items_data = []
+        for item in payload.get("items", []):
+            product = Product.objects.get(pk=item["product_id"], is_active=True)
+            items_data.append({
+                "product": product,
+                "quantity": item["quantity"],
+                "unit_price": item.get("unit_price", product.selling_price),
+                "discount_amount": item.get("discount_amount", "0.000"),
+                "tax_amount": item.get("tax_amount", "0.000"),
+            })
+
+        sale = hold_sale(
+            warehouse=warehouse,
+            cashier=request.user,
+            session=active_session,
+            items_data=items_data,
+            customer=customer,
+            notes=payload.get("notes", ""),
+        )
+
+        return JsonResponse({"ok": True, "sale_id": sale.id})
+    except Exception as e:
+        return JsonResponse({"ok": False, "error": str(e)}, status=400)
 
 
+@login_required
+@cashier_required
+@require_GET
+def list_held_sales_view(request):
+    sales = POSSale.objects.filter(status=POSSale.SaleStatus.HELD).order_by('-date')
+    data = []
+    for s in sales:
+        data.append({
+            "id": s.id,
+            "sale_number": s.sale_number,
+            "customer_name": s.customer.name if s.customer else "Walk-in",
+            "created_at": s.date.strftime("%Y-%m-%d %H:%M"),
+            "items_count": s.items.count(),
+            "total": str(s.total)
+        })
+    return JsonResponse({"ok": True, "held_sales": data})
+
+
+@login_required
+@cashier_required
+@require_POST
+def recall_held_sale_view(request, pk):
+    sale = get_object_or_404(POSSale, pk=pk, status=POSSale.SaleStatus.HELD)
+    
+    items = []
+    for item in sale.items.all():
+        stock = StockBalance.objects.filter(product=item.product, warehouse=sale.warehouse).first()
+        available = (stock.quantity - stock.reserved_quantity) if stock else 0
+        
+        items.append({
+            "product_id": item.product.id,
+            "name": item.product.name,
+            "quantity": str(item.quantity),
+            "unit_price": str(item.unit_price),
+            "available_stock": str(available)
+        })
+        
+    customer_id = sale.customer_id
+    # Discard the hold since it's now back in the active cart
+    sale.delete() 
+    
+    return JsonResponse({
+        "ok": True,
+        "items": items,
+        "customer_id": customer_id
+    })
+
+
+@login_required
+@cashier_required
+@require_POST
+def cancel_held_sale_view(request, pk):
+    sale = get_object_or_404(POSSale, pk=pk, status=POSSale.SaleStatus.HELD)
+    sale.delete()
+    return JsonResponse({"ok": True})
 @login_required
 @cashier_required
 def pos_terminal(request):

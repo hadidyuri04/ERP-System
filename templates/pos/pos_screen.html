@@ -28,6 +28,11 @@
 
 {% block topbar_actions %}
 <div class="d-flex align-items-center gap-2">
+    <!-- HELD ORDERS MODAL TRIGGER BUTTON -->
+    <button type="button" class="btn btn-soft text-warning fw-bold" id="btn-held-modal" data-bs-toggle="modal" data-bs-target="#heldOrdersModal">
+        <i class="bi bi-pause-circle me-1"></i>{% trans "Held Orders" %}
+        <span id="held-orders-badge" class="badge bg-warning text-dark ms-1">0</span>
+    </button>
     <button type="button" class="btn btn-soft text-success fw-bold" data-bs-toggle="modal" data-bs-target="#cashMovementModal" data-bs-backdrop="false">
         <i class="bi bi-cash-stack me-1"></i>{% trans "Cash In/Out" %}
     </button>
@@ -36,6 +41,23 @@
 {% endblock %}
 
 {% block content %}
+<style>
+  /* Fix overlap issue caused by the new Hold Order button */
+  .pos-cart {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .pos-cart-items {
+    flex: 1 1 auto !important;
+    overflow-y: auto !important;
+  }
+  .pos-totals {
+    position: static !important;
+    margin-top: auto !important;
+  }
+</style>
+
+<!-- Your existing Collapsible Close Session Card follows ... -->
 <!-- Collapsible Close Session Card for POS Screen -->
 {% if active_session %}
 <div class="collapse mb-4" id="terminalCloseSessionCard">
@@ -156,6 +178,10 @@
         <span>{% trans "Total" %}</span>
         <span><span id="total">0.000</span> <small>{% trans "JOD" %}</small></span>
       </div>
+      <!-- HOLD ORDER BUTTON -->
+      <button id="hold-order" class="btn btn-outline-warning btn-lg w-100 mb-2" disabled>
+        <i class="bi bi-pause-circle me-1"></i>{% trans "Hold order" %}
+      </button>
       <button id="complete" class="btn btn-primary btn-lg w-100" disabled>
         <i class="bi bi-check2-circle me-1"></i>{% trans "Complete sale" %}
       </button>
@@ -210,6 +236,44 @@
 </div>
 {% endif %}
 
+<!-- HELD ORDERS MODAL MARKUP -->
+<div class="modal fade" id="heldOrdersModal" tabindex="-1" aria-labelledby="heldOrdersModalLabel" aria-hidden="true" data-bs-backdrop="false">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content shadow">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold" id="heldOrdersModalLabel">
+          <i class="bi bi-pause-circle me-2 text-warning"></i>{% trans "Held Orders" %}
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>{% trans "Ref #" %}</th>
+                <th>{% trans "Customer" %}</th>
+                <th>{% trans "Time" %}</th>
+                <th class="text-center">{% trans "Items" %}</th>
+                <th class="text-end">{% trans "Total" %}</th>
+                <th class="text-center">{% trans "Actions" %}</th>
+              </tr>
+            </thead>
+            <tbody id="held-orders-table-body">
+              <tr>
+                <td colspan="6" class="text-center py-4 text-muted">{% trans "Loading held orders..." %}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Close" %}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 (() => {
   const cart = new Map();
@@ -220,6 +284,11 @@
   const searchInput = document.getElementById('product-search');
   const productGrid = document.getElementById('product-grid');
   
+  // HELD ORDERS ELEMENTS
+  const holdBtn = document.getElementById('hold-order');
+  const heldModalEl = document.getElementById('heldOrdersModal');
+  const heldBadge = document.getElementById('held-orders-badge');
+
   const money = value => Number(value).toFixed(3);
   function notify(message, type='warning') { 
     if (window.ERP?.toast?.[type]) ERP.toast[type](message); 
@@ -283,6 +352,7 @@
     document.getElementById('cart-count').textContent = cart.size; 
     empty.hidden = cart.size > 0; 
     complete.disabled = cart.size === 0;
+    holdBtn.disabled = cart.size === 0;
   }
 
   // Bind click events to existing product buttons
@@ -497,9 +567,139 @@
     });
   }
 
+  // Fetch & render held orders count and list
+  async function fetchHeldOrders() {
+    try {
+      const res = await fetch('{% url "pos:list_held_sales" %}');
+      const data = await res.json();
+      if (data.ok) {
+        heldBadge.textContent = data.held_sales.length;
+        const tbody = document.getElementById('held-orders-table-body');
+        
+        if (data.held_sales.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">{% trans "No orders on hold." %}</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = data.held_sales.map(s => `
+          <tr>
+            <td class="fw-bold">${s.sale_number}</td>
+            <td>${s.customer_name}</td>
+            <td>${s.created_at}</td>
+            <td class="text-center">${s.items_count}</td>
+            <td class="text-end fw-bold">${s.total} JOD</td>
+            <td class="text-center">
+              <button type="button" class="btn btn-sm btn-primary me-1" onclick="recallHeldOrder(${s.id})">
+                <i class="bi bi-arrow-return-left me-1"></i>{% trans "Recall" %}
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-danger" onclick="cancelHeldOrder(${s.id})">
+                <i class="bi bi-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      }
+    } catch (e) {
+      console.error("Error fetching held orders:", e);
+    }
+  }
+
+  // Hold Order action
+  holdBtn.addEventListener('click', async () => {
+    const warehouse = warehouseSelect.value;
+    if (!warehouse || cart.size === 0) return;
+
+    holdBtn.disabled = true;
+    try {
+      const res = await fetch('{% url "pos:hold_sale" %}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+          warehouse_id: warehouse,
+          customer_id: document.getElementById('customer').value || null,
+          items: [...cart.values()]
+        })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        cart.clear();
+        draw();
+        fetchHeldOrders();
+        notify('{% trans "Order placed on hold." %}', 'success');
+      } else {
+        notify(data.error || '{% trans "Could not hold order." %}', 'error');
+      }
+    } catch (e) {
+      notify('{% trans "Could not connect to server." %}', 'error');
+    } finally {
+      holdBtn.disabled = cart.size === 0;
+    }
+  });
+
+  // Expose recall and cancel functions globally for modal rows
+  window.recallHeldOrder = async (id) => {
+    if (cart.size > 0 && !confirm('{% trans "Your current cart will be cleared and replaced with the held order. Continue?" %}')) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/pos/held-sales/${id}/recall/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+      });
+      const data = await res.json();
+      if (data.ok) {
+        cart.clear();
+        data.items.forEach(item => {
+          cart.set(item.product_id, {
+            product_id: item.product_id,
+            name: item.name,
+            quantity: item.quantity,
+            unit_price: Number(item.unit_price),
+            available_stock: item.available_stock
+          });
+        });
+        document.getElementById('customer').value = data.customer_id || '';
+        draw();
+        fetchHeldOrders();
+        bootstrap.Modal.getInstance(heldModalEl)?.hide();
+        notify('{% trans "Held order restored to cart." %}', 'success');
+      } else {
+        notify(data.error || '{% trans "Could not recall held order." %}', 'error');
+      }
+    } catch (e) {
+      notify('{% trans "Could not connect to server." %}', 'error');
+    }
+  };
+
+  window.cancelHeldOrder = async (id) => {
+    if (!confirm('{% trans "Are you sure you want to discard this held order?" %}')) return;
+    try {
+      const res = await fetch(`/pos/held-sales/${id}/cancel/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+      });
+      const data = await res.json();
+      if (data.ok) {
+        fetchHeldOrders();
+        notify('{% trans "Held order discarded." %}', 'info');
+      }
+    } catch (e) {
+      notify('{% trans "Could not connect to server." %}', 'error');
+    }
+  };
+
+  if (heldModalEl) {
+    heldModalEl.addEventListener('show.bs.modal', fetchHeldOrders);
+  }
+
   // Initialize bindings on load
   bindProductButtons();
   draw();
+  fetchHeldOrders();
 })();
 </script>
 {% endblock %}
