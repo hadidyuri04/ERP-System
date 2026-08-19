@@ -42,22 +42,46 @@
 
 {% block content %}
 <style>
-  /* Fix overlap issue caused by the new Hold Order button */
+  /* Bulletproof POS Cart Layout: Internal scrolling, totals always visible at bottom of card */
   .pos-cart {
+    position: sticky !important;
+    top: 85px !important;
     display: flex !important;
     flex-direction: column !important;
   }
+
+  /* Scrollable items list with a safe max-height */
   .pos-cart-items {
-    flex: 1 1 auto !important;
+    max-height: 380px !important;
     overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-right: 4px;
+    margin-bottom: 10px;
   }
+
+  .pos-cart-items::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .pos-cart-items::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+  }
+
+  /* Pinned bottom totals footer */
   .pos-totals {
-    position: static !important;
     margin-top: auto !important;
+    background-color: var(--bs-body-bg, #ffffff) !important;
+    border-top: 1px solid var(--bs-border-color, #dee2e6) !important;
+    padding-top: 12px !important;
+  }
+
+  .pos-totals .total-line {
+    padding-top: 3px !important;
+    padding-bottom: 3px !important;
   }
 </style>
 
-<!-- Your existing Collapsible Close Session Card follows ... -->
 <!-- Collapsible Close Session Card for POS Screen -->
 {% if active_session %}
 <div class="collapse mb-4" id="terminalCloseSessionCard">
@@ -102,8 +126,6 @@
           data-code="{{ product.code }}" 
           data-barcode="{{ product.barcode|default:'' }}" 
           data-name="{{ product.name }}" 
-          {# unlocalize is essential: in Arabic Django renders 0.350 as "0,350"
-             and JavaScript's Number() turns that into NaN. #}
           data-price="{{ product.selling_price|unlocalize }}"
           data-stock="{{ product.available_stock|default:0|unlocalize }}"
           data-tax-rate="{% if product.tax_rate and product.tax_rate.subject_to_tax %}{{ product.tax_rate.rate|unlocalize }}{% else %}0{% endif %}">
@@ -137,7 +159,7 @@
       <button id="clear-cart" type="button" class="btn btn-ghost btn-sm">{% trans "Clear" %}</button>
     </div>
     
-    <div class="pos-order-fields">
+    <div class="pos-order-fields mb-2">
       <div>
         <label for="warehouse">{% trans "Warehouse" %}</label>
         <input type="hidden" id="warehouse" value="{{ active_session.warehouse.pk }}">
@@ -162,9 +184,9 @@
     
     <div id="cart" class="pos-cart-items"></div>
     
-    <div class="pos-payment">
+    <div class="pos-payment mb-2">
       <label for="payment-method">{% trans "Payment method" %}</label>
-      <select id="payment-method">
+      <select id="payment-method" class="form-select">
         <option value="cash">{% trans "Cash" %}</option>
         <option value="card">{% trans "Card" %}</option>
         <option value="bank">{% trans "Bank transfer" %}</option>
@@ -190,7 +212,7 @@
         <span><span id="total">0.000</span> <small>{% trans "JOD" %}</small></span>
       </div>
       <!-- HOLD ORDER BUTTON -->
-      <button id="hold-order" class="btn btn-outline-warning btn-lg w-100 mb-2" disabled>
+      <button id="hold-order" class="btn btn-outline-warning btn-lg w-100 mb-2 mt-2" disabled>
         <i class="bi bi-pause-circle me-1"></i>{% trans "Hold order" %}
       </button>
       <button id="complete" class="btn btn-primary btn-lg w-100" disabled>
@@ -306,12 +328,9 @@
     else alert(message); 
   }
 
-  // Matches finance/TaxRate.tax_for() on the server: round half up to 3 dp.
   function lineTax(item) {
     const rate = Number(item.tax_rate) || 0;
     if (!rate) return 0;
-    // amount * rate / 100, rounded half up to 3 decimals:
-    //   (amount * rate / 100) * 1000  ==  amount * rate * 10
     return Math.round(item.quantity * item.unit_price * rate * 10) / 1000;
   }
 
@@ -369,8 +388,6 @@
       cartRoot.appendChild(row);
     }
     
-    // The server recomputes tax from each product's rate, so these three must
-    // agree with it or the payment check rejects the sale.
     document.getElementById('pos-subtotal').textContent = money(subtotal);
     document.getElementById('pos-tax').textContent = money(taxTotal);
     document.getElementById('total').textContent = money(subtotal + taxTotal);
@@ -381,7 +398,6 @@
     holdBtn.disabled = cart.size === 0;
   }
 
-  // Bind click events to existing product buttons
   function bindProductButtons() {
     document.querySelectorAll('.product-button').forEach(button => {
       if (button.dataset.bound) return;
@@ -425,7 +441,6 @@
     });
   }
 
-  // Dynamic AJAX search using your backend's `search_product` endpoint
   async function performSearch(query) {
     const warehouseId = warehouseSelect.value;
     if (!warehouseId) {
@@ -479,7 +494,6 @@
 
         document.getElementById('product-count').textContent = visible + ' {% trans "items" %}';
 
-        // Fast Barcode Supermarket Shortcut: If exact barcode match returns 1 item, auto-add to cart
         if (data.results.length === 1 && String(data.results[0].barcode || '').trim() === query.trim()) {
           const prod = data.results[0];
           if (Number(prod.available_stock) > 0) {
@@ -558,7 +572,6 @@
     } 
   });
 
-  // Handle Cash In/Out Form via AJAX to prevent page redirect errors
   const cashMovementForm = document.getElementById('cashMovementForm');
   if (cashMovementForm) {
     cashMovementForm.addEventListener('submit', async (e) => {
@@ -596,7 +609,6 @@
     });
   }
 
-  // Fetch & render held orders count and list
   async function fetchHeldOrders() {
     try {
       const res = await fetch('{% url "pos:list_held_sales" %}');
@@ -633,7 +645,6 @@
     }
   }
 
-  // Hold Order action
   holdBtn.addEventListener('click', async () => {
     const warehouse = warehouseSelect.value;
     if (!warehouse || cart.size === 0) return;
@@ -668,7 +679,6 @@
     }
   });
 
-  // Expose recall and cancel functions globally for modal rows
   window.recallHeldOrder = async (id) => {
     if (cart.size > 0 && !confirm('{% trans "Your current cart will be cleared and replaced with the held order. Continue?" %}')) {
       return;
@@ -725,7 +735,6 @@
     heldModalEl.addEventListener('show.bs.modal', fetchHeldOrders);
   }
 
-  // Initialize bindings on load
   bindProductButtons();
   draw();
   fetchHeldOrders();
