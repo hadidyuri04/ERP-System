@@ -33,11 +33,21 @@ from .models import (
     FiscalYear,
     JournalEntry,
     JournalEntryLine,
+    OpenItem,
+    OpenItemAllocation,
     PaymentVoucher,
     PeriodStatus,
     ReceiptVoucher,
 )
-from .reports import generate_balance_sheet, generate_income_statement, get_account_balance
+from .reports import (
+    generate_balance_sheet,
+    generate_customer_statement,
+    generate_income_statement,
+    generate_payables_aging,
+    generate_receivables_aging,
+    generate_supplier_statement,
+    get_account_balance,
+)
 from .services import (
     create_fiscal_year,
     get_period_summary,
@@ -1610,3 +1620,423 @@ class FiscalPeriodTests(TestCase):
             )
         )
         self.assertEqual(response.status_code, 403)
+
+
+class PartyStatementTests(TestCase):
+    def setUp(self):
+        self.accountant = get_user_model().objects.create_user(
+            username="party-statement-accountant",
+            password="test-password",
+            role="accountant",
+        )
+        self.receivable = Account.objects.create(
+            code="1300",
+            name="Accounts receivable",
+            account_type=Account.AccountType.ASSET,
+        )
+        self.payable = Account.objects.create(
+            code="2100",
+            name="Accounts payable",
+            account_type=Account.AccountType.LIABILITY,
+        )
+        self.customer = Customer.objects.create(
+            code="ST-C001",
+            name="Statement customer",
+            opening_balance=Decimal("25.000"),
+        )
+        self.supplier = Supplier.objects.create(
+            code="ST-S001",
+            name="Statement supplier",
+            opening_balance=Decimal("30.000"),
+        )
+
+    def add_line(
+        self,
+        number,
+        journal_date,
+        account,
+        *,
+        debit="0.000",
+        credit="0.000",
+        customer=None,
+        supplier=None,
+        status=JournalEntry.Status.POSTED,
+    ):
+        journal = JournalEntry.objects.create(
+            entry_number=number,
+            date=journal_date,
+            description=f"Activity for {number}",
+            status=status,
+            created_by=self.accountant,
+            approved_by=(
+                self.accountant if status == JournalEntry.Status.POSTED else None
+            ),
+        )
+        return JournalEntryLine.objects.create(
+            journal_entry=journal,
+            account=account,
+            customer=customer,
+            supplier=supplier,
+            debit=Decimal(debit),
+            credit=Decimal(credit),
+        )
+
+    def test_customer_statement_uses_opening_and_debit_normal_balance(self):
+        self.add_line(
+            "CUST-OLD",
+            date(2026, 1, 15),
+            self.receivable,
+            debit="100.000",
+            customer=self.customer,
+        )
+        self.add_line(
+            "CUST-PAY",
+            date(2026, 2, 10),
+            self.receivable,
+            credit="40.000",
+            customer=self.customer,
+        )
+        self.add_line(
+            "CUST-DRAFT",
+            date(2026, 2, 11),
+            self.receivable,
+            debit="999.000",
+            customer=self.customer,
+            status=JournalEntry.Status.DRAFT,
+        )
+
+        statement = generate_customer_statement(
+            self.customer,
+            start_date=date(2026, 2, 1),
+            end_date=date(2026, 2, 28),
+        )
+
+        self.assertEqual(statement["opening_balance"], Decimal("125.000"))
+        self.assertEqual(len(statement["entries"]), 1)
+        self.assertEqual(statement["entries"][0]["balance"], Decimal("85.000"))
+        self.assertEqual(statement["closing_balance"], Decimal("85.000"))
+
+    def test_supplier_statement_uses_opening_and_credit_normal_balance(self):
+        self.add_line(
+            "SUP-OLD",
+            date(2026, 1, 20),
+            self.payable,
+            credit="80.000",
+            supplier=self.supplier,
+        )
+        self.add_line(
+            "SUP-PAY",
+            date(2026, 2, 12),
+            self.payable,
+            debit="25.000",
+            supplier=self.supplier,
+        )
+
+        statement = generate_supplier_statement(
+            self.supplier,
+            start_date=date(2026, 2, 1),
+            end_date=date(2026, 2, 28),
+        )
+
+        self.assertEqual(statement["opening_balance"], Decimal("110.000"))
+        self.assertEqual(len(statement["entries"]), 1)
+        self.assertEqual(statement["entries"][0]["balance"], Decimal("85.000"))
+        self.assertEqual(statement["closing_balance"], Decimal("85.000"))
+
+    def test_statement_pages_render_and_validate_date_ranges(self):
+        self.client.force_login(self.accountant)
+        customer_url = reverse("finance:customer_statement")
+        supplier_url = reverse("finance:supplier_statement")
+
+        customer_response = self.client.get(
+            customer_url,
+            {"customer": self.customer.pk},
+        )
+        self.assertEqual(customer_response.status_code, 200)
+        self.assertContains(customer_response, "Statement customer")
+
+        supplier_response = self.client.get(
+            supplier_url,
+            {"supplier": self.supplier.pk},
+        )
+        self.assertEqual(supplier_response.status_code, 200)
+        self.assertContains(supplier_response, "Statement supplier")
+
+        invalid_response = self.client.get(
+            customer_url,
+            {
+                "customer": self.customer.pk,
+                "start_date": "2026-03-01",
+                "end_date": "2026-02-01",
+            },
+        )
+        self.assertContains(
+            invalid_response,
+            "The start date cannot be later than the end date.",
+        )
+
+
+class AgingReportTests(TestCase):
+    def setUp(self):
+        self.accountant = get_user_model().objects.create_user(
+            username="aging-accountant",
+            password="test-password",
+            role="accountant",
+        )
+        self.cashier = get_user_model().objects.create_user(
+            username="aging-cashier",
+            password="test-password",
+            role="cashier",
+        )
+        self.receivable = Account.objects.create(
+            code="1300",
+            name="Accounts receivable",
+            account_type=Account.AccountType.ASSET,
+        )
+        self.payable = Account.objects.create(
+            code="2100",
+            name="Accounts payable",
+            account_type=Account.AccountType.LIABILITY,
+        )
+        self.cash = Account.objects.create(
+            code="1100",
+            name="Cash",
+            account_type=Account.AccountType.ASSET,
+        )
+        self.customer = Customer.objects.create(
+            code="AGE-C001",
+            name="Aging customer",
+        )
+        self.supplier = Supplier.objects.create(
+            code="AGE-S001",
+            name="Aging supplier",
+        )
+
+    def add_party_line(
+        self,
+        number,
+        journal_date,
+        *,
+        account,
+        debit="0.000",
+        credit="0.000",
+        customer=None,
+        supplier=None,
+        status=JournalEntry.Status.POSTED,
+        source_type=JournalEntry.SourceType.MANUAL,
+        source_id=None,
+    ):
+        journal = JournalEntry.objects.create(
+            entry_number=number,
+            date=journal_date,
+            description=number,
+            status=status,
+            source_type=source_type,
+            source_id=source_id,
+            created_by=self.accountant,
+            approved_by=(
+                self.accountant if status == JournalEntry.Status.POSTED else None
+            ),
+        )
+        return JournalEntryLine.objects.create(
+            journal_entry=journal,
+            account=account,
+            customer=customer,
+            supplier=supplier,
+            debit=Decimal(debit),
+            credit=Decimal(credit),
+        )
+
+    def test_receivables_aging_bucket_boundaries_and_fifo_receipt(self):
+        for number, journal_date, amount in (
+            ("AR-90", date(2026, 5, 31), "50.000"),
+            ("AR-61", date(2026, 7, 1), "40.000"),
+            ("AR-31", date(2026, 7, 31), "30.000"),
+            ("AR-30", date(2026, 8, 1), "20.000"),
+        ):
+            self.add_party_line(
+                number,
+                journal_date,
+                account=self.receivable,
+                debit=amount,
+                customer=self.customer,
+            )
+        self.add_party_line(
+            "AR-RECEIPT",
+            date(2026, 8, 15),
+            account=self.receivable,
+            credit="15.000",
+            customer=self.customer,
+            source_type=JournalEntry.SourceType.RECEIPT,
+            source_id=501,
+        )
+        self.add_party_line(
+            "AR-CURRENT",
+            date(2026, 8, 31),
+            account=self.receivable,
+            debit="10.000",
+            customer=self.customer,
+        )
+        self.add_party_line(
+            "AR-DRAFT",
+            date(2026, 8, 1),
+            account=self.receivable,
+            debit="999.000",
+            customer=self.customer,
+            status=JournalEntry.Status.DRAFT,
+        )
+
+        report = generate_receivables_aging(
+            as_of_date=date(2026, 8, 31),
+            customer=self.customer,
+        )
+        row = report["rows"][0]
+
+        self.assertEqual(row["current"], Decimal("10.000"))
+        self.assertEqual(row["days_1_30"], Decimal("20.000"))
+        self.assertEqual(row["days_31_60"], Decimal("30.000"))
+        self.assertEqual(row["days_61_90"], Decimal("40.000"))
+        self.assertEqual(row["days_90_plus"], Decimal("35.000"))
+        self.assertEqual(row["balance"], Decimal("135.000"))
+
+    def test_payables_aging_uses_purchase_due_date_and_partial_payment(self):
+        warehouse = Warehouse.objects.create(code="AGE-WH", name="Aging warehouse")
+        invoice = PurchaseInvoice.objects.create(
+            invoice_number="AGE-PI-1",
+            supplier=self.supplier,
+            warehouse=warehouse,
+            invoice_date=date(2026, 1, 1),
+            due_date=date(2026, 9, 15),
+            payment_type=PurchaseInvoice.PaymentType.CREDIT,
+            status=PurchaseInvoice.Status.CONFIRMED,
+            total=Decimal("100.000"),
+            created_by=self.accountant,
+        )
+        self.add_party_line(
+            "AGE-PI-JOURNAL",
+            invoice.invoice_date,
+            account=self.payable,
+            credit="100.000",
+            supplier=self.supplier,
+            source_type=JournalEntry.SourceType.PURCHASE,
+            source_id=invoice.pk,
+        )
+        self.add_party_line(
+            "AGE-PAYMENT",
+            date(2026, 2, 1),
+            account=self.payable,
+            debit="40.000",
+            supplier=self.supplier,
+            source_type=JournalEntry.SourceType.PAYMENT,
+            source_id=502,
+        )
+
+        report = generate_payables_aging(
+            as_of_date=date(2026, 8, 31),
+            supplier=self.supplier,
+        )
+        row = report["rows"][0]
+
+        self.assertEqual(row["current"], Decimal("60.000"))
+        self.assertEqual(row["total_outstanding"], Decimal("60.000"))
+        self.assertEqual(row["documents"][0]["due_date"], date(2026, 9, 15))
+
+    def test_reversed_documents_and_their_reversal_do_not_affect_aging(self):
+        self.add_party_line(
+            "AR-REVERSED",
+            date(2026, 8, 1),
+            account=self.receivable,
+            debit="70.000",
+            customer=self.customer,
+            status=JournalEntry.Status.REVERSED,
+        )
+        self.add_party_line(
+            "AR-REVERSAL",
+            date(2026, 8, 2),
+            account=self.receivable,
+            credit="70.000",
+            customer=self.customer,
+            source_type=JournalEntry.SourceType.REVERSAL,
+            source_id=999,
+        )
+
+        report = generate_receivables_aging(
+            as_of_date=date(2026, 8, 31),
+            customer=self.customer,
+        )
+
+        self.assertEqual(report["rows"], [])
+        self.assertEqual(report["totals"]["balance"], Decimal("0.000"))
+
+    def test_receipt_posting_records_fifo_open_item_allocation(self):
+        create_required_fiscal_years(date.today().year)
+        source_line = self.add_party_line(
+            "AR-OPEN-ITEM",
+            date.today(),
+            account=self.receivable,
+            debit="75.000",
+            customer=self.customer,
+        )
+        open_item = OpenItem.objects.create(
+            item_type=OpenItem.ItemType.RECEIVABLE,
+            customer=self.customer,
+            journal_line=source_line,
+            document_number="AR-OPEN-ITEM",
+            document_date=date.today(),
+            due_date=date.today(),
+            original_amount=Decimal("75.000"),
+        )
+        receipt = ReceiptVoucher.objects.create(
+            voucher_number="AGE-RV-1",
+            date=date.today(),
+            customer=self.customer,
+            received_from=self.customer.name,
+            account=self.cash,
+            amount=Decimal("30.000"),
+            payment_method=ReceiptVoucher.PaymentMethod.CASH,
+            created_by=self.accountant,
+        )
+
+        post_receipt_voucher(receipt.pk, self.accountant)
+
+        allocation = OpenItemAllocation.objects.get(open_item=open_item)
+        self.assertEqual(allocation.amount, Decimal("30.000"))
+        self.assertEqual(allocation.allocation_date, date.today())
+
+        receipt_journal = JournalEntry.objects.get(
+            source_type=JournalEntry.SourceType.RECEIPT,
+            source_id=receipt.pk,
+        )
+        reversal = reverse_journal_entry(
+            receipt_journal.pk,
+            self.accountant,
+            "Receipt entered incorrectly",
+        )
+        self.assertFalse(
+            OpenItemAllocation.objects.filter(open_item=open_item).exists()
+        )
+        self.assertEqual(
+            reversal.lines.get(account=self.receivable).customer,
+            self.customer,
+        )
+
+    def test_aging_pages_filter_validate_and_enforce_permissions(self):
+        self.client.force_login(self.accountant)
+        receivables_url = reverse("finance:receivables_aging")
+        payables_url = reverse("finance:payables_aging")
+
+        response = self.client.get(
+            receivables_url,
+            {"as_of_date": "2026-08-31", "customer": self.customer.pk},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Accounts receivable aging")
+
+        invalid = self.client.get(receivables_url, {"as_of_date": "invalid"})
+        self.assertContains(invalid, "Enter a valid date.")
+
+        self.assertEqual(self.client.get(payables_url).status_code, 200)
+
+        self.client.force_login(self.cashier)
+        self.assertEqual(self.client.get(receivables_url).status_code, 403)
+        self.assertEqual(self.client.get(payables_url).status_code, 403)

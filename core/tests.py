@@ -3,6 +3,9 @@ from django.conf import settings
 from django.test import TestCase
 from django.urls import reverse
 
+from inventory.models import Warehouse
+from pos.models import POSSession
+
 
 class ConnectedViewsSmokeTests(TestCase):
     """Keep the main navigation and create pages renderable as they evolve."""
@@ -33,6 +36,8 @@ class ConnectedViewsSmokeTests(TestCase):
         "finance:trial_balance",
         "finance:income_statement",
         "finance:balance_sheet",
+        "finance:receivables_aging",
+        "finance:payables_aging",
         "pos:terminal",
         "pos:sale_list",
         "quotations:list",
@@ -46,6 +51,15 @@ class ConnectedViewsSmokeTests(TestCase):
             email="admin@example.com",
         )
         self.client.force_login(self.user)
+        warehouse = Warehouse.objects.create(
+            code="SMOKE-WH",
+            name="Smoke test warehouse",
+        )
+        POSSession.objects.create(
+            session_number="SMOKE-SESSION",
+            cashier=self.user,
+            warehouse=warehouse,
+        )
 
     def test_main_pages_render(self):
         for route_name in self.route_names:

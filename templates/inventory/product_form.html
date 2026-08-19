@@ -27,8 +27,8 @@
       </form>
     </div>
 
-    {# Stock lives on batches and balances, not on the product, so it gets its
-       own panel and its own document rather than a field on this form. #}
+    {% comment %}Stock lives on batches and balances, not on the product, so it
+    gets its own panel and document rather than a field on this form.{% endcomment %}
     {% if product and product.image %}
       <div class="card-soft card-pad mt-3">
         <div class="form-section-title">{% trans "Product Image" %}</div>

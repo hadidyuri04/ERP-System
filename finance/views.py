@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 
@@ -11,14 +12,18 @@ from core.permissions import accountant_required
 
 from .forms import (
     AsOfDateForm,
+    CustomerStatementForm,
     FiscalPeriodNotesForm,
     FiscalYearForm,
     FiscalYearNotesForm,
     JournalEntryForm,
     JournalEntryLineFormSet,
+    PayablesAgingForm,
     PaymentVoucherForm,
+    ReceivablesAgingForm,
     ReceiptVoucherForm,
     ReportDateRangeForm,
+    SupplierStatementForm,
 )
 from .models import (
     Account,
@@ -31,8 +36,12 @@ from .models import (
 )
 from .reports import (
     generate_balance_sheet,
+    generate_customer_statement,
     generate_general_ledger,
     generate_income_statement,
+    generate_payables_aging,
+    generate_receivables_aging,
+    generate_supplier_statement,
     generate_trial_balance,
 )
 from .services import (
@@ -458,3 +467,105 @@ def fiscal_year_notes_view(request, pk):
     else:
         messages.error(request, _("Fiscal-year notes could not be updated."))
     return redirect("finance:fiscal_period_list")
+
+
+@login_required
+@accountant_required
+def customer_statement_view(request):
+    form = CustomerStatementForm(request.GET or None)
+    statement = None
+
+    if form.is_valid():
+        statement = generate_customer_statement(
+            customer=form.cleaned_data["customer"],
+            start_date=form.cleaned_data["start_date"],
+            end_date=form.cleaned_data["end_date"],
+        )
+
+    return render(
+        request,
+        "reports/customer_statement.html",
+        {"form": form, "statement": statement},
+    )
+
+
+@login_required
+@accountant_required
+def supplier_statement_view(request):
+    form = SupplierStatementForm(request.GET or None)
+    statement = None
+
+    if form.is_valid():
+        statement = generate_supplier_statement(
+            supplier=form.cleaned_data["supplier"],
+            start_date=form.cleaned_data["start_date"],
+            end_date=form.cleaned_data["end_date"],
+        )
+
+    return render(
+        request,
+        "reports/supplier_statement.html",
+        {"form": form, "statement": statement},
+    )
+
+
+@login_required
+@accountant_required
+def receivables_aging_view(request):
+    form = ReceivablesAgingForm(
+        request.GET or None,
+        initial={"as_of_date": timezone.localdate()},
+    )
+    report = None
+
+    if not form.is_bound:
+        report = generate_receivables_aging()
+    elif form.is_valid():
+        report = generate_receivables_aging(
+            as_of_date=form.cleaned_data["as_of_date"],
+            customer=form.cleaned_data["customer"],
+        )
+
+    return render(
+        request,
+        "reports/aging_report.html",
+        {
+            "form": form,
+            "report": report,
+            "title": _("Accounts receivable aging"),
+            "description": _("Outstanding customer balances grouped by age."),
+            "party_label": _("Customer"),
+            "report_kind": "receivable",
+        },
+    )
+
+
+@login_required
+@accountant_required
+def payables_aging_view(request):
+    form = PayablesAgingForm(
+        request.GET or None,
+        initial={"as_of_date": timezone.localdate()},
+    )
+    report = None
+
+    if not form.is_bound:
+        report = generate_payables_aging()
+    elif form.is_valid():
+        report = generate_payables_aging(
+            as_of_date=form.cleaned_data["as_of_date"],
+            supplier=form.cleaned_data["supplier"],
+        )
+
+    return render(
+        request,
+        "reports/aging_report.html",
+        {
+            "form": form,
+            "report": report,
+            "title": _("Accounts payable aging"),
+            "description": _("Outstanding supplier balances grouped by age."),
+            "party_label": _("Supplier"),
+            "report_kind": "payable",
+        },
+    )

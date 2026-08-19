@@ -1,0 +1,126 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block page_header %}
+<span class="eyebrow">{% trans "Finance reports" %}</span>
+<h1>{{ title }}</h1>
+<p>{{ description }}</p>
+{% endblock %}
+
+{% block content %}
+<div class="aging-page">
+  <section class="card-soft aging-filter-card">
+    <div class="aging-filter-intro">
+      <span class="aging-filter-icon"><i class="bi bi-sliders2"></i></span>
+      <div>
+        <h3>{% trans "Report filters" %}</h3>
+        <p>{% trans "Choose a reporting date and optionally narrow the results to one account." %}</p>
+      </div>
+    </div>
+
+    <form method="get" class="aging-filter-form">
+      {% for field in form %}
+        <div class="aging-filter-field">
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+          {{ field.errors }}
+        </div>
+      {% endfor %}
+      <div class="aging-filter-actions">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-arrow-repeat me-1"></i>{% trans "Run report" %}
+        </button>
+        {% if report_kind == "receivable" %}
+          <a href="{% url 'finance:receivables_aging' %}" class="btn btn-ghost">{% trans "Reset" %}</a>
+        {% else %}
+          <a href="{% url 'finance:payables_aging' %}" class="btn btn-ghost">{% trans "Reset" %}</a>
+        {% endif %}
+      </div>
+    </form>
+    {{ form.non_field_errors }}
+  </section>
+
+  {% if report %}
+    <section class="aging-report-meta">
+      <div>
+        <span class="badge-soft badge-neutral"><i class="bi bi-calendar3"></i>{{ report.as_of_date }}</span>
+        <span class="aging-party-count">{{ report.rows|length }} {% trans "accounts with balances" %}</span>
+      </div>
+      <span class="aging-fifo-note"><i class="bi bi-info-circle"></i>{% trans "Payments are applied to the oldest balances first." %}</span>
+    </section>
+
+    <section class="aging-stats-grid">
+      <article class="aging-stat is-primary">
+        <span class="aging-stat-icon"><i class="bi bi-wallet2"></i></span>
+        <div><span class="aging-stat-label">{% trans "Net outstanding" %}</span><strong>{{ report.totals.balance|floatformat:3 }}</strong></div>
+      </article>
+      <article class="aging-stat is-current">
+        <span class="aging-stat-icon"><i class="bi bi-check2-circle"></i></span>
+        <div><span class="aging-stat-label">{% trans "Current" %}</span><strong>{{ report.totals.current|floatformat:3 }}</strong></div>
+      </article>
+      <article class="aging-stat is-warning">
+        <span class="aging-stat-icon"><i class="bi bi-clock-history"></i></span>
+        <div><span class="aging-stat-label">{% trans "Over 90 days" %}</span><strong>{{ report.totals.days_90_plus|floatformat:3 }}</strong></div>
+      </article>
+      <article class="aging-stat is-credit">
+        <span class="aging-stat-icon"><i class="bi bi-arrow-down-left-circle"></i></span>
+        <div><span class="aging-stat-label">{% trans "Unapplied credit" %}</span><strong>{{ report.totals.unapplied_credit|floatformat:3 }}</strong></div>
+      </article>
+    </section>
+
+    <section class="card-soft aging-summary-card">
+      <div class="card-head aging-card-head">
+        <div><span class="eyebrow">{% trans "Balance summary" %}</span><h3>{% trans "Aging by account" %}</h3></div>
+        <span class="aging-date-label">{% trans "As of" %} {{ report.as_of_date }}</span>
+      </div>
+      <div class="table-wrap">
+        <table class="table-erp aging-table">
+          <thead><tr><th>{{ party_label }}</th><th class="num">{% trans "Current" %}</th><th class="num">{% trans "1-30 days" %}</th><th class="num">{% trans "31-60 days" %}</th><th class="num">{% trans "61-90 days" %}</th><th class="num">{% trans "90+ days" %}</th><th class="num">{% trans "Credit" %}</th><th class="num">{% trans "Balance" %}</th></tr></thead>
+          <tbody>
+            {% for row in report.rows %}
+              <tr>
+                <td><div class="aging-party-cell"><span class="aging-party-avatar">{{ row.party.name|slice:":1"|upper }}</span><span><strong>{{ row.party.name }}</strong><small>{{ row.party.code }}</small></span></div></td>
+                <td class="num aging-current">{{ row.current|floatformat:3 }}</td>
+                <td class="num">{{ row.days_1_30|floatformat:3 }}</td>
+                <td class="num">{{ row.days_31_60|floatformat:3 }}</td>
+                <td class="num aging-late">{{ row.days_61_90|floatformat:3 }}</td>
+                <td class="num aging-critical">{{ row.days_90_plus|floatformat:3 }}</td>
+                <td class="num aging-credit">{{ row.unapplied_credit|floatformat:3 }}</td>
+                <td class="num aging-balance"><strong>{{ row.balance|floatformat:3 }}</strong></td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="8"><div class="aging-empty"><span><i class="bi bi-check2-circle"></i></span><strong>{% trans "No outstanding balances" %}</strong><p>{% trans "There are no open balances for the selected date and account." %}</p></div></td></tr>
+            {% endfor %}
+          </tbody>
+          {% if report.rows %}
+            <tfoot><tr><td>{% trans "Report total" %}</td><td class="num">{{ report.totals.current|floatformat:3 }}</td><td class="num">{{ report.totals.days_1_30|floatformat:3 }}</td><td class="num">{{ report.totals.days_31_60|floatformat:3 }}</td><td class="num">{{ report.totals.days_61_90|floatformat:3 }}</td><td class="num">{{ report.totals.days_90_plus|floatformat:3 }}</td><td class="num">{{ report.totals.unapplied_credit|floatformat:3 }}</td><td class="num">{{ report.totals.balance|floatformat:3 }}</td></tr></tfoot>
+          {% endif %}
+        </table>
+      </div>
+    </section>
+
+    {% if report.rows %}
+      <section class="aging-details-section">
+        <div class="aging-section-heading"><div><span class="eyebrow">{% trans "Supporting detail" %}</span><h3>{% trans "Open documents" %}</h3></div><p>{% trans "Expand an account to review the invoices behind its balance." %}</p></div>
+        <div class="aging-details-list">
+          {% for row in report.rows %}
+            {% if row.documents %}
+              <details class="card-soft aging-detail-card">
+                <summary><span class="aging-party-avatar">{{ row.party.name|slice:":1"|upper }}</span><span class="aging-detail-name"><strong>{{ row.party.name }}</strong><small>{{ row.documents|length }} {% trans "open documents" %}</small></span><span class="aging-detail-total">{{ row.total_outstanding|floatformat:3 }}</span><i class="bi bi-chevron-down aging-detail-chevron"></i></summary>
+                <div class="table-wrap aging-detail-table-wrap">
+                  <table class="table-erp aging-detail-table">
+                    <thead><tr><th>{% trans "Document" %}</th><th>{% trans "Document date" %}</th><th>{% trans "Due date" %}</th><th class="num">{% trans "Days overdue" %}</th><th class="num">{% trans "Original" %}</th><th class="num">{% trans "Remaining" %}</th></tr></thead>
+                    <tbody>{% for document in row.documents %}<tr><td class="cell-strong">{{ document.document_number }}</td><td>{{ document.document_date }}</td><td>{{ document.due_date }}</td><td class="num"><span class="aging-days {% if document.days_overdue > 90 %}is-critical{% elif document.days_overdue > 30 %}is-late{% endif %}">{{ document.days_overdue }}</span></td><td class="num">{{ document.original_amount|floatformat:3 }}</td><td class="num cell-strong">{{ document.remaining|floatformat:3 }}</td></tr>{% endfor %}</tbody>
+                  </table>
+                </div>
+              </details>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+  {% endif %}
+</div>
+{% endblock %}

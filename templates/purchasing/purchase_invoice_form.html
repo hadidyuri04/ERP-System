@@ -24,8 +24,8 @@
 <form method="post" id="purchaseForm">
   {% csrf_token %}
 
-  {# Everything that stopped the save, in one place. Without this a failure on
-     a field the row layout does not print looks like the page just reloaded. #}
+  {% comment %}Everything that stopped the save, in one place. Without this a
+  failure on a field the row layout does not print looks like a reload.{% endcomment %}
   {% if form.errors or formset.errors or formset.non_form_errors %}
     <div class="card-soft card-pad mb-3" style="border-inline-start:4px solid var(--danger)">
       <div class="fw-bold mb-2" style="color:var(--danger)">

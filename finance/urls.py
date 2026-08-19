@@ -82,4 +82,24 @@ urlpatterns = [
         views.fiscal_year_notes_view,
         name="fiscal_year_notes",
     ),
+    path(
+        "reports/customer-statement/",
+        views.customer_statement_view,
+        name="customer_statement",
+    ),
+    path(
+        "reports/supplier-statement/",
+        views.supplier_statement_view,
+        name="supplier_statement",
+    ),
+    path(
+        "reports/receivables-aging/",
+        views.receivables_aging_view,
+        name="receivables_aging",
+    ),
+    path(
+        "reports/payables-aging/",
+        views.payables_aging_view,
+        name="payables_aging",
+    ),
 ]

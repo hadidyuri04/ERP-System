@@ -1,0 +1,45 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Supplier statement" %}{% endblock %}
+
+{% block page_header %}
+<h1>{% trans "Supplier statement" %}</h1>
+<p>{% trans "Payable activity and running balance for one supplier." %}</p>
+{% endblock %}
+
+{% block content %}
+<div class="card-soft">
+  <form method="get" class="filter-bar">
+    {% for field in form %}
+      <div>
+        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+        {{ field }}
+        {{ field.errors }}
+      </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">{% trans "View statement" %}</button>
+  </form>
+  {{ form.non_field_errors }}
+
+  {% if statement %}
+    <div class="card-pad">
+      <h3>{{ statement.party }}</h3>
+      <p><strong>{% trans "Opening balance" %}:</strong> {{ statement.opening_balance|floatformat:3 }}</p>
+    </div>
+    <div class="table-wrap">
+      <table class="table-erp">
+        <thead><tr><th>{% trans "Date" %}</th><th>{% trans "Entry" %}</th><th>{% trans "Description" %}</th><th>{% trans "Debit" %}</th><th>{% trans "Credit" %}</th><th>{% trans "Balance" %}</th></tr></thead>
+        <tbody>
+          {% for entry in statement.entries %}
+            <tr><td>{{ entry.date }}</td><td>{{ entry.entry_number }}</td><td>{{ entry.description }}</td><td>{{ entry.debit|floatformat:3 }}</td><td>{{ entry.credit|floatformat:3 }}</td><td>{{ entry.balance|floatformat:3 }}</td></tr>
+          {% empty %}
+            <tr><td colspan="6">{% trans "No transactions in this period." %}</td></tr>
+          {% endfor %}
+        </tbody>
+        <tfoot><tr><td colspan="5">{% trans "Closing balance" %}</td><td>{{ statement.closing_balance|floatformat:3 }}</td></tr></tfoot>
+      </table>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1272,6 +1272,80 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--purple-6
   flex-direction: row-reverse;
 }
 
+/* Aging reports */
+.aging-page { display: grid; gap: 18px; }
+.aging-filter-card, .aging-summary-card, .aging-detail-card { overflow: hidden; }
+.aging-filter-intro { display: flex; align-items: center; gap: 14px; padding: 20px 24px 14px; }
+.aging-filter-intro h3, .aging-section-heading h3, .aging-card-head h3 { margin: 0; }
+.aging-filter-intro p, .aging-section-heading p { margin: 3px 0 0; color: var(--muted); font-size: .82rem; }
+.aging-filter-icon { width: 42px; height: 42px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 13px; background: var(--purple-100); color: var(--purple-700); font-size: 1.05rem; }
+.aging-filter-form { display: grid; grid-template-columns: minmax(180px, 240px) minmax(220px, 1fr) auto; align-items: end; gap: 14px; padding: 0 24px 22px; }
+.aging-filter-field label { display: block; margin-bottom: 7px; color: var(--ink-soft); font-size: .74rem; font-weight: 750; }
+.aging-filter-actions { display: flex; gap: 8px; padding-bottom: 1px; }
+.aging-report-meta { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 0 3px; }
+.aging-report-meta > div { display: flex; align-items: center; gap: 10px; }
+.aging-report-meta .badge-soft { gap: 7px; }
+.aging-party-count, .aging-fifo-note { color: var(--muted); font-size: .76rem; }
+.aging-fifo-note { display: inline-flex; align-items: center; gap: 6px; }
+.aging-stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.aging-stat { display: flex; align-items: center; gap: 13px; min-height: 105px; padding: 19px; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--surface); box-shadow: var(--shadow-sm); }
+.aging-stat-icon { width: 43px; height: 43px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 13px; font-size: 1.05rem; }
+.aging-stat-label { display: block; margin-bottom: 3px; color: var(--muted); font-size: .72rem; font-weight: 700; }
+.aging-stat strong { display: block; color: var(--ink); font-size: 1.2rem; font-weight: 820; font-variant-numeric: tabular-nums; }
+.aging-stat.is-primary { border-color: transparent; background: linear-gradient(135deg, var(--purple-700), var(--purple-500)); }
+.aging-stat.is-primary .aging-stat-icon { background: rgba(255,255,255,.16); color: #fff; }
+.aging-stat.is-primary .aging-stat-label { color: rgba(255,255,255,.72); }
+.aging-stat.is-primary strong { color: #fff; }
+.aging-stat.is-current .aging-stat-icon { background: var(--success-bg); color: var(--success); }
+.aging-stat.is-warning .aging-stat-icon { background: var(--warning-bg); color: var(--warning); }
+.aging-stat.is-credit .aging-stat-icon { background: var(--purple-50); color: var(--purple-600); }
+.aging-card-head { display: flex; align-items: center; justify-content: space-between; }
+.aging-date-label { padding: 7px 12px; border-radius: var(--r-pill); background: var(--surface-alt); color: var(--muted); font-size: .72rem; font-weight: 700; }
+.aging-table { min-width: 1050px; }
+.aging-table .num, .aging-detail-table .num { text-align: end; font-variant-numeric: tabular-nums; }
+.aging-party-cell { display: flex; align-items: center; gap: 11px; min-width: 190px; }
+.aging-party-cell > span:last-child { display: grid; gap: 2px; }
+.aging-party-cell small, .aging-detail-name small { color: var(--muted); font-size: .68rem; }
+.aging-party-avatar { width: 34px; height: 34px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 11px; background: var(--purple-100); color: var(--purple-700); font-size: .75rem; font-weight: 800; }
+.aging-table td.aging-current { color: var(--success); }
+.aging-table td.aging-late { color: var(--warning); }
+.aging-table td.aging-critical { color: var(--danger); }
+.aging-table td.aging-credit { color: var(--purple-600); }
+.aging-table td.aging-balance { background: rgba(109,74,252,.035); color: var(--ink); }
+.aging-empty { display: grid; justify-items: center; gap: 5px; padding: 34px 15px; text-align: center; }
+.aging-empty > span { width: 48px; height: 48px; display: grid; place-items: center; margin-bottom: 3px; border-radius: 50%; background: var(--success-bg); color: var(--success); font-size: 1.25rem; }
+.aging-empty p { margin: 0; color: var(--muted); font-size: .78rem; }
+.aging-details-section { display: grid; gap: 12px; margin-top: 4px; }
+.aging-section-heading { display: flex; justify-content: space-between; align-items: end; padding: 0 3px; }
+.aging-details-list { display: grid; gap: 10px; }
+.aging-detail-card summary { display: flex; align-items: center; gap: 12px; padding: 16px 19px; cursor: pointer; list-style: none; }
+.aging-detail-card summary::-webkit-details-marker { display: none; }
+.aging-detail-name { display: grid; gap: 2px; }
+.aging-detail-total { margin-inline-start: auto; font-size: .92rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.aging-detail-chevron { margin-inline-start: 8px; color: var(--muted); transition: transform var(--t-fast) var(--ease); }
+.aging-detail-card[open] .aging-detail-chevron { transform: rotate(180deg); }
+.aging-detail-table-wrap { border-top: 1px solid var(--border); border-radius: 0; }
+.aging-detail-table { min-width: 760px; }
+.aging-days { display: inline-flex; min-width: 32px; justify-content: center; padding: 3px 8px; border-radius: var(--r-pill); background: var(--success-bg); color: var(--success); font-size: .7rem; font-weight: 750; }
+.aging-days.is-late { background: var(--warning-bg); color: var(--warning); }
+.aging-days.is-critical { background: var(--danger-bg); color: var(--danger); }
+
+@media (max-width: 1000px) {
+  .aging-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .aging-filter-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .aging-filter-actions { grid-column: 1 / -1; }
+}
+
+@media (max-width: 640px) {
+  .aging-filter-intro { padding: 17px 17px 12px; }
+  .aging-filter-form { grid-template-columns: 1fr; padding: 0 17px 18px; }
+  .aging-filter-actions { grid-column: auto; }
+  .aging-filter-actions .btn { flex: 1; }
+  .aging-report-meta, .aging-section-heading { align-items: flex-start; flex-direction: column; }
+  .aging-stats-grid { grid-template-columns: 1fr; }
+  .aging-stat { min-height: 88px; }
+}
+
 /* Fiscal periods */
 .fiscal-year-card { overflow: hidden; }
 .fiscal-year-head {

@@ -448,6 +448,102 @@ class JournalEntryLine(models.Model):
         return f"{self.journal_entry.entry_number} - {self.account}"
 
 
+class OpenItem(models.Model):
+    class ItemType(models.TextChoices):
+        RECEIVABLE = "receivable", _("Receivable")
+        PAYABLE = "payable", _("Payable")
+
+    item_type = models.CharField(max_length=20, choices=ItemType.choices)
+    customer = models.ForeignKey(
+        Customer, null=True, blank=True,
+        on_delete=models.PROTECT,
+        related_name="open_items",
+    )
+    supplier = models.ForeignKey(
+        Supplier, null=True, blank=True,
+        on_delete=models.PROTECT,
+        related_name="open_items",
+    )
+    journal_line = models.OneToOneField(
+        JournalEntryLine,
+        on_delete=models.PROTECT,
+        related_name="open_item",
+    )
+    document_number = models.CharField(max_length=100)
+    document_date = models.DateField()
+    due_date = models.DateField()
+    original_amount = models.DecimalField(max_digits=14, decimal_places=3)
+
+    class Meta:
+        ordering = ["due_date", "document_date", "id"]
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    Q(item_type="receivable", customer__isnull=False, supplier__isnull=True)
+                    | Q(item_type="payable", customer__isnull=True, supplier__isnull=False)
+                ),
+                name="open_item_has_correct_party",
+            ),
+            models.CheckConstraint(
+                condition=Q(original_amount__gt=0),
+                name="open_item_amount_positive",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.item_type == self.ItemType.RECEIVABLE:
+            if not self.customer_id or self.supplier_id:
+                raise ValidationError(_("A receivable must reference only a customer."))
+        elif self.item_type == self.ItemType.PAYABLE:
+            if not self.supplier_id or self.customer_id:
+                raise ValidationError(_("A payable must reference only a supplier."))
+        if self.original_amount <= 0:
+            raise ValidationError(_("Open-item amount must be greater than zero."))
+
+    def __str__(self):
+        return f"{self.document_number} - {self.original_amount}"
+
+
+class OpenItemAllocation(models.Model):
+    open_item = models.ForeignKey(
+        OpenItem,
+        on_delete=models.PROTECT,
+        related_name="allocations",
+    )
+    journal_line = models.ForeignKey(
+        JournalEntryLine,
+        on_delete=models.PROTECT,
+        related_name="open_item_allocations",
+    )
+    allocation_date = models.DateField()
+    amount = models.DecimalField(max_digits=14, decimal_places=3)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="created_open_item_allocations",
+    )
+
+    class Meta:
+        ordering = ["allocation_date", "id"]
+        constraints = [
+            models.CheckConstraint(
+                condition=Q(amount__gt=0),
+                name="open_item_allocation_amount_positive",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.amount <= 0:
+            raise ValidationError(_("Allocation amount must be greater than zero."))
+        if self.open_item_id and self.allocation_date < self.open_item.document_date:
+            raise ValidationError(_("Allocation date cannot precede the document date."))
+
+    def __str__(self):
+        return f"{self.open_item.document_number} - {self.amount}"
+
+
 class ReceiptVoucher(models.Model):
     class Status(models.TextChoices):
         DRAFT = "draft", _("Draft")

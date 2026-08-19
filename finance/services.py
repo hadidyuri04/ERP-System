@@ -16,10 +16,54 @@ from .models import (
     FiscalYear,
     JournalEntry,
     JournalEntryLine,
+    OpenItem,
+    OpenItemAllocation,
     PeriodStatus,
     ReceiptVoucher,
     PaymentVoucher,
 )
+
+
+def _allocate_open_items(*, item_type, party, settlement_line, allocation_date, user):
+    """Allocate a settlement to the party's oldest open documents first."""
+    party_filter = (
+        {"customer": party}
+        if item_type == OpenItem.ItemType.RECEIVABLE
+        else {"supplier": party}
+    )
+    amount_left = settlement_line.credit
+    if item_type == OpenItem.ItemType.PAYABLE:
+        amount_left = settlement_line.debit
+
+    open_items = list(
+        OpenItem.objects.select_for_update()
+        .filter(item_type=item_type, document_date__lte=allocation_date, **party_filter)
+        .order_by("due_date", "document_date", "id")
+    )
+    allocation_totals = {
+        row["open_item_id"]: row["total"]
+        for row in OpenItemAllocation.objects.filter(open_item__in=open_items)
+        .values("open_item_id")
+        .annotate(total=Sum("amount"))
+    }
+    for open_item in open_items:
+        if amount_left <= 0:
+            break
+        allocated = allocation_totals.get(open_item.pk, Decimal("0.000"))
+        remaining = open_item.original_amount - allocated
+        if remaining <= 0:
+            continue
+        amount = min(remaining, amount_left)
+        OpenItemAllocation.objects.create(
+            open_item=open_item,
+            journal_line=settlement_line,
+            allocation_date=allocation_date,
+            amount=amount,
+            created_by=user,
+        )
+        amount_left -= amount
+
+    return amount_left
 
 
 def ensure_not_posted(source_type, source_id):
@@ -220,7 +264,7 @@ def post_receipt_voucher(voucher_id, user):
     )
 
     # Accounts Receivable decreases → Credit
-    JournalEntryLine.objects.create(
+    receivable_line = JournalEntryLine.objects.create(
         journal_entry=journal,
         account=receivable_account,
         customer=voucher.customer,
@@ -231,6 +275,13 @@ def post_receipt_voucher(voucher_id, user):
 
     # 6. Post the journal using your existing validation
     post_journal_entry(journal.id, user)
+    _allocate_open_items(
+        item_type=OpenItem.ItemType.RECEIVABLE,
+        party=voucher.customer,
+        settlement_line=receivable_line,
+        allocation_date=voucher.date,
+        user=user,
+    )
 
     # 7. Confirm the voucher
     voucher.status = ReceiptVoucher.Status.CONFIRMED
@@ -291,7 +342,7 @@ def post_payment_voucher(voucher_id, user):
     )
 
     # Accounts Payable decreases → Debit
-    JournalEntryLine.objects.create(
+    payable_line = JournalEntryLine.objects.create(
         journal_entry=journal,
         account=payable_account,
         supplier=voucher.supplier,
@@ -311,6 +362,13 @@ def post_payment_voucher(voucher_id, user):
 
     # 6. Post the journal using existing validation
     post_journal_entry(journal.id, user)
+    _allocate_open_items(
+        item_type=OpenItem.ItemType.PAYABLE,
+        party=voucher.supplier,
+        settlement_line=payable_line,
+        allocation_date=voucher.date,
+        user=user,
+    )
 
     # 7. Confirm the voucher
     voucher.status = PaymentVoucher.Status.CONFIRMED
@@ -528,7 +586,7 @@ def post_purchase_invoice(invoice_id, user):
         )
 
     if outstanding > 0:
-        JournalEntryLine.objects.create(
+        payable_line = JournalEntryLine.objects.create(
             journal_entry=journal,
             account=payable_account,
             supplier=invoice.supplier,
@@ -539,6 +597,15 @@ def post_purchase_invoice(invoice_id, user):
             },
             debit=Decimal("0.000"),
             credit=outstanding,
+        )
+        OpenItem.objects.create(
+            item_type=OpenItem.ItemType.PAYABLE,
+            supplier=invoice.supplier,
+            journal_line=payable_line,
+            document_number=invoice.invoice_number,
+            document_date=invoice.invoice_date,
+            due_date=invoice.due_date or invoice.invoice_date,
+            original_amount=outstanding,
         )
 
     # 12. Post the journal
@@ -687,7 +754,7 @@ def post_pos_sale(sale_id, user):
 
         total_payment_posted += amount
 
-        JournalEntryLine.objects.create(
+        payment_line = JournalEntryLine.objects.create(
             journal_entry=journal,
             account=debit_account,
             customer=(
@@ -705,6 +772,16 @@ def post_pos_sale(sale_id, user):
             debit=amount,
             credit=Decimal("0.000"),
         )
+        if payment.payment_method == POSPayment.PaymentMethod.CREDIT:
+            OpenItem.objects.create(
+                item_type=OpenItem.ItemType.RECEIVABLE,
+                customer=sale.customer,
+                journal_line=payment_line,
+                document_number=sale.sale_number,
+                document_date=sale.date.date(),
+                due_date=sale.date.date(),
+                original_amount=amount,
+            )
 
     if remaining_change > 0:
         raise ValidationError(
@@ -871,6 +948,16 @@ def reverse_journal_entry(entry_id, user, reason):
             _("A reversal journal entry cannot be reversed.")
         )
 
+    if OpenItemAllocation.objects.filter(
+        open_item__journal_line__journal_entry=original,
+    ).exists():
+        raise ValidationError(
+            _(
+                "This document has settlements applied to it. Reverse those "
+                "receipts or payments first."
+            )
+        )
+
     reason = (reason or "").strip()
     if not reason:
         raise ValidationError(
@@ -895,6 +982,8 @@ def reverse_journal_entry(entry_id, user, reason):
             JournalEntryLine(
                 journal_entry=reversal,
                 account=line.account,
+                customer=line.customer,
+                supplier=line.supplier,
                 description=line.description,
                 debit=line.credit,
                 credit=line.debit,
@@ -904,6 +993,16 @@ def reverse_journal_entry(entry_id, user, reason):
     )
 
     reversal = post_journal_entry(reversal.pk, user)
+
+    # Reversing a settlement reopens the invoices it had paid. Reversing an
+    # unsettled invoice removes its operational open item; the journals remain
+    # as the permanent accounting audit trail.
+    OpenItemAllocation.objects.filter(
+        journal_line__journal_entry=original,
+    ).delete()
+    OpenItem.objects.filter(
+        journal_line__journal_entry=original,
+    ).delete()
 
     original.status = JournalEntry.Status.REVERSED
     original.reversal_reason = reason

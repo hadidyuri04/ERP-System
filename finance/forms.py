@@ -5,6 +5,9 @@ from django.core.exceptions import ValidationError
 from django.forms import BaseInlineFormSet, inlineformset_factory
 from django.utils.translation import gettext_lazy as _
 
+from customers.models import Customer
+from suppliers.models import Supplier
+
 from .models import (
     Account,
     FiscalPeriod,
@@ -207,3 +210,33 @@ class FiscalPeriodNotesForm(forms.ModelForm):
     class Meta:
         model = FiscalPeriod
         fields = ["notes"]
+
+
+class CustomerStatementForm(ReportDateRangeForm):
+    customer = forms.ModelChoiceField(
+        queryset=Customer.objects.all().order_by("name"),
+        label=_("Customer"),
+    )
+
+
+class SupplierStatementForm(ReportDateRangeForm):
+    supplier = forms.ModelChoiceField(
+        queryset=Supplier.objects.all().order_by("name"),
+        label=_("Supplier"),
+    )
+
+
+class ReceivablesAgingForm(AsOfDateForm):
+    customer = forms.ModelChoiceField(
+        queryset=Customer.objects.all().order_by("name"),
+        label=_("Customer"),
+        required=False,
+    )
+
+
+class PayablesAgingForm(AsOfDateForm):
+    supplier = forms.ModelChoiceField(
+        queryset=Supplier.objects.all().order_by("name"),
+        label=_("Supplier"),
+        required=False,
+    )
