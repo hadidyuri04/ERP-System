@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
 from django.test import TestCase
 from django.urls import reverse
@@ -13,6 +13,7 @@ from inventory.models import (
     Product,
     StockBalance,
     StockBatch,
+    StockMovement,
     Unit,
     Warehouse,
     WasteLoss,
@@ -22,11 +23,24 @@ from inventory.services import confirm_waste_loss
 from pos.models import POSPayment, POSSale, POSSaleItem
 from pos.services import complete_sale
 from purchasing.models import PurchaseInvoice, PurchaseInvoiceItem
+from purchasing.services import confirm_purchase
 from suppliers.models import Supplier
 
-from .models import Account, JournalEntry, JournalEntryLine, PaymentVoucher, ReceiptVoucher
+from .models import (
+    Account,
+    FiscalPeriod,
+    FiscalPeriodAction,
+    FiscalYear,
+    JournalEntry,
+    JournalEntryLine,
+    PaymentVoucher,
+    PeriodStatus,
+    ReceiptVoucher,
+)
 from .reports import generate_balance_sheet, generate_income_statement, get_account_balance
 from .services import (
+    create_fiscal_year,
+    get_period_summary,
     get_posting_account,
     post_journal_entry,
     post_payment_voucher,
@@ -34,7 +48,15 @@ from .services import (
     post_purchase_invoice,
     post_receipt_voucher,
     reverse_journal_entry,
+    set_fiscal_year_status,
+    set_period_status,
 )
+
+
+def create_required_fiscal_years(*years):
+    """Create each calendar year once for tests that post journal entries."""
+    for year in set(years):
+        create_fiscal_year(year)
 
 
 class ManualJournalViewTests(TestCase):
@@ -125,7 +147,9 @@ class FinancePostingTests(TestCase):
         self.user = get_user_model().objects.create_user(
             username="accountant",
             password="test-password",
+            role="accountant",
         )
+        create_required_fiscal_years(2026, date.today().year)
         self.customer = Customer.objects.create(code="C001", name="Customer")
         self.supplier = Supplier.objects.create(code="S001", name="Supplier")
 
@@ -145,6 +169,19 @@ class FinancePostingTests(TestCase):
             code: Account.objects.create(code=code, name=name, account_type=account_type)
             for code, (name, account_type) in account_data.items()
         }
+
+    def close_period_for(self, posting_date):
+        period = FiscalPeriod.objects.get(
+            fiscal_year__year=posting_date.year,
+            month=posting_date.month,
+        )
+        set_period_status(
+            period.pk,
+            PeriodStatus.CLOSED,
+            self.user,
+            reason="Posting workflow validation test",
+        )
+        return period
 
     def test_post_journal_entry_records_approver(self):
         journal = JournalEntry.objects.create(
@@ -257,12 +294,15 @@ class FinancePostingTests(TestCase):
                 )
 
     def test_pos_posts_split_revenue_tax_and_cogs(self):
-        category = Category.objects.create(code="CAT", name="Category")
-        unit = Unit.objects.create(name="Piece", symbol="pc")
+        category = Category.objects.create(
+            code="CAT", name_en="Category", name_ar="Category"
+        )
+        unit = Unit.objects.create(name_en="Piece", name_ar="Piece", symbol="pc")
         warehouse = Warehouse.objects.create(code="WH", name="Warehouse")
         product = Product.objects.create(
             code="P001",
-            name="Product",
+            name_en="Product",
+            name_ar="Product",
             category=category,
             unit=unit,
             purchase_price=Decimal("60.000"),
@@ -309,12 +349,15 @@ class FinancePostingTests(TestCase):
             post_pos_sale(sale.id, self.user)
 
     def test_purchase_uses_one_balanced_finance_journal(self):
-        category = Category.objects.create(code="PCAT", name="Purchase Category")
-        unit = Unit.objects.create(name="Box", symbol="box")
+        category = Category.objects.create(
+            code="PCAT", name_en="Purchase Category", name_ar="Purchase Category"
+        )
+        unit = Unit.objects.create(name_en="Box", name_ar="Box", symbol="box")
         warehouse = Warehouse.objects.create(code="PWH", name="Purchase Warehouse")
         product = Product.objects.create(
             code="PP01",
-            name="Purchased product",
+            name_en="Purchased product",
+            name_ar="Purchased product",
             category=category,
             unit=unit,
             purchase_price=Decimal("50.000"),
@@ -349,12 +392,15 @@ class FinancePostingTests(TestCase):
         )
 
     def test_complete_sale_posts_finance_with_actual_batch_cost(self):
-        category = Category.objects.create(code="SCAT", name="Sale Category")
-        unit = Unit.objects.create(name="Unit", symbol="u")
+        category = Category.objects.create(
+            code="SCAT", name_en="Sale Category", name_ar="Sale Category"
+        )
+        unit = Unit.objects.create(name_en="Unit", name_ar="Unit", symbol="u")
         warehouse = Warehouse.objects.create(code="SWH", name="Sale Warehouse")
         product = Product.objects.create(
             code="SP01",
-            name="Stock product",
+            name_en="Stock product",
+            name_ar="Stock product",
             category=category,
             unit=unit,
             purchase_price=Decimal("30.000"),
@@ -402,16 +448,35 @@ class FinancePostingTests(TestCase):
         )
 
     def test_confirm_waste_loss_posts_finance_journal(self):
-        category = Category.objects.create(code="WCAT", name="Waste Category")
-        unit = Unit.objects.create(name="Waste Unit", symbol="wu")
+        category = Category.objects.create(
+            code="WCAT", name_en="Waste Category", name_ar="Waste Category"
+        )
+        unit = Unit.objects.create(
+            name_en="Waste Unit", name_ar="Waste Unit", symbol="wu"
+        )
         warehouse = Warehouse.objects.create(code="WWH", name="Waste Warehouse")
         product = Product.objects.create(
             code="WP01",
-            name="Waste product",
+            name_en="Waste product",
+            name_ar="Waste product",
             category=category,
             unit=unit,
             purchase_price=Decimal("12.000"),
             selling_price=Decimal("20.000"),
+        )
+        StockBatch.objects.create(
+            product=product,
+            warehouse=warehouse,
+            batch_number="WB001",
+            received_date=date.today(),
+            unit_cost=Decimal("12.000"),
+            quantity_received=Decimal("2.000"),
+            quantity_remaining=Decimal("2.000"),
+        )
+        StockBalance.objects.create(
+            product=product,
+            warehouse=warehouse,
+            quantity=Decimal("2.000"),
         )
         waste = WasteLoss.objects.create(
             document_number="WST-001",
@@ -442,12 +507,17 @@ class FinancePostingTests(TestCase):
         )
 
     def test_waste_confirmation_rolls_back_when_finance_posting_fails(self):
-        category = Category.objects.create(code="RCAT", name="Rollback Category")
-        unit = Unit.objects.create(name="Rollback Unit", symbol="ru")
+        category = Category.objects.create(
+            code="RCAT", name_en="Rollback Category", name_ar="Rollback Category"
+        )
+        unit = Unit.objects.create(
+            name_en="Rollback Unit", name_ar="Rollback Unit", symbol="ru"
+        )
         warehouse = Warehouse.objects.create(code="RWH", name="Rollback Warehouse")
         product = Product.objects.create(
             code="RP01",
-            name="Rollback product",
+            name_en="Rollback product",
+            name_ar="Rollback product",
             category=category,
             unit=unit,
             purchase_price=Decimal("10.000"),
@@ -482,6 +552,254 @@ class FinancePostingTests(TestCase):
             ).exists()
         )
 
+    def test_closed_period_rejects_receipt_and_rolls_back_journal(self):
+        self.close_period_for(date.today())
+        receipt = ReceiptVoucher.objects.create(
+            voucher_number="CLOSED-RV",
+            date=date.today(),
+            customer=self.customer,
+            received_from=self.customer.name,
+            account=self.accounts["1100"],
+            amount=Decimal("40.000"),
+            payment_method=ReceiptVoucher.PaymentMethod.CASH,
+            created_by=self.user,
+        )
+
+        with self.assertRaisesMessage(ValidationError, "period"):
+            post_receipt_voucher(receipt.pk, self.user)
+
+        receipt.refresh_from_db()
+        self.assertEqual(receipt.status, ReceiptVoucher.Status.DRAFT)
+        self.assertFalse(
+            JournalEntry.objects.filter(
+                source_type=JournalEntry.SourceType.RECEIPT,
+                source_id=receipt.pk,
+            ).exists()
+        )
+
+    def test_closed_period_rejects_payment_and_rolls_back_journal(self):
+        self.close_period_for(date.today())
+        payment = PaymentVoucher.objects.create(
+            voucher_number="CLOSED-PV",
+            date=date.today(),
+            supplier=self.supplier,
+            paid_to=self.supplier.name,
+            account=self.accounts["1100"],
+            amount=Decimal("30.000"),
+            payment_method=PaymentVoucher.PaymentMethod.CASH,
+            created_by=self.user,
+        )
+
+        with self.assertRaisesMessage(ValidationError, "period"):
+            post_payment_voucher(payment.pk, self.user)
+
+        payment.refresh_from_db()
+        self.assertEqual(payment.status, PaymentVoucher.Status.DRAFT)
+        self.assertFalse(
+            JournalEntry.objects.filter(
+                source_type=JournalEntry.SourceType.PAYMENT,
+                source_id=payment.pk,
+            ).exists()
+        )
+
+    def test_closed_period_rejects_purchase_and_rolls_back_inventory(self):
+        self.close_period_for(date.today())
+        category = Category.objects.create(
+            code="CLOSED-PCAT",
+            name_en="Closed purchase category",
+            name_ar="Closed purchase category",
+        )
+        unit = Unit.objects.create(
+            name_en="Closed purchase unit",
+            name_ar="Closed purchase unit",
+            symbol="cpu",
+        )
+        warehouse = Warehouse.objects.create(
+            code="CLOSED-PWH",
+            name="Closed purchase warehouse",
+        )
+        product = Product.objects.create(
+            code="CLOSED-PP",
+            name_en="Closed purchase product",
+            name_ar="Closed purchase product",
+            category=category,
+            unit=unit,
+            purchase_price=Decimal("25.000"),
+            selling_price=Decimal("40.000"),
+        )
+        invoice = PurchaseInvoice.objects.create(
+            invoice_number="CLOSED-PI",
+            supplier=self.supplier,
+            warehouse=warehouse,
+            invoice_date=date.today(),
+            payment_type=PurchaseInvoice.PaymentType.CREDIT,
+            subtotal=Decimal("50.000"),
+            total=Decimal("50.000"),
+            created_by=self.user,
+        )
+        PurchaseInvoiceItem.objects.create(
+            purchase_invoice=invoice,
+            product=product,
+            quantity=Decimal("2.000"),
+            unit_cost=Decimal("25.000"),
+            line_total=Decimal("50.000"),
+            batch_number="CLOSED-BATCH",
+        )
+
+        with self.assertRaisesMessage(ValidationError, "period"):
+            confirm_purchase(invoice.pk, self.user)
+
+        invoice.refresh_from_db()
+        self.assertEqual(invoice.status, PurchaseInvoice.Status.DRAFT)
+        self.assertFalse(StockBatch.objects.filter(product=product).exists())
+        self.assertFalse(StockBalance.objects.filter(product=product).exists())
+        self.assertFalse(StockMovement.objects.filter(product=product).exists())
+        self.assertFalse(
+            JournalEntry.objects.filter(
+                source_type=JournalEntry.SourceType.PURCHASE,
+                source_id=invoice.pk,
+            ).exists()
+        )
+
+    def test_closed_period_rejects_pos_sale_and_restores_stock(self):
+        self.close_period_for(date.today())
+        category = Category.objects.create(
+            code="CLOSED-SCAT",
+            name_en="Closed sale category",
+            name_ar="Closed sale category",
+        )
+        unit = Unit.objects.create(
+            name_en="Closed sale unit",
+            name_ar="Closed sale unit",
+            symbol="csu",
+        )
+        warehouse = Warehouse.objects.create(
+            code="CLOSED-SWH",
+            name="Closed sale warehouse",
+        )
+        product = Product.objects.create(
+            code="CLOSED-SP",
+            name_en="Closed sale product",
+            name_ar="Closed sale product",
+            category=category,
+            unit=unit,
+            purchase_price=Decimal("20.000"),
+            selling_price=Decimal("35.000"),
+        )
+        batch = StockBatch.objects.create(
+            product=product,
+            warehouse=warehouse,
+            batch_number="CLOSED-SALE-BATCH",
+            received_date=date.today(),
+            unit_cost=Decimal("20.000"),
+            quantity_received=Decimal("5.000"),
+            quantity_remaining=Decimal("5.000"),
+        )
+        balance = StockBalance.objects.create(
+            product=product,
+            warehouse=warehouse,
+            quantity=Decimal("5.000"),
+        )
+
+        with self.assertRaisesMessage(ValidationError, "period"):
+            complete_sale(
+                warehouse=warehouse,
+                cashier=self.user,
+                items_data=[{
+                    "product": product,
+                    "quantity": "2.000",
+                    "unit_price": "35.000",
+                }],
+                payments_data=[{
+                    "payment_method": POSPayment.PaymentMethod.CASH,
+                    "amount": "70.000",
+                }],
+            )
+
+        batch.refresh_from_db()
+        balance.refresh_from_db()
+        self.assertEqual(batch.quantity_remaining, Decimal("5.000"))
+        self.assertEqual(balance.quantity, Decimal("5.000"))
+        self.assertFalse(POSSale.objects.filter(warehouse=warehouse).exists())
+        self.assertFalse(StockMovement.objects.filter(product=product).exists())
+        self.assertFalse(
+            JournalEntry.objects.filter(
+                source_type=JournalEntry.SourceType.POS_SALE,
+            ).exists()
+        )
+
+    def test_closed_period_rejects_waste_and_restores_stock(self):
+        self.close_period_for(date.today())
+        category = Category.objects.create(
+            code="CLOSED-WCAT",
+            name_en="Closed waste category",
+            name_ar="Closed waste category",
+        )
+        unit = Unit.objects.create(
+            name_en="Closed waste unit",
+            name_ar="Closed waste unit",
+            symbol="cwu",
+        )
+        warehouse = Warehouse.objects.create(
+            code="CLOSED-WWH",
+            name="Closed waste warehouse",
+        )
+        product = Product.objects.create(
+            code="CLOSED-WP",
+            name_en="Closed waste product",
+            name_ar="Closed waste product",
+            category=category,
+            unit=unit,
+            purchase_price=Decimal("12.000"),
+            selling_price=Decimal("18.000"),
+        )
+        batch = StockBatch.objects.create(
+            product=product,
+            warehouse=warehouse,
+            batch_number="CLOSED-WASTE-BATCH",
+            received_date=date.today(),
+            unit_cost=Decimal("12.000"),
+            quantity_received=Decimal("3.000"),
+            quantity_remaining=Decimal("3.000"),
+        )
+        balance = StockBalance.objects.create(
+            product=product,
+            warehouse=warehouse,
+            quantity=Decimal("3.000"),
+        )
+        waste = WasteLoss.objects.create(
+            document_number="CLOSED-WASTE",
+            warehouse=warehouse,
+            date=date.today(),
+            reason=WasteLoss.WasteReason.DAMAGED,
+            created_by=self.user,
+        )
+        WasteLossItem.objects.create(
+            waste_loss=waste,
+            product=product,
+            batch=batch,
+            quantity=Decimal("1.000"),
+            unit_cost=Decimal("12.000"),
+            total_cost=Decimal("12.000"),
+        )
+
+        with self.assertRaisesMessage(ValidationError, "period"):
+            confirm_waste_loss(waste.pk, self.user)
+
+        waste.refresh_from_db()
+        batch.refresh_from_db()
+        balance.refresh_from_db()
+        self.assertEqual(waste.status, WasteLoss.Status.DRAFT)
+        self.assertEqual(batch.quantity_remaining, Decimal("3.000"))
+        self.assertEqual(balance.quantity, Decimal("3.000"))
+        self.assertFalse(StockMovement.objects.filter(product=product).exists())
+        self.assertFalse(
+            JournalEntry.objects.filter(
+                source_type=JournalEntry.SourceType.WASTE,
+                source_id=waste.pk,
+            ).exists()
+        )
+
 
 class JournalReversalTests(TestCase):
     def setUp(self):
@@ -490,6 +808,7 @@ class JournalReversalTests(TestCase):
             password="test-password",
             role="accountant",
         )
+        create_required_fiscal_years(date.today().year)
         self.cash = Account.objects.create(
             code="REV1100",
             name="Reversal cash",
@@ -641,6 +960,35 @@ class JournalReversalTests(TestCase):
         self.assertContains(original_response, "Entered twice")
         self.assertContains(original_response, reversal.entry_number)
 
+    def test_closed_period_rejects_reversal_and_preserves_original(self):
+        original = self.create_journal()
+        period = FiscalPeriod.objects.get(
+            fiscal_year__year=date.today().year,
+            month=date.today().month,
+        )
+        set_period_status(
+            period.pk,
+            PeriodStatus.CLOSED,
+            self.accountant,
+            reason="Month-end close",
+        )
+
+        with self.assertRaisesMessage(ValidationError, "period"):
+            reverse_journal_entry(
+                original.pk,
+                self.accountant,
+                "Correction after close",
+            )
+
+        original.refresh_from_db()
+        self.assertEqual(original.status, JournalEntry.Status.POSTED)
+        self.assertFalse(
+            JournalEntry.objects.filter(
+                source_type=JournalEntry.SourceType.REVERSAL,
+                source_id=original.pk,
+            ).exists()
+        )
+
 
 class IncomeStatementTests(TestCase):
     def setUp(self):
@@ -649,6 +997,7 @@ class IncomeStatementTests(TestCase):
             password="test-password",
             role="accountant",
         )
+        create_required_fiscal_years(2026, date.today().year)
         self.cash = Account.objects.create(
             code="IS1100",
             name="Statement cash",
@@ -791,6 +1140,7 @@ class BalanceSheetTests(TestCase):
             password="test-password",
             role="accountant",
         )
+        create_required_fiscal_years(2026, date.today().year)
         self.cash = Account.objects.create(
             code="BS1100",
             name="Balance cash",
@@ -941,3 +1291,322 @@ class BalanceSheetTests(TestCase):
         )
         self.client.force_login(cashier)
         self.assertEqual(self.client.get(url).status_code, 403)
+
+
+class FiscalPeriodTests(TestCase):
+    def setUp(self):
+        self.accountant = get_user_model().objects.create_user(
+            username="period-accountant",
+            password="test-password",
+            role="accountant",
+        )
+        self.admin = get_user_model().objects.create_user(
+            username="period-admin",
+            password="test-password",
+            role="admin",
+        )
+        self.cashier = get_user_model().objects.create_user(
+            username="period-cashier",
+            password="test-password",
+            role="cashier",
+        )
+        self.fiscal_year = create_fiscal_year(2026)
+        self.period = self.fiscal_year.periods.get(month=8)
+        self.cash = Account.objects.create(
+            code="FP1100",
+            name="Period cash",
+            account_type=Account.AccountType.ASSET,
+        )
+        self.capital = Account.objects.create(
+            code="FP3100",
+            name="Period capital",
+            account_type=Account.AccountType.EQUITY,
+        )
+
+    def create_draft_journal(self, number="FP-JE-001"):
+        journal = JournalEntry.objects.create(
+            entry_number=number,
+            date=date(2026, 8, 15),
+            description="Fiscal period test",
+            created_by=self.accountant,
+        )
+        JournalEntryLine.objects.create(
+            journal_entry=journal,
+            account=self.cash,
+            debit=Decimal("10.000"),
+        )
+        JournalEntryLine.objects.create(
+            journal_entry=journal,
+            account=self.capital,
+            credit=Decimal("10.000"),
+        )
+        return journal
+
+    def test_year_creation_builds_twelve_calendar_periods(self):
+        periods = list(self.fiscal_year.periods.order_by("month"))
+
+        self.assertEqual(len(periods), 12)
+        self.assertEqual(periods[0].start_date, date(2026, 1, 1))
+        self.assertEqual(periods[1].end_date, date(2026, 2, 28))
+        self.assertTrue(
+            all(period.status == PeriodStatus.OPEN for period in periods)
+        )
+
+    def test_closed_month_blocks_posting(self):
+        set_period_status(
+            self.period.pk,
+            PeriodStatus.CLOSED,
+            self.accountant,
+            reason="Monthly close",
+        )
+        journal = self.create_draft_journal()
+
+        with self.assertRaisesMessage(ValidationError, "accounting period"):
+            post_journal_entry(journal.pk, self.accountant)
+
+        journal.refresh_from_db()
+        self.assertEqual(journal.status, JournalEntry.Status.DRAFT)
+
+    def test_reopening_month_allows_posting_and_clears_audit_fields(self):
+        set_period_status(
+            self.period.pk,
+            PeriodStatus.CLOSED,
+            self.accountant,
+            reason="Monthly close",
+        )
+        set_period_status(
+            self.period.pk,
+            PeriodStatus.OPEN,
+            self.admin,
+            reason="Approved correction",
+        )
+        journal = self.create_draft_journal()
+
+        post_journal_entry(journal.pk, self.accountant)
+
+        self.period.refresh_from_db()
+        journal.refresh_from_db()
+        self.assertIsNone(self.period.closed_by)
+        self.assertIsNone(self.period.closed_at)
+        self.assertEqual(journal.status, JournalEntry.Status.POSTED)
+
+    def test_closing_year_closes_every_month(self):
+        set_fiscal_year_status(
+            self.fiscal_year.pk,
+            PeriodStatus.CLOSED,
+            self.accountant,
+            reason="Year-end review complete",
+        )
+
+        self.fiscal_year.refresh_from_db()
+        self.assertEqual(self.fiscal_year.status, PeriodStatus.CLOSED)
+        self.assertEqual(self.fiscal_year.closed_by, self.accountant)
+        self.assertEqual(
+            self.fiscal_year.periods.filter(status=PeriodStatus.CLOSED).count(),
+            12,
+        )
+
+    def test_closed_year_blocks_posting(self):
+        set_fiscal_year_status(
+            self.fiscal_year.pk,
+            PeriodStatus.CLOSED,
+            self.accountant,
+            reason="Year-end review complete",
+        )
+        journal = self.create_draft_journal()
+
+        with self.assertRaisesMessage(ValidationError, "fiscal year is closed"):
+            post_journal_entry(journal.pk, self.accountant)
+
+    def test_month_cannot_reopen_while_year_is_closed(self):
+        set_fiscal_year_status(
+            self.fiscal_year.pk,
+            PeriodStatus.CLOSED,
+            self.accountant,
+            reason="Year-end review complete",
+        )
+
+        with self.assertRaisesMessage(ValidationError, "Open the fiscal year"):
+            set_period_status(
+                self.period.pk,
+                PeriodStatus.OPEN,
+                self.admin,
+                reason="Correction required",
+            )
+
+    def test_only_administrator_can_reopen_month_or_year(self):
+        set_period_status(
+            self.period.pk,
+            PeriodStatus.CLOSED,
+            self.accountant,
+            reason="Monthly close",
+        )
+
+        with self.assertRaises(PermissionDenied):
+            set_period_status(
+                self.period.pk,
+                PeriodStatus.OPEN,
+                self.accountant,
+                reason="Correction",
+            )
+
+        set_fiscal_year_status(
+            self.fiscal_year.pk,
+            PeriodStatus.CLOSED,
+            self.accountant,
+            reason="Year close",
+        )
+        with self.assertRaises(PermissionDenied):
+            set_fiscal_year_status(
+                self.fiscal_year.pk,
+                PeriodStatus.OPEN,
+                self.accountant,
+                reason="Correction",
+            )
+
+        set_fiscal_year_status(
+            self.fiscal_year.pk,
+            PeriodStatus.OPEN,
+            self.admin,
+            reason="Approved correction",
+        )
+        self.fiscal_year.refresh_from_db()
+        self.assertEqual(self.fiscal_year.status, PeriodStatus.OPEN)
+
+    def test_accountant_can_manage_periods_but_cashier_cannot(self):
+        list_url = reverse("finance:fiscal_period_list")
+        status_url = reverse("finance:fiscal_period_status", args=[self.period.pk])
+
+        self.client.force_login(self.accountant)
+        self.assertEqual(self.client.get(list_url).status_code, 200)
+        response = self.client.post(
+            status_url,
+            {"status": PeriodStatus.CLOSED, "reason": "Monthly close"},
+        )
+        self.assertRedirects(response, list_url)
+        self.assertEqual(
+            self.client.post(
+                status_url,
+                {"status": PeriodStatus.OPEN, "reason": "Correction"},
+            ).status_code,
+            403,
+        )
+
+        self.client.force_login(self.admin)
+        response = self.client.post(
+            status_url,
+            {"status": PeriodStatus.OPEN, "reason": "Approved correction"},
+        )
+        self.assertRedirects(response, list_url)
+
+        self.client.force_login(self.cashier)
+        self.assertEqual(self.client.get(list_url).status_code, 403)
+        self.assertEqual(
+            self.client.post(
+                status_url,
+                {"status": PeriodStatus.OPEN, "reason": "Not allowed"},
+            ).status_code,
+            403,
+        )
+
+    def test_reason_is_required_and_actions_are_audited(self):
+        with self.assertRaisesMessage(ValidationError, "reason is required"):
+            set_period_status(
+                self.period.pk,
+                PeriodStatus.CLOSED,
+                self.accountant,
+            )
+
+        set_period_status(
+            self.period.pk,
+            PeriodStatus.CLOSED,
+            self.accountant,
+            reason="Books reconciled",
+        )
+        action = FiscalPeriodAction.objects.get(period=self.period)
+        self.assertEqual(action.action, FiscalPeriodAction.Action.CLOSED)
+        self.assertEqual(action.performed_by, self.accountant)
+        self.assertEqual(action.reason, "Books reconciled")
+
+    def test_draft_journal_blocks_closing(self):
+        self.create_draft_journal()
+
+        with self.assertRaisesMessage(ValidationError, "draft journals"):
+            set_period_status(
+                self.period.pk,
+                PeriodStatus.CLOSED,
+                self.accountant,
+                reason="Attempted close",
+            )
+
+        self.period.refresh_from_db()
+        self.assertEqual(self.period.status, PeriodStatus.OPEN)
+        self.assertFalse(FiscalPeriodAction.objects.filter(period=self.period).exists())
+
+    def test_period_summary_reports_posted_totals(self):
+        journal = self.create_draft_journal()
+        post_journal_entry(journal.pk, self.accountant)
+
+        summary = get_period_summary(self.period)
+
+        self.assertEqual(summary["posted_journals"], 1)
+        self.assertEqual(summary["draft_journals"], 0)
+        self.assertEqual(summary["total_debit"], Decimal("10.000"))
+        self.assertEqual(summary["total_credit"], Decimal("10.000"))
+
+    def test_accountant_can_update_period_notes(self):
+        self.client.force_login(self.accountant)
+        response = self.client.post(
+            reverse("finance:fiscal_period_notes", args=[self.period.pk]),
+            {"notes": "Bank reconciliation completed."},
+        )
+
+        self.assertRedirects(response, reverse("finance:fiscal_period_list"))
+        self.period.refresh_from_db()
+        self.assertEqual(self.period.notes, "Bank reconciliation completed.")
+
+    def test_history_page_is_linked_and_paginates_ten_rows(self):
+        FiscalPeriodAction.objects.bulk_create(
+            [
+                FiscalPeriodAction(
+                    fiscal_year=self.fiscal_year,
+                    period=self.period,
+                    action=(
+                        FiscalPeriodAction.Action.CLOSED
+                        if index % 2
+                        else FiscalPeriodAction.Action.OPENED
+                    ),
+                    performed_by=self.admin,
+                    reason=f"History action {index}",
+                )
+                for index in range(11)
+            ]
+        )
+        list_url = reverse("finance:fiscal_period_list")
+        history_url = reverse(
+            "finance:fiscal_year_history",
+            args=[self.fiscal_year.pk],
+        )
+        self.client.force_login(self.accountant)
+
+        list_response = self.client.get(list_url)
+        self.assertContains(list_response, history_url)
+
+        first_page = self.client.get(history_url)
+        self.assertEqual(first_page.status_code, 200)
+        self.assertEqual(len(first_page.context["page_obj"]), 10)
+        self.assertTrue(first_page.context["page_obj"].has_next())
+
+        second_page = self.client.get(history_url, {"page": 2})
+        self.assertEqual(len(second_page.context["page_obj"]), 1)
+        self.assertTrue(second_page.context["page_obj"].has_previous())
+
+    def test_cashier_cannot_view_fiscal_history(self):
+        self.client.force_login(self.cashier)
+        response = self.client.get(
+            reverse(
+                "finance:fiscal_year_history",
+                args=[self.fiscal_year.pk],
+            )
+        )
+        self.assertEqual(response.status_code, 403)

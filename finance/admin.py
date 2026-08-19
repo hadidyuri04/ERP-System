@@ -2,6 +2,9 @@ from django.contrib import admin
 
 from .models import (
     Account,
+    FiscalPeriod,
+    FiscalPeriodAction,
+    FiscalYear,
     JournalEntry,
     JournalEntryLine,
     ReceiptVoucher,
@@ -21,6 +24,77 @@ class TaxRateAdmin(admin.ModelAdmin):
     list_filter = ("subject_to_tax", "is_active")
     search_fields = ("code", "name")
     readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(FiscalYear)
+class FiscalYearAdmin(admin.ModelAdmin):
+    list_display = ("year", "status", "closed_by", "closed_at")
+    list_filter = ("status",)
+    readonly_fields = (
+        "status",
+        "closed_by",
+        "closed_at",
+        "close_reason",
+        "created_at",
+    )
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(FiscalPeriod)
+class FiscalPeriodAdmin(admin.ModelAdmin):
+    list_display = (
+        "fiscal_year",
+        "month",
+        "start_date",
+        "end_date",
+        "status",
+        "closed_by",
+    )
+    list_filter = ("status", "fiscal_year")
+    readonly_fields = (
+        "fiscal_year",
+        "month",
+        "start_date",
+        "end_date",
+        "status",
+        "closed_by",
+        "closed_at",
+        "close_reason",
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(FiscalPeriodAction)
+class FiscalPeriodActionAdmin(admin.ModelAdmin):
+    list_display = (
+        "fiscal_year",
+        "period",
+        "action",
+        "performed_by",
+        "performed_at",
+    )
+    list_filter = ("action", "fiscal_year")
+    readonly_fields = (
+        "fiscal_year",
+        "period",
+        "action",
+        "performed_by",
+        "performed_at",
+        "reason",
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 # =========================

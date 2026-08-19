@@ -1,0 +1,27 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Create fiscal year" %}{% endblock %}
+
+{% block page_header %}
+  <h1>{% trans "Create fiscal year" %}</h1>
+{% endblock %}
+
+{% block page_actions %}
+  <a href="{% url 'finance:fiscal_period_list' %}" class="btn btn-ghost">
+    {% trans "Back" %}
+  </a>
+{% endblock %}
+
+{% block content %}
+  <form method="post" class="card-soft card-pad">
+    {% csrf_token %}
+    {% include "core/_form_fields.html" with form=form %}
+    <p class="field-hint">
+      {% trans "Creating a fiscal year also creates its twelve monthly accounting periods." %}
+    </p>
+    <button type="submit" class="btn btn-primary">
+      {% trans "Create fiscal year" %}
+    </button>
+  </form>
+{% endblock %}

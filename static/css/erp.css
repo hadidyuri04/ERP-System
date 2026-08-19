@@ -1271,6 +1271,95 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--purple-6
 [dir="rtl"] .auth-wrapper {
   flex-direction: row-reverse;
 }
+
+/* Fiscal periods */
+.fiscal-year-card { overflow: hidden; }
+.fiscal-year-head {
+  display: grid;
+  grid-template-columns: minmax(250px, 1fr) auto;
+  align-items: center;
+  gap: 24px;
+  padding: 20px 22px;
+  border-block-end: 1px solid var(--border);
+  background: linear-gradient(105deg, var(--purple-50), #fff 42%);
+}
+.fiscal-year-identity { display: flex; align-items: center; gap: 13px; min-width: 0; }
+.fiscal-year-icon {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  color: var(--purple-700);
+  background: #fff;
+  border: 1px solid var(--purple-100);
+  box-shadow: 0 6px 18px rgba(78, 52, 145, .08);
+}
+.fiscal-year-kicker { display: block; margin-bottom: 1px; color: var(--muted); font-size: .66rem; font-weight: 750; text-transform: uppercase; letter-spacing: .08em; }
+.fiscal-year-identity h3 { margin: 0; color: var(--ink); font-size: 1.25rem; letter-spacing: -.025em; }
+.fiscal-status { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: var(--r-pill); font-size: .7rem; font-weight: 780; }
+.fiscal-status > span { width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 3px rgba(255,255,255,.7); }
+.fiscal-status.is-open { color: var(--success); background: var(--success-bg); }
+.fiscal-status.is-closed { color: var(--danger); background: var(--danger-bg); }
+.fiscal-year-status-form { display: flex; align-items: end; justify-content: flex-end; gap: 10px; }
+.fiscal-reason-field { display: grid; gap: 5px; min-width: min(290px, 32vw); }
+.fiscal-reason-field > span { color: var(--muted); font-size: .64rem; font-weight: 750; }
+.fiscal-reason-field input { width: 100%; height: 42px; padding: 9px 12px; font-size: .78rem; }
+.fiscal-year-action { min-height: 42px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding-inline: 17px; white-space: nowrap; border-radius: 11px; }
+.fiscal-admin-note { display: inline-flex; align-items: center; gap: 7px; padding: 9px 12px; border-radius: 10px; color: var(--muted); background: var(--surface-alt); font-size: .7rem; }
+.fiscal-year-meta { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 14px; padding: 15px 22px; border-block-end: 1px solid var(--border); background: #fff; }
+.fiscal-year-notes-wrap { min-width: 0; }
+.fiscal-last-reason { display: flex; align-items: center; gap: 6px; margin: 0 0 9px; color: var(--ink-soft); font-size: .7rem; }
+.fiscal-last-reason i { color: var(--purple-500); }
+.fiscal-year-notes-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 9px; }
+.fiscal-notes-field { position: relative; min-width: 0; }
+.fiscal-notes-field > i { position: absolute; z-index: 1; inset-inline-start: 13px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+.fiscal-notes-field textarea {
+  width: 100%;
+  height: 42px;
+  min-height: 42px;
+  padding: 10px 12px;
+  padding-inline-start: 38px;
+  resize: none;
+  overflow: hidden;
+  font-size: .78rem;
+}
+.fiscal-meta-action { min-height: 42px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding-inline: 16px; white-space: nowrap; border-radius: 11px; }
+.fiscal-history-btn {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 12px;
+  border: 1px solid var(--purple-100);
+  border-radius: 11px;
+  color: var(--purple-700);
+  background: var(--purple-50);
+  white-space: nowrap;
+}
+.fiscal-history-btn:hover { color: var(--purple-800); background: var(--purple-100); transform: translateY(-1px); }
+.fiscal-history-btn > i:first-child { font-size: 1rem; }
+.fiscal-history-btn span { display: grid; text-align: start; line-height: 1.15; font-size: .73rem; font-weight: 760; }
+.fiscal-history-btn small { color: var(--muted); font-size: .59rem; font-weight: 650; }
+.fiscal-history-arrow { margin-inline-start: 4px; font-size: .7rem; }
+[dir="rtl"] .fiscal-history-arrow { transform: rotate(180deg); }
+
+@media (max-width: 900px) {
+  .fiscal-year-head { grid-template-columns: 1fr; gap: 15px; }
+  .fiscal-year-status-form { justify-content: stretch; }
+  .fiscal-reason-field { min-width: 0; flex: 1; }
+  .fiscal-year-meta { grid-template-columns: 1fr; align-items: stretch; }
+  .fiscal-history-btn { justify-content: center; }
+}
+
+@media (max-width: 600px) {
+  .fiscal-year-head, .fiscal-year-meta { padding: 15px; }
+  .fiscal-year-identity { flex-wrap: wrap; }
+  .fiscal-year-status-form { display: grid; grid-template-columns: 1fr; }
+  .fiscal-year-notes-form { grid-template-columns: 1fr; }
+  .fiscal-year-action, .fiscal-meta-action { width: 100%; }
+}
 /* Base layout setup */
 .auth-wrapper {
   display: flex;
