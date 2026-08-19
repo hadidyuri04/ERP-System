@@ -3,6 +3,7 @@ from django.conf import settings
 from django.test import TestCase
 from django.urls import reverse
 
+from finance.models import FiscalYear
 from inventory.models import Warehouse
 from pos.models import POSSession
 
@@ -36,8 +37,10 @@ class ConnectedViewsSmokeTests(TestCase):
         "finance:trial_balance",
         "finance:income_statement",
         "finance:balance_sheet",
+        "finance:cash_flow_statement",
         "finance:receivables_aging",
         "finance:payables_aging",
+        "finance:fiscal_period_list",
         "pos:terminal",
         "pos:sale_list",
         "quotations:list",
@@ -60,6 +63,7 @@ class ConnectedViewsSmokeTests(TestCase):
             cashier=self.user,
             warehouse=warehouse,
         )
+        self.fiscal_year = FiscalYear.objects.create(year=2099)
 
     def test_main_pages_render(self):
         for route_name in self.route_names:
@@ -104,3 +108,24 @@ class ConnectedViewsSmokeTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "\u0642\u064a\u0648\u062f \u0627\u0644\u064a\u0648\u0645\u064a\u0629")
         self.assertContains(response, "\u0642\u064a\u062f \u062c\u062f\u064a\u062f")
+
+        translated_finance_pages = {
+            "finance:cash_flow_statement": "قائمة التدفقات النقدية",
+            "finance:receivables_aging": "تقرير أعمار الذمم المدينة",
+            "finance:payables_aging": "تقرير أعمار الذمم الدائنة",
+            "finance:fiscal_period_list": "الفترات المالية",
+        }
+        for route_name, arabic_title in translated_finance_pages.items():
+            with self.subTest(arabic_route_name=route_name):
+                response = self.client.get(reverse(route_name))
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, arabic_title)
+
+        fiscal_periods_response = self.client.get(reverse("finance:fiscal_period_list"))
+        self.assertContains(fiscal_periods_response, "سجل الفتح والإغلاق")
+
+        history_response = self.client.get(
+            reverse("finance:fiscal_year_history", args=[self.fiscal_year.pk])
+        )
+        self.assertEqual(history_response.status_code, 200)
+        self.assertContains(history_response, "سجل الفتح والإغلاق")

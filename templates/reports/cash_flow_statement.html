@@ -1,0 +1,63 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Cash-flow statement" %}{% endblock %}
+
+{% block page_header %}
+<span class="eyebrow">{% trans "Finance reports" %}</span>
+<h1>{% trans "Cash-flow statement" %}</h1>
+<p>{% trans "Direct-method cash inflows and outflows from operating, investing and financing activities." %}</p>
+{% endblock %}
+
+{% block content %}
+<div class="cashflow-page">
+  <section class="card-soft cashflow-filter-card">
+    <div class="cashflow-filter-title"><span><i class="bi bi-calendar-range"></i></span><div><h3>{% trans "Reporting period" %}</h3><p>{% trans "Leave both dates empty to include all posted activity." %}</p></div></div>
+    <form method="get" class="cashflow-filter-form">
+      <div><label for="{{ date_form.start_date.id_for_label }}">{{ date_form.start_date.label }}</label>{{ date_form.start_date }}{{ date_form.start_date.errors }}</div>
+      <div><label for="{{ date_form.end_date.id_for_label }}">{{ date_form.end_date.label }}</label>{{ date_form.end_date }}{{ date_form.end_date.errors }}</div>
+      <button type="submit" class="btn btn-primary"><i class="bi bi-arrow-repeat me-1"></i>{% trans "Run report" %}</button>
+      <a href="{% url 'finance:cash_flow_statement' %}" class="btn btn-ghost">{% trans "Reset" %}</a>
+    </form>
+    {{ date_form.non_field_errors }}
+  </section>
+
+  {% if statement %}
+    <section class="cashflow-stats">
+      <article class="cashflow-stat is-opening"><span><i class="bi bi-safe2"></i></span><div><small>{% trans "Opening cash" %}</small><strong>{{ statement.opening_cash|floatformat:3 }}</strong></div></article>
+      <article class="cashflow-stat is-inflow"><span><i class="bi bi-arrow-down-left"></i></span><div><small>{% trans "Total inflows" %}</small><strong>{{ statement.total_inflows|floatformat:3 }}</strong></div></article>
+      <article class="cashflow-stat is-outflow"><span><i class="bi bi-arrow-up-right"></i></span><div><small>{% trans "Total outflows" %}</small><strong>{{ statement.total_outflows|floatformat:3 }}</strong></div></article>
+      <article class="cashflow-stat is-closing"><span><i class="bi bi-wallet2"></i></span><div><small>{% trans "Closing cash" %}</small><strong>{{ statement.closing_cash|floatformat:3 }}</strong></div></article>
+    </section>
+
+    <section class="cashflow-bridge card-soft">
+      <div><small>{% trans "Opening cash" %}</small><strong>{{ statement.opening_cash|floatformat:3 }}</strong></div><i class="bi bi-plus-lg"></i><div><small>{% trans "Net cash movement" %}</small><strong class="{% if statement.net_change < 0 %}text-danger{% else %}text-success{% endif %}">{{ statement.net_change|floatformat:3 }}</strong></div><i class="bi bi-equals"></i><div><small>{% trans "Closing cash" %}</small><strong>{{ statement.closing_cash|floatformat:3 }}</strong></div>
+      {% if statement.is_reconciled %}<span class="badge-soft badge-success">{% trans "Reconciled" %}</span>{% else %}<span class="badge-soft badge-danger">{% trans "Difference" %}: {{ statement.difference|floatformat:3 }}</span>{% endif %}
+    </section>
+
+    <section class="cashflow-sections">
+      <details class="card-soft cashflow-section" open>
+        <summary><span class="cashflow-section-icon operating"><i class="bi bi-arrow-left-right"></i></span><span><strong>{% trans "Operating activities" %}</strong><small>{% trans "Day-to-day receipts and payments" %}</small></span><b>{{ statement.operating_total|floatformat:3 }}</b><i class="bi bi-chevron-down"></i></summary>
+        <div class="table-wrap"><table class="table-erp cashflow-table"><thead><tr><th>{% trans "Date" %}</th><th>{% trans "Entry" %}</th><th>{% trans "Description" %}</th><th>{% trans "Cash account" %}</th><th class="num">{% trans "Inflow" %}</th><th class="num">{% trans "Outflow" %}</th></tr></thead><tbody>{% for row in statement.operating_rows %}<tr><td>{{ row.date }}</td><td class="cell-strong"><a class="record-link" href="{% url 'finance:journal_detail' row.entry_id %}">{{ row.entry_number }}</a></td><td>{{ row.description }}</td><td>{{ row.account }}</td><td class="num cashflow-inflow">{{ row.inflow|floatformat:3 }}</td><td class="num cashflow-outflow">{{ row.outflow|floatformat:3 }}</td></tr>{% empty %}<tr><td colspan="6" class="cashflow-empty">{% trans "No operating cash activity." %}</td></tr>{% endfor %}</tbody><tfoot><tr><td colspan="4">{% trans "Net operating cash" %}</td><td colspan="2" class="num">{{ statement.operating_total|floatformat:3 }}</td></tr></tfoot></table></div>
+      </details>
+
+      <details class="card-soft cashflow-section" open>
+        <summary><span class="cashflow-section-icon investing"><i class="bi bi-building"></i></span><span><strong>{% trans "Investing activities" %}</strong><small>{% trans "Long-term assets and investments" %}</small></span><b>{{ statement.investing_total|floatformat:3 }}</b><i class="bi bi-chevron-down"></i></summary>
+        <div class="table-wrap"><table class="table-erp cashflow-table"><thead><tr><th>{% trans "Date" %}</th><th>{% trans "Entry" %}</th><th>{% trans "Description" %}</th><th>{% trans "Cash account" %}</th><th class="num">{% trans "Inflow" %}</th><th class="num">{% trans "Outflow" %}</th></tr></thead><tbody>{% for row in statement.investing_rows %}<tr><td>{{ row.date }}</td><td class="cell-strong"><a class="record-link" href="{% url 'finance:journal_detail' row.entry_id %}">{{ row.entry_number }}</a></td><td>{{ row.description }}</td><td>{{ row.account }}</td><td class="num cashflow-inflow">{{ row.inflow|floatformat:3 }}</td><td class="num cashflow-outflow">{{ row.outflow|floatformat:3 }}</td></tr>{% empty %}<tr><td colspan="6" class="cashflow-empty">{% trans "No investing cash activity." %}</td></tr>{% endfor %}</tbody><tfoot><tr><td colspan="4">{% trans "Net investing cash" %}</td><td colspan="2" class="num">{{ statement.investing_total|floatformat:3 }}</td></tr></tfoot></table></div>
+      </details>
+
+      <details class="card-soft cashflow-section" open>
+        <summary><span class="cashflow-section-icon financing"><i class="bi bi-bank"></i></span><span><strong>{% trans "Financing activities" %}</strong><small>{% trans "Capital, borrowing and repayments" %}</small></span><b>{{ statement.financing_total|floatformat:3 }}</b><i class="bi bi-chevron-down"></i></summary>
+        <div class="table-wrap"><table class="table-erp cashflow-table"><thead><tr><th>{% trans "Date" %}</th><th>{% trans "Entry" %}</th><th>{% trans "Description" %}</th><th>{% trans "Cash account" %}</th><th class="num">{% trans "Inflow" %}</th><th class="num">{% trans "Outflow" %}</th></tr></thead><tbody>{% for row in statement.financing_rows %}<tr><td>{{ row.date }}</td><td class="cell-strong"><a class="record-link" href="{% url 'finance:journal_detail' row.entry_id %}">{{ row.entry_number }}</a></td><td>{{ row.description }}</td><td>{{ row.account }}</td><td class="num cashflow-inflow">{{ row.inflow|floatformat:3 }}</td><td class="num cashflow-outflow">{{ row.outflow|floatformat:3 }}</td></tr>{% empty %}<tr><td colspan="6" class="cashflow-empty">{% trans "No financing cash activity." %}</td></tr>{% endfor %}</tbody><tfoot><tr><td colspan="4">{% trans "Net financing cash" %}</td><td colspan="2" class="num">{{ statement.financing_total|floatformat:3 }}</td></tr></tfoot></table></div>
+      </details>
+
+      {% if statement.unclassified_rows %}
+        <details class="card-soft cashflow-section cashflow-unclassified" open>
+          <summary><span class="cashflow-section-icon unclassified"><i class="bi bi-exclamation-triangle"></i></span><span><strong>{% trans "Unclassified cash activity" %}</strong><small>{% trans "Review these historical journals and assign an activity" %}</small></span><b>{{ statement.unclassified_total|floatformat:3 }}</b><i class="bi bi-chevron-down"></i></summary>
+          <div class="table-wrap"><table class="table-erp cashflow-table"><thead><tr><th>{% trans "Date" %}</th><th>{% trans "Entry" %}</th><th>{% trans "Description" %}</th><th>{% trans "Cash account" %}</th><th class="num">{% trans "Inflow" %}</th><th class="num">{% trans "Outflow" %}</th></tr></thead><tbody>{% for row in statement.unclassified_rows %}<tr><td>{{ row.date }}</td><td class="cell-strong"><a class="record-link" href="{% url 'finance:journal_detail' row.entry_id %}">{{ row.entry_number }}</a></td><td>{{ row.description }}</td><td>{{ row.account }}</td><td class="num cashflow-inflow">{{ row.inflow|floatformat:3 }}</td><td class="num cashflow-outflow">{{ row.outflow|floatformat:3 }}</td></tr>{% endfor %}</tbody></table></div>
+        </details>
+      {% endif %}
+    </section>
+  {% endif %}
+</div>
+{% endblock %}

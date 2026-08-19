@@ -10,7 +10,8 @@
 
 {% block content %}
 <div class="card-soft card-pad">
-  <p>{{ entry.date }} · {{ entry.description }}</p>
+  <p>{{ entry.date }} - {{ entry.description }}</p>
+  <p><strong>{% trans "Cash-flow activity" %}:</strong> {{ entry.get_cash_flow_activity_display }}</p>
 
   {% if entry.reversal_of %}
     <p>

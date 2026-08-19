@@ -1346,6 +1346,27 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--purple-6
   .aging-stat { min-height: 88px; }
 }
 
+/* Cash-flow statement */
+.cashflow-page { display: grid; gap: 18px; }
+.cashflow-filter-card { overflow: hidden; }
+.cashflow-filter-title { display: flex; align-items: center; gap: 13px; padding: 19px 22px 12px; }
+.cashflow-filter-title > span { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; background: var(--purple-100); color: var(--purple-700); }
+.cashflow-filter-title h3 { margin: 0; }.cashflow-filter-title p { margin: 2px 0 0; color: var(--muted); font-size: .76rem; }
+.cashflow-filter-form { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) auto auto; align-items: end; gap: 12px; padding: 0 22px 20px; }
+.cashflow-filter-form label { display: block; margin-bottom: 6px; color: var(--ink-soft); font-size: .72rem; font-weight: 750; }
+.cashflow-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; }
+.cashflow-stat { display: flex; align-items: center; gap: 12px; min-height: 100px; padding: 18px; border: 1px solid var(--border); border-radius: var(--r-lg); background: #fff; box-shadow: var(--shadow-sm); }
+.cashflow-stat > span { width: 42px; height: 42px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 13px; }
+.cashflow-stat small { display: block; color: var(--muted); font-size: .7rem; font-weight: 700; }.cashflow-stat strong { display: block; margin-top: 3px; font-size: 1.15rem; font-weight: 820; font-variant-numeric: tabular-nums; }
+.cashflow-stat.is-opening > span { background: var(--purple-50); color: var(--purple-600); }.cashflow-stat.is-inflow > span { background: var(--success-bg); color: var(--success); }.cashflow-stat.is-outflow > span { background: var(--danger-bg); color: var(--danger); }
+.cashflow-stat.is-closing { border-color: transparent; background: linear-gradient(135deg, var(--purple-700), var(--purple-500)); }.cashflow-stat.is-closing > span { background: rgba(255,255,255,.16); color: #fff; }.cashflow-stat.is-closing small { color: rgba(255,255,255,.72); }.cashflow-stat.is-closing strong { color: #fff; }
+.cashflow-bridge { display: flex; align-items: center; justify-content: center; gap: clamp(14px, 3vw, 34px); padding: 18px 22px; text-align: center; }.cashflow-bridge > div { display: grid; gap: 2px; }.cashflow-bridge small { color: var(--muted); font-size: .68rem; font-weight: 700; }.cashflow-bridge strong { font-size: 1rem; font-variant-numeric: tabular-nums; }.cashflow-bridge > i { color: var(--purple-300); }
+.cashflow-sections { display: grid; gap: 12px; }.cashflow-section { overflow: hidden; }.cashflow-section summary { display: flex; align-items: center; gap: 12px; padding: 16px 19px; cursor: pointer; list-style: none; }.cashflow-section summary::-webkit-details-marker { display: none; }.cashflow-section summary > span:nth-child(2) { display: grid; gap: 2px; }.cashflow-section summary small { color: var(--muted); font-size: .67rem; }.cashflow-section summary > b { margin-inline-start: auto; font-size: .94rem; font-variant-numeric: tabular-nums; }.cashflow-section summary > i { color: var(--muted); transition: transform var(--t-fast); }.cashflow-section[open] summary > i { transform: rotate(180deg); }
+.cashflow-section-icon { width: 38px; height: 38px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 12px; }.cashflow-section-icon.operating { background: var(--success-bg); color: var(--success); }.cashflow-section-icon.investing { background: var(--warning-bg); color: var(--warning); }.cashflow-section-icon.financing { background: var(--purple-100); color: var(--purple-700); }.cashflow-section-icon.unclassified { background: var(--danger-bg); color: var(--danger); }
+.cashflow-table { min-width: 850px; border-top: 1px solid var(--border); }.cashflow-table .num { text-align: end; font-variant-numeric: tabular-nums; }.cashflow-inflow { color: var(--success); }.cashflow-outflow { color: var(--danger); }.cashflow-empty { padding: 26px !important; color: var(--muted); text-align: center !important; }.cashflow-unclassified { border-color: rgba(220,53,69,.25); }
+@media (max-width: 900px) { .cashflow-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }.cashflow-filter-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }.cashflow-bridge { flex-wrap: wrap; } }
+@media (max-width: 560px) { .cashflow-filter-form { grid-template-columns: 1fr; }.cashflow-stats { grid-template-columns: 1fr; }.cashflow-bridge { justify-content: space-between; }.cashflow-bridge .badge-soft { width: 100%; justify-content: center; } }
+
 /* Fiscal periods */
 .fiscal-year-card { overflow: hidden; }
 .fiscal-year-head {

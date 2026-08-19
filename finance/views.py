@@ -36,6 +36,7 @@ from .models import (
 )
 from .reports import (
     generate_balance_sheet,
+    generate_cash_flow_statement,
     generate_customer_statement,
     generate_general_ledger,
     generate_income_statement,
@@ -330,6 +331,27 @@ def balance_sheet_view(request):
             "balance_sheet": balance_sheet,
             "date_form": date_form,
         },
+    )
+
+
+@login_required
+@accountant_required
+def cash_flow_statement_view(request):
+    date_form = ReportDateRangeForm(request.GET or None)
+    statement = None
+
+    if not date_form.is_bound:
+        statement = generate_cash_flow_statement()
+    elif date_form.is_valid():
+        statement = generate_cash_flow_statement(
+            start_date=date_form.cleaned_data["start_date"],
+            end_date=date_form.cleaned_data["end_date"],
+        )
+
+    return render(
+        request,
+        "reports/cash_flow_statement.html",
+        {"date_form": date_form, "statement": statement},
     )
 
 @login_required

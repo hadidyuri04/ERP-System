@@ -296,6 +296,99 @@ def generate_balance_sheet(as_of_date=None):
     }
 
 
+def generate_cash_flow_statement(start_date=None, end_date=None):
+    """Generate a direct-method cash-flow statement from posted cash lines."""
+    cash_lines = JournalEntryLine.objects.filter(
+        account__is_cash_equivalent=True,
+        journal_entry__status__in=[
+            JournalEntry.Status.POSTED,
+            JournalEntry.Status.REVERSED,
+        ],
+    ).select_related("journal_entry", "account")
+
+    opening_lines = cash_lines.none()
+    period_lines = cash_lines
+    if start_date:
+        opening_lines = cash_lines.filter(journal_entry__date__lt=start_date)
+        period_lines = period_lines.filter(journal_entry__date__gte=start_date)
+    if end_date:
+        period_lines = period_lines.filter(journal_entry__date__lte=end_date)
+
+    opening = opening_lines.aggregate(debit=Sum("debit"), credit=Sum("credit"))
+    opening_cash = (
+        (opening["debit"] or Decimal("0.000"))
+        - (opening["credit"] or Decimal("0.000"))
+    )
+
+    activity_keys = (
+        JournalEntry.CashFlowActivity.OPERATING,
+        JournalEntry.CashFlowActivity.INVESTING,
+        JournalEntry.CashFlowActivity.FINANCING,
+        JournalEntry.CashFlowActivity.NONE,
+    )
+    rows = {key: [] for key in activity_keys}
+    totals = {key: Decimal("0.000") for key in activity_keys}
+    total_inflows = Decimal("0.000")
+    total_outflows = Decimal("0.000")
+
+    for line in period_lines.order_by(
+        "journal_entry__date",
+        "journal_entry_id",
+        "id",
+    ):
+        amount = line.debit - line.credit
+        activity = line.journal_entry.cash_flow_activity
+        if activity not in rows:
+            activity = JournalEntry.CashFlowActivity.NONE
+        inflow = amount if amount > 0 else Decimal("0.000")
+        outflow = -amount if amount < 0 else Decimal("0.000")
+        total_inflows += inflow
+        total_outflows += outflow
+        totals[activity] += amount
+        rows[activity].append({
+            "date": line.journal_entry.date,
+            "entry_id": line.journal_entry_id,
+            "entry_number": line.journal_entry.entry_number,
+            "description": line.description or line.journal_entry.description,
+            "account": line.account,
+            "inflow": inflow,
+            "outflow": outflow,
+            "net": amount,
+        })
+
+    net_change = sum(totals.values(), Decimal("0.000"))
+    calculated_closing = opening_cash + net_change
+    closing_lines = cash_lines
+    if end_date:
+        closing_lines = closing_lines.filter(journal_entry__date__lte=end_date)
+    closing = closing_lines.aggregate(debit=Sum("debit"), credit=Sum("credit"))
+    actual_closing = (
+        (closing["debit"] or Decimal("0.000"))
+        - (closing["credit"] or Decimal("0.000"))
+    )
+    difference = calculated_closing - actual_closing
+
+    return {
+        "start_date": start_date,
+        "end_date": end_date,
+        "operating_rows": rows[JournalEntry.CashFlowActivity.OPERATING],
+        "investing_rows": rows[JournalEntry.CashFlowActivity.INVESTING],
+        "financing_rows": rows[JournalEntry.CashFlowActivity.FINANCING],
+        "unclassified_rows": rows[JournalEntry.CashFlowActivity.NONE],
+        "operating_total": totals[JournalEntry.CashFlowActivity.OPERATING],
+        "investing_total": totals[JournalEntry.CashFlowActivity.INVESTING],
+        "financing_total": totals[JournalEntry.CashFlowActivity.FINANCING],
+        "unclassified_total": totals[JournalEntry.CashFlowActivity.NONE],
+        "total_inflows": total_inflows,
+        "total_outflows": total_outflows,
+        "opening_cash": opening_cash,
+        "net_change": net_change,
+        "closing_cash": actual_closing,
+        "difference": difference,
+        "is_reconciled": difference == Decimal("0.000"),
+    }
+
+
 def _generate_party_statement(
     *,
     party,

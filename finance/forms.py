@@ -56,6 +56,7 @@ class CashAccountMixin:
             account_type=Account.AccountType.ASSET,
             allow_posting=True,
             is_active=True,
+            is_cash_equivalent=True,
         ).order_by("code")
 
 
@@ -98,7 +99,7 @@ class PaymentVoucherForm(CashAccountMixin, forms.ModelForm):
 class JournalEntryForm(forms.ModelForm):
     class Meta:
         model = JournalEntry
-        fields = ["entry_number", "date", "description"]
+        fields = ["entry_number", "date", "description", "cash_flow_activity"]
         widgets = {
             "date": forms.DateInput(attrs={"type": "date"}),
         }
