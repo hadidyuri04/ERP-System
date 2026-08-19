@@ -9,8 +9,18 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 
 from core.permissions import accountant_required
-
+from .exports import (
+    aging_document,
+    balance_sheet_document,
+    cash_flow_document,
+    export_response,
+    general_ledger_document,
+    income_statement_document,
+    party_statement_document,
+    trial_balance_document,
+)
 from .forms import (
+    AccountForm,
     AsOfDateForm,
     CustomerStatementForm,
     FiscalPeriodNotesForm,
@@ -61,12 +71,110 @@ def _message_validation_error(request, exc):
     messages.error(request, "; ".join(exc.messages) if hasattr(exc, "messages") else str(exc))
 
 
+def _build_account_tree():
+    accounts = list(
+        Account.objects.select_related("parent").order_by("code")
+    )
+
+    children = {}
+    for account in accounts:
+        children.setdefault(account.parent_id, []).append(account)
+
+    rows = []
+    visited = set()
+
+    def add_children(parent_id, depth):
+        for account in children.get(parent_id, []):
+            if account.pk in visited:
+                continue
+
+            visited.add(account.pk)
+            rows.append({
+                "account": account,
+                "depth": depth,
+                "indent": depth * 24,
+                "has_children": bool(children.get(account.pk)),
+            })
+            add_children(account.pk, depth + 1)
+
+    add_children(None, 0)
+
+    # Safely show any old accounts with an invalid hierarchy.
+    for account in accounts:
+        if account.pk not in visited:
+            rows.append({
+                "account": account,
+                "depth": 0,
+                "indent": 0,
+                "has_children": bool(children.get(account.pk)),
+            })
+
+    return rows
+
+
 @login_required
 @accountant_required
 def account_list_view(request):
-    accounts = Account.objects.select_related("parent").order_by("code")
-    return render(request, "finance/account_list.html", {"accounts": accounts})
+    return render(
+        request,
+        "finance/account_list.html",
+        {"account_rows": _build_account_tree()},
+    )
 
+
+@login_required
+@accountant_required
+def account_create_view(request):
+    if request.method == "POST":
+        form = AccountForm(request.POST)
+        if form.is_valid():
+            account = form.save()
+            messages.success(
+                request,
+                _("Account %(account)s created successfully.")
+                % {"account": account},
+            )
+            return redirect("finance:account_list")
+    else:
+        form = AccountForm()
+
+    return render(
+        request,
+        "finance/account_form.html",
+        {
+            "form": form,
+            "page_title": _("Create account"),
+        },
+    )
+
+
+@login_required
+@accountant_required
+def account_update_view(request, pk):
+    account = get_object_or_404(Account, pk=pk)
+
+    if request.method == "POST":
+        form = AccountForm(request.POST, instance=account)
+        if form.is_valid():
+            account = form.save()
+            messages.success(
+                request,
+                _("Account %(account)s updated successfully.")
+                % {"account": account},
+            )
+            return redirect("finance:account_list")
+    else:
+        form = AccountForm(instance=account)
+
+    return render(
+        request,
+        "finance/account_form.html",
+        {
+            "form": form,
+            "account": account,
+            "page_title": _("Edit account"),
+        },
+    )
 
 @login_required
 @accountant_required
@@ -202,11 +310,22 @@ def general_ledger_view(request):
         "start_date": start_date,
         "end_date": end_date,
     }
+    ledger = None
     if account_id:
         try:
-            context.update(generate_general_ledger(account_id, start_date, end_date))
+            ledger = generate_general_ledger(account_id, start_date, end_date)
+            context.update(ledger)
         except ValueError as exc:
             messages.error(request, str(exc))
+    if ledger:
+        export = export_response(
+            request,
+            request.GET.get("export"),
+            "general-ledger",
+            general_ledger_document(ledger, start_date, end_date),
+        )
+        if export:
+            return export
     return render(request, "reports/general_ledger.html", context)
 
 
@@ -215,8 +334,26 @@ def general_ledger_view(request):
 def trial_balance_view(request):
     start_date = request.GET.get("start_date") or None
     end_date = request.GET.get("end_date") or None
+
     tb_data = generate_trial_balance(start_date, end_date)
-    return render(request, "reports/trial_balance.html", {"tb_data": tb_data, "start_date": start_date, "end_date": end_date})
+    export = export_response(
+        request,
+        request.GET.get("export"),
+        "trial-balance",
+        trial_balance_document(tb_data, start_date, end_date),
+    )
+    if export:
+        return export
+
+    return render(
+        request,
+        "reports/trial_balance.html",
+        {
+            "tb_data": tb_data,
+            "start_date": start_date,
+            "end_date": end_date,
+        },
+    )
 
 
 @login_required
@@ -301,6 +438,20 @@ def income_statement_view(request):
             end_date=date_form.cleaned_data["end_date"],
         )
 
+    if statement:
+        export = export_response(
+            request,
+            request.GET.get("export"),
+            "income-statement",
+            income_statement_document(
+                statement,
+                date_form.cleaned_data.get("start_date") if date_form.is_bound else None,
+                date_form.cleaned_data.get("end_date") if date_form.is_bound else None,
+            ),
+        )
+        if export:
+            return export
+
     return render(
         request,
         "reports/income_statement.html",
@@ -323,6 +474,19 @@ def balance_sheet_view(request):
         balance_sheet = generate_balance_sheet(
             as_of_date=date_form.cleaned_data["as_of_date"],
         )
+
+    if balance_sheet:
+        as_of_date = (
+            date_form.cleaned_data.get("as_of_date") if date_form.is_bound else None
+        )
+        export = export_response(
+            request,
+            request.GET.get("export"),
+            "balance-sheet",
+            balance_sheet_document(balance_sheet, as_of_date),
+        )
+        if export:
+            return export
 
     return render(
         request,
@@ -347,6 +511,16 @@ def cash_flow_statement_view(request):
             start_date=date_form.cleaned_data["start_date"],
             end_date=date_form.cleaned_data["end_date"],
         )
+
+    if statement:
+        export = export_response(
+            request,
+            request.GET.get("export"),
+            "cash-flow-statement",
+            cash_flow_document(statement),
+        )
+        if export:
+            return export
 
     return render(
         request,
@@ -504,6 +678,21 @@ def customer_statement_view(request):
             end_date=form.cleaned_data["end_date"],
         )
 
+    if statement:
+        export = export_response(
+            request,
+            request.GET.get("export"),
+            "customer-statement",
+            party_statement_document(
+                statement,
+                "customer",
+                form.cleaned_data["start_date"],
+                form.cleaned_data["end_date"],
+            ),
+        )
+        if export:
+            return export
+
     return render(
         request,
         "reports/customer_statement.html",
@@ -523,6 +712,21 @@ def supplier_statement_view(request):
             start_date=form.cleaned_data["start_date"],
             end_date=form.cleaned_data["end_date"],
         )
+
+    if statement:
+        export = export_response(
+            request,
+            request.GET.get("export"),
+            "supplier-statement",
+            party_statement_document(
+                statement,
+                "supplier",
+                form.cleaned_data["start_date"],
+                form.cleaned_data["end_date"],
+            ),
+        )
+        if export:
+            return export
 
     return render(
         request,
@@ -547,6 +751,16 @@ def receivables_aging_view(request):
             as_of_date=form.cleaned_data["as_of_date"],
             customer=form.cleaned_data["customer"],
         )
+
+    if report:
+        export = export_response(
+            request,
+            request.GET.get("export"),
+            "receivables-aging",
+            aging_document(report, "receivable"),
+        )
+        if export:
+            return export
 
     return render(
         request,
@@ -578,6 +792,16 @@ def payables_aging_view(request):
             as_of_date=form.cleaned_data["as_of_date"],
             supplier=form.cleaned_data["supplier"],
         )
+
+    if report:
+        export = export_response(
+            request,
+            request.GET.get("export"),
+            "payables-aging",
+            aging_document(report, "payable"),
+        )
+        if export:
+            return export
 
     return render(
         request,

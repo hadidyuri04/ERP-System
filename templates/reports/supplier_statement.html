@@ -23,6 +23,7 @@
   {{ form.non_field_errors }}
 
   {% if statement %}
+    {% include "reports/_export_buttons.html" %}
     <div class="card-pad">
       <h3>{{ statement.party }}</h3>
       <p><strong>{% trans "Opening balance" %}:</strong> {{ statement.opening_balance|floatformat:3 }}</p>

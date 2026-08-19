@@ -1272,6 +1272,97 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--purple-6
   flex-direction: row-reverse;
 }
 
+/* Chart of accounts */
+.account-tree-card { overflow: hidden; }
+.account-tree-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  padding: 14px 20px;
+  border-block-end: 1px solid var(--border);
+  color: var(--muted);
+  background: var(--surface-alt);
+  font-size: .72rem;
+  font-weight: 700;
+}
+.account-tree-legend span { display: inline-flex; align-items: center; gap: 7px; }
+.account-tree-legend i { color: var(--purple-500); }
+.account-tree-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 230px;
+  padding-inline-start: var(--account-indent, 0);
+}
+.account-tree-name > span:last-child { display: grid; gap: 2px; }
+.account-tree-name strong { color: var(--ink); font-size: .78rem; }
+.account-tree-name small { color: var(--muted); font-size: .7rem; }
+.account-tree-icon {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  color: var(--purple-600);
+  background: var(--purple-50);
+}
+.account-tree-icon.is-summary { color: #9a6700; background: #fff7db; }
+.account-editor-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(260px, .7fr);
+  gap: 20px;
+  align-items: start;
+}
+.account-editor-form { max-width: none; }
+.account-editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-block-start: 6px;
+}
+.account-editor-guide { position: sticky; top: 92px; }
+.account-guide-icon {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  margin-block-end: 14px;
+  border-radius: 13px;
+  color: var(--purple-700);
+  background: var(--purple-50);
+  font-size: 1.2rem;
+}
+.account-editor-guide h2 { margin: 0 0 8px; font-size: 1rem; }
+.account-editor-guide p,
+.account-editor-guide li { color: var(--muted); font-size: .75rem; line-height: 1.65; }
+.account-editor-guide ul { margin: 12px 0 0; padding-inline-start: 18px; }
+
+@media (max-width: 850px) {
+  .account-editor-layout { grid-template-columns: 1fr; }
+  .account-editor-guide { position: static; }
+}
+
+.report-export-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 18px;
+  border-block: 1px solid var(--border);
+  background: var(--surface-alt);
+}
+.report-export-actions > span {
+  margin-inline-end: auto;
+  color: var(--muted);
+  font-size: .7rem;
+  font-weight: 750;
+}
+.report-export-actions .btn { display: inline-flex; align-items: center; gap: 6px; }
+.report-export-actions .bi-file-earmark-excel { color: #16824b; }
+.report-export-actions .bi-file-earmark-pdf { color: #cf3545; }
+
 /* Aging reports */
 .aging-page { display: grid; gap: 18px; }
 .aging-filter-card, .aging-summary-card, .aging-detail-card { overflow: hidden; }

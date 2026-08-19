@@ -241,3 +241,133 @@ class PayablesAgingForm(AsOfDateForm):
         label=_("Supplier"),
         required=False,
     )
+
+
+class AccountForm(forms.ModelForm):
+    class Meta:
+        model = Account
+        fields = [
+            "code",
+            "name",
+            "account_type",
+            "parent",
+            "allow_posting",
+            "is_cash_equivalent",
+            "is_active",
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        excluded_ids = set()
+
+        if self.instance.pk:
+            excluded_ids.add(self.instance.pk)
+
+            pending = list(self.instance.children.values_list("pk", flat=True))
+            while pending:
+                account_id = pending.pop()
+                if account_id in excluded_ids:
+                    continue
+
+                excluded_ids.add(account_id)
+                pending.extend(
+                    Account.objects.filter(parent_id=account_id)
+                    .values_list("pk", flat=True)
+                )
+
+        self.fields["parent"].queryset = (
+            Account.objects.exclude(pk__in=excluded_ids).order_by("code")
+        )
+        self.fields["parent"].help_text = _(
+            "Leave blank for a top-level account. Parent accounts must be non-posting."
+        )
+        self.fields["allow_posting"].help_text = _(
+            "Enable only for leaf accounts that can receive journal debits and credits."
+        )
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        parent = cleaned_data.get("parent")
+        account_type = cleaned_data.get("account_type")
+        allow_posting = cleaned_data.get("allow_posting")
+        is_cash_equivalent = cleaned_data.get("is_cash_equivalent")
+
+        if (
+            self.instance.pk
+            and account_type
+            and account_type != self.instance.account_type
+        ):
+            if self.instance.children.exclude(account_type=account_type).exists():
+                self.add_error(
+                    "account_type",
+                    _("Change the child accounts to this type before changing the parent."),
+                )
+            if self.instance.journal_lines.exists():
+                self.add_error(
+                    "account_type",
+                    _("The type of an account used in journal entries cannot be changed."),
+                )
+
+        if parent:
+            if parent.account_type != account_type:
+                self.add_error(
+                    "parent",
+                    _("The parent and child accounts must have the same type."),
+                )
+
+            if parent.allow_posting:
+                self.add_error(
+                    "parent",
+                    _("A posting account cannot be used as a parent account."),
+                )
+
+            if not parent.is_active:
+                self.add_error(
+                    "parent",
+                    _("An inactive account cannot be used as a parent account."),
+                )
+
+            current = parent
+            visited = set()
+            while current:
+                if current.pk in visited:
+                    self.add_error(
+                        "parent",
+                        _("The selected parent belongs to an invalid circular hierarchy."),
+                    )
+                    break
+                visited.add(current.pk)
+                if self.instance.pk and current.pk == self.instance.pk:
+                    self.add_error(
+                        "parent",
+                        _("An account cannot be its own parent or descendant."),
+                    )
+                    break
+                current = current.parent
+
+        if (
+            allow_posting
+            and self.instance.pk
+            and self.instance.children.exists()
+        ):
+            self.add_error(
+                "allow_posting",
+                _("An account with child accounts cannot allow direct posting."),
+            )
+
+        if is_cash_equivalent:
+            if account_type != Account.AccountType.ASSET:
+                self.add_error(
+                    "is_cash_equivalent",
+                    _("A cash-equivalent account must be an asset account."),
+                )
+
+            if not allow_posting:
+                self.add_error(
+                    "is_cash_equivalent",
+                    _("A cash-equivalent account must allow posting."),
+                )
+
+        return cleaned_data

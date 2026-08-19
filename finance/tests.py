@@ -1,11 +1,17 @@
 from datetime import date
 from decimal import Decimal
+from io import BytesIO
+import re
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
 from django.test import TestCase
 from django.urls import reverse
+from openpyxl import load_workbook
+from playwright.sync_api import Error as PlaywrightError
 
 from customers.models import Customer
 from inventory.models import (
@@ -26,6 +32,7 @@ from purchasing.models import PurchaseInvoice, PurchaseInvoiceItem
 from purchasing.services import confirm_purchase
 from suppliers.models import Supplier
 
+from .forms import AccountForm
 from .models import (
     Account,
     FiscalPeriod,
@@ -68,6 +75,299 @@ def create_required_fiscal_years(*years):
     """Create each calendar year once for tests that post journal entries."""
     for year in set(years):
         create_fiscal_year(year)
+
+
+class AccountHierarchyViewTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="chart-accountant",
+            password="test-password",
+            role="accountant",
+        )
+        self.client.force_login(self.user)
+        self.assets = Account.objects.create(
+            code="1000",
+            name="Assets",
+            account_type=Account.AccountType.ASSET,
+            allow_posting=False,
+        )
+        self.current_assets = Account.objects.create(
+            code="1100",
+            name="Current assets",
+            account_type=Account.AccountType.ASSET,
+            parent=self.assets,
+            allow_posting=False,
+        )
+        self.cash = Account.objects.create(
+            code="1110",
+            name="Cash",
+            account_type=Account.AccountType.ASSET,
+            parent=self.current_assets,
+            is_cash_equivalent=True,
+        )
+        self.revenue = Account.objects.create(
+            code="4000",
+            name="Revenue",
+            account_type=Account.AccountType.REVENUE,
+            allow_posting=False,
+        )
+
+    def test_account_list_builds_parent_child_tree(self):
+        response = self.client.get(reverse("finance:account_list"))
+
+        self.assertEqual(response.status_code, 200)
+        rows = response.context["account_rows"]
+        self.assertEqual(
+            [(row["account"].code, row["depth"]) for row in rows],
+            [("1000", 0), ("1100", 1), ("1110", 2), ("4000", 0)],
+        )
+        self.assertTrue(rows[0]["has_children"])
+        self.assertFalse(rows[2]["has_children"])
+        self.assertContains(response, reverse("finance:account_create"))
+        self.assertContains(
+            response,
+            reverse("finance:account_update", args=[self.cash.pk]),
+        )
+
+    def test_accountant_can_create_posting_child_account(self):
+        response = self.client.post(
+            reverse("finance:account_create"),
+            {
+                "code": "1120",
+                "name": "Bank",
+                "account_type": Account.AccountType.ASSET,
+                "parent": self.current_assets.pk,
+                "allow_posting": "on",
+                "is_cash_equivalent": "on",
+                "is_active": "on",
+            },
+        )
+
+        account = Account.objects.get(code="1120")
+        self.assertRedirects(response, reverse("finance:account_list"))
+        self.assertEqual(account.parent, self.current_assets)
+        self.assertTrue(account.allow_posting)
+        self.assertTrue(account.is_cash_equivalent)
+
+    def test_accountant_can_edit_account(self):
+        response = self.client.post(
+            reverse("finance:account_update", args=[self.cash.pk]),
+            {
+                "code": self.cash.code,
+                "name": "Main cash",
+                "account_type": Account.AccountType.ASSET,
+                "parent": self.current_assets.pk,
+                "allow_posting": "on",
+                "is_cash_equivalent": "on",
+                "is_active": "on",
+            },
+        )
+
+        self.assertRedirects(response, reverse("finance:account_list"))
+        self.cash.refresh_from_db()
+        self.assertEqual(self.cash.name, "Main cash")
+
+    def test_form_rejects_posting_parent_and_different_account_type(self):
+        posting_parent_form = AccountForm(
+            data={
+                "code": "1125",
+                "name": "Petty cash",
+                "account_type": Account.AccountType.ASSET,
+                "parent": self.cash.pk,
+                "allow_posting": "on",
+                "is_active": "on",
+            }
+        )
+        wrong_type_form = AccountForm(
+            data={
+                "code": "4100",
+                "name": "Wrong child",
+                "account_type": Account.AccountType.ASSET,
+                "parent": self.revenue.pk,
+                "allow_posting": "on",
+                "is_active": "on",
+            }
+        )
+
+        self.assertFalse(posting_parent_form.is_valid())
+        self.assertIn("parent", posting_parent_form.errors)
+        self.assertFalse(wrong_type_form.is_valid())
+        self.assertIn("parent", wrong_type_form.errors)
+
+    def test_invalid_account_response_contains_toast_detectable_field_error(self):
+        response = self.client.post(
+            reverse("finance:account_create"),
+            {
+                "code": "1125",
+                "name": "Petty cash",
+                "account_type": Account.AccountType.ASSET,
+                "parent": self.cash.pk,
+                "allow_posting": "on",
+                "is_active": "on",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'class="form-error"')
+        self.assertContains(
+            response,
+            "A posting account cannot be used as a parent account.",
+        )
+        self.assertFalse(Account.objects.filter(code="1125").exists())
+
+    def test_form_rejects_cycle_and_posting_summary_account(self):
+        cycle_form = AccountForm(
+            data={
+                "code": self.assets.code,
+                "name": self.assets.name,
+                "account_type": Account.AccountType.ASSET,
+                "parent": self.current_assets.pk,
+                "is_active": "on",
+            },
+            instance=self.assets,
+        )
+        posting_summary_form = AccountForm(
+            data={
+                "code": self.current_assets.code,
+                "name": self.current_assets.name,
+                "account_type": Account.AccountType.ASSET,
+                "parent": self.assets.pk,
+                "allow_posting": "on",
+                "is_active": "on",
+            },
+            instance=self.current_assets,
+        )
+
+        self.assertFalse(cycle_form.is_valid())
+        self.assertIn("parent", cycle_form.errors)
+        self.assertFalse(posting_summary_form.is_valid())
+        self.assertIn("allow_posting", posting_summary_form.errors)
+
+    def test_cash_equivalent_must_be_posting_asset(self):
+        form = AccountForm(
+            data={
+                "code": "4100",
+                "name": "Cash-like revenue",
+                "account_type": Account.AccountType.REVENUE,
+                "parent": self.revenue.pk,
+                "is_cash_equivalent": "on",
+                "is_active": "on",
+            }
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("is_cash_equivalent", form.errors)
+
+    def test_parent_type_cannot_change_while_children_keep_old_type(self):
+        form = AccountForm(
+            data={
+                "code": self.assets.code,
+                "name": self.assets.name,
+                "account_type": Account.AccountType.LIABILITY,
+                "is_active": "on",
+            },
+            instance=self.assets,
+        )
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("account_type", form.errors)
+
+
+class ReportExportViewTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="report-export-accountant",
+            password="test-password",
+            role="accountant",
+        )
+        self.client.force_login(self.user)
+        self.account = Account.objects.create(
+            code="EX1100",
+            name="Export cash",
+            account_type=Account.AccountType.ASSET,
+        )
+        self.customer = Customer.objects.create(
+            code="EX-C001",
+            name="Export customer",
+        )
+        self.supplier = Supplier.objects.create(
+            code="EX-S001",
+            name="Export supplier",
+        )
+
+    def _excel_urls(self):
+        return (
+            f'{reverse("finance:general_ledger")}?account_id={self.account.pk}&export=xlsx',
+            f'{reverse("finance:trial_balance")}?export=xlsx',
+            f'{reverse("finance:income_statement")}?export=xlsx',
+            f'{reverse("finance:balance_sheet")}?export=xlsx',
+            f'{reverse("finance:cash_flow_statement")}?export=xlsx',
+            f'{reverse("finance:customer_statement")}?customer={self.customer.pk}&export=xlsx',
+            f'{reverse("finance:supplier_statement")}?supplier={self.supplier.pk}&export=xlsx',
+            f'{reverse("finance:receivables_aging")}?export=xlsx',
+            f'{reverse("finance:payables_aging")}?export=xlsx',
+        )
+
+    def test_every_finance_report_exports_a_valid_excel_workbook(self):
+        for url in self._excel_urls():
+            with self.subTest(url=url):
+                response = self.client.get(url)
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(
+                    response["Content-Type"],
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                )
+                self.assertIn("attachment;", response["Content-Disposition"])
+                self.assertTrue(response.content.startswith(b"PK"))
+                workbook = load_workbook(BytesIO(response.content), read_only=True)
+                self.assertTrue(workbook.active.title)
+
+    def test_pdf_export_returns_a_pdf_download(self):
+        response = self.client.get(
+            reverse("finance:trial_balance"),
+            {"export": "pdf"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/pdf")
+        self.assertIn("trial-balance.pdf", response["Content-Disposition"])
+        self.assertTrue(response.content.startswith(b"%PDF"))
+        self.assertEqual(
+            len(re.findall(rb"/Type\s*/Page\b", response.content)),
+            1,
+        )
+
+    def test_arabic_excel_uses_rtl_sheet_direction(self):
+        self.client.cookies[settings.LANGUAGE_COOKIE_NAME] = "ar"
+        response = self.client.get(
+            reverse("finance:trial_balance"),
+            {"export": "xlsx"},
+        )
+
+        workbook = load_workbook(BytesIO(response.content))
+        self.assertTrue(workbook.active.sheet_view.rightToLeft)
+        self.assertEqual(workbook.active["A1"].value, "ميزان المراجعة")
+
+    def test_report_page_shows_both_export_buttons(self):
+        response = self.client.get(reverse("finance:trial_balance"))
+
+        self.assertContains(response, "export=xlsx")
+        self.assertContains(response, "export=pdf")
+
+    @patch("finance.exports.pdf_response")
+    def test_missing_pdf_runtime_returns_report_with_clear_error_toast(self, pdf_mock):
+        pdf_mock.side_effect = PlaywrightError("Chromium executable not found")
+
+        response = self.client.get(
+            reverse("finance:trial_balance"),
+            {"export": "pdf"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "PDF export is unavailable. Install the Playwright Chromium runtime",
+        )
 
 
 class ManualJournalViewTests(TestCase):

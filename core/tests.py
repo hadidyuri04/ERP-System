@@ -28,6 +28,7 @@ class ConnectedViewsSmokeTests(TestCase):
         "purchasing:list",
         "purchasing:create",
         "finance:account_list",
+        "finance:account_create",
         "finance:journal_list",
         "finance:receipt_list",
         "finance:receipt_create",
@@ -110,6 +111,7 @@ class ConnectedViewsSmokeTests(TestCase):
         self.assertContains(response, "\u0642\u064a\u062f \u062c\u062f\u064a\u062f")
 
         translated_finance_pages = {
+            "finance:account_create": "إنشاء حساب",
             "finance:cash_flow_statement": "قائمة التدفقات النقدية",
             "finance:receivables_aging": "تقرير أعمار الذمم المدينة",
             "finance:payables_aging": "تقرير أعمار الذمم الدائنة",

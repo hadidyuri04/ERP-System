@@ -677,6 +677,30 @@
     });
   };
 
+  // Surface normal Django form validation through the same toast system.
+  // Inline errors remain in place so users can still identify each field.
+  ERP.toastFormErrors = function (root) {
+    const scope = root || document;
+    const messages = [];
+    const seen = new Set();
+
+    scope.querySelectorAll('.form-error, .journal-form-errors, form .errorlist').forEach((el) => {
+      const message = (el.textContent || '').replace(/\s+/g, ' ').trim();
+      if (!message || seen.has(message)) return;
+      seen.add(message);
+      messages.push(message);
+    });
+
+    if (!messages.length) return;
+
+    const detail = messages.slice(0, 3).join(' • ');
+    ERP.toast.error(
+      ERP.t('save_failed', 'Could not save'),
+      detail || ERP.t('check_fields', 'Please check the highlighted fields.'),
+      8000
+    );
+  };
+
   /* ==================================================================
      Boot
      ================================================================== */
@@ -699,6 +723,7 @@
     ERP.bindLanguageSwitch();
     ERP.animateCounters();
     ERP.flushServerMessages();
+    ERP.toastFormErrors();
 
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((el) => {
       if (window.bootstrap) new bootstrap.Tooltip(el);

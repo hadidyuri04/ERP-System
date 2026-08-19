@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ERP System\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-19 12:53+0300\n"
+"POT-Creation-Date: 2026-08-19 14:27+0300\n"
 "PO-Revision-Date: 2026-08-13 13:30+0300\n"
 "Last-Translator: ERP Team\n"
 "Language-Team: Arabic\n"
@@ -113,17 +113,225 @@ msgstr "تم التعديل على العميل بنجاح"
 msgid "Edit customer"
 msgstr "تعديل العميل"
 
+msgid ""
+"PDF export is unavailable. Install the Playwright Chromium runtime and try "
+"again."
+msgstr ""
+"تصدير PDF غير متاح. ثبّت بيئة Chromium الخاصة بـ Playwright ثم حاول مرة "
+"أخرى."
+
 msgid "Start date"
 msgstr "تاريخ البداية"
+
+msgid "Beginning"
+msgstr "بداية المدة"
 
 msgid "End date"
 msgstr "تاريخ النهاية"
 
-msgid "The start date cannot be later than the end date."
-msgstr "لا يمكن أن يكون تاريخ البداية بعد تاريخ النهاية."
+msgid "Today"
+msgstr "اليوم"
+
+msgid "General ledger"
+msgstr "دفتر الأستاذ العام"
+
+msgid "Account"
+msgstr "حساب"
+
+msgid "Date"
+msgstr "التاريخ"
+
+msgid "Entry"
+msgstr "القيد"
+
+msgid "Description"
+msgstr "الوصف"
+
+msgid "Debit"
+msgstr "مدين"
+
+msgid "Credit"
+msgstr "دائن"
+
+msgid "Running balance"
+msgstr "الرصيد الجاري"
+
+msgid "Final balance"
+msgstr "الرصيد النهائي"
+
+msgid "Trial balance"
+msgstr "ميزان المراجعة"
+
+msgid "Total"
+msgstr "المجموع الكلي"
+
+msgid "Income statement"
+msgstr "قائمة الدخل"
+
+msgid "Revenue"
+msgstr "إيراد"
+
+msgid "Amount"
+msgstr "المبلغ"
+
+msgid "Total revenue"
+msgstr "إجمالي الإيرادات"
+
+msgid "Expenses"
+msgstr "المصروفات"
+
+msgid "Total expenses"
+msgstr "إجمالي المصروفات"
+
+msgid "Net profit"
+msgstr "صافي الربح"
+
+msgid "Balance sheet"
+msgstr "قائمة المركز المالي"
 
 msgid "As of date"
 msgstr "كما في تاريخ"
+
+msgid "Assets"
+msgstr "الأصول"
+
+msgid "Total assets"
+msgstr "إجمالي الأصول"
+
+msgid "Liabilities"
+msgstr "الالتزامات"
+
+msgid "Total liabilities"
+msgstr "إجمالي الالتزامات"
+
+msgid "Equity"
+msgstr "حقوق الملكية"
+
+msgid "Current earnings"
+msgstr "أرباح الفترة الحالية"
+
+msgid "Total equity and earnings"
+msgstr "إجمالي حقوق الملكية والأرباح"
+
+msgid "Liabilities and equity"
+msgstr "الالتزامات وحقوق الملكية"
+
+msgid "Inflow"
+msgstr "تدفق نقدي داخل"
+
+msgid "Outflow"
+msgstr "تدفق نقدي خارج"
+
+msgid "Net cash flow"
+msgstr "صافي التدفق النقدي"
+
+msgid "Activity total"
+msgstr "إجمالي النشاط"
+
+msgid "Operating activities"
+msgstr "الأنشطة التشغيلية"
+
+msgid "Investing activities"
+msgstr "الأنشطة الاستثمارية"
+
+msgid "Financing activities"
+msgstr "الأنشطة التمويلية"
+
+msgid "Unclassified activity"
+msgstr "نشاط غير مصنّف"
+
+msgid "Cash reconciliation"
+msgstr "تسوية النقد"
+
+msgid "Measure"
+msgstr "البيان"
+
+msgid "Opening cash"
+msgstr "رصيد النقد أول المدة"
+
+msgid "Total inflows"
+msgstr "إجمالي التدفقات الداخلة"
+
+msgid "Total outflows"
+msgstr "إجمالي التدفقات الخارجة"
+
+msgid "Net change in cash"
+msgstr "صافي التغير في النقد"
+
+msgid "Closing cash"
+msgstr "رصيد النقد في نهاية الفترة"
+
+msgid "Cash-flow statement"
+msgstr "قائمة التدفقات النقدية"
+
+msgid "Customer statement"
+msgstr "كشف حساب العميل"
+
+msgid "Supplier statement"
+msgstr "كشف حساب المورد"
+
+msgid "Opening balance"
+msgstr "الرصيد الافتتاحي"
+
+msgid "Balance"
+msgstr "الرصيد"
+
+msgid "Closing balance"
+msgstr "الرصيد الختامي"
+
+msgid "Accounts receivable aging"
+msgstr "تقرير أعمار الذمم المدينة"
+
+msgid "Accounts payable aging"
+msgstr "تقرير أعمار الذمم الدائنة"
+
+msgid "Supplier"
+msgstr "المورد"
+
+msgid "Aging by account"
+msgstr "أعمار الديون حسب الحساب"
+
+msgid "Current"
+msgstr "حالي"
+
+msgid "1-30 days"
+msgstr "من 1 إلى 30 يومًا"
+
+msgid "31-60 days"
+msgstr "من 31 إلى 60 يومًا"
+
+msgid "61-90 days"
+msgstr "من 61 إلى 90 يومًا"
+
+msgid "90+ days"
+msgstr "أكثر من 90 يومًا"
+
+msgid "Report total"
+msgstr "إجمالي التقرير"
+
+msgid "Open documents"
+msgstr "المستندات المفتوحة"
+
+msgid "Document"
+msgstr "المستند"
+
+msgid "Document date"
+msgstr "تاريخ المستند"
+
+msgid "Due date"
+msgstr "تاريخ الاستحقاق"
+
+msgid "Days overdue"
+msgstr "أيام التأخير"
+
+msgid "Original"
+msgstr "القيمة الأصلية"
+
+msgid "Remaining"
+msgstr "المتبقي"
+
+msgid "The start date cannot be later than the end date."
+msgstr "لا يمكن أن يكون تاريخ البداية بعد تاريخ النهاية."
 
 msgid "A customer is required for an accounts receivable receipt."
 msgstr "يجب تحديد عميل عند تسجيل قبض على حساب الذمم المدينة."
@@ -144,12 +352,47 @@ msgstr "لا يمكن أن يكون إجمالي قيد اليومية صفرً�
 msgid "Journal is not balanced. Debit: %(debit)s, Credit: %(credit)s."
 msgstr "قيد اليومية غير متوازن. المدين: %(debit)s، الدائن: %(credit)s."
 
-#| msgid "Maximum discount must be between 0 and 100."
 msgid "Enter a year between 2000 and 2100."
 msgstr "أدخل سنة بين 2000 و2100."
 
-msgid "Supplier"
-msgstr "المورد"
+msgid ""
+"Leave blank for a top-level account. Parent accounts must be non-posting."
+msgstr ""
+"اتركه فارغًا للحساب الرئيسي. يجب أن تكون الحسابات الأب غير قابلة للترحيل."
+
+msgid ""
+"Enable only for leaf accounts that can receive journal debits and credits."
+msgstr "فعّله فقط للحسابات الفرعية التي تقبل الحركات المدينة والدائنة."
+
+msgid "Change the child accounts to this type before changing the parent."
+msgstr "غيّر أنواع الحسابات الفرعية إلى هذا النوع قبل تغيير الحساب الأب."
+
+msgid "The type of an account used in journal entries cannot be changed."
+msgstr "لا يمكن تغيير نوع حساب مستخدم في قيود اليومية."
+
+msgid "The parent and child accounts must have the same type."
+msgstr "يجب أن يكون الحساب الأب والحساب الفرعي من النوع نفسه."
+
+msgid "A posting account cannot be used as a parent account."
+msgstr "لا يمكن استخدام حساب قابل للترحيل كحساب أب."
+
+msgid "An inactive account cannot be used as a parent account."
+msgstr "لا يمكن استخدام حساب غير نشط كحساب أب."
+
+msgid "The selected parent belongs to an invalid circular hierarchy."
+msgstr "الحساب الأب المحدد جزء من تسلسل هرمي دائري غير صالح."
+
+msgid "An account cannot be its own parent or descendant."
+msgstr "لا يمكن أن يكون الحساب أبًا لنفسه أو لأحد الحسابات التابعة له."
+
+msgid "An account with child accounts cannot allow direct posting."
+msgstr "لا يمكن السماح بالترحيل المباشر إلى حساب لديه حسابات فرعية."
+
+msgid "A cash-equivalent account must be an asset account."
+msgstr "يجب أن يكون حساب النقد وما في حكمه من حسابات الأصول."
+
+msgid "A cash-equivalent account must allow posting."
+msgstr "يجب أن يكون حساب النقد وما في حكمه قابلاً للترحيل."
 
 msgid "Tax Rate"
 msgstr "نسبة الضريبة"
@@ -172,11 +415,9 @@ msgstr "لا يمكن أن تكون نسبة الضريبة سالبة."
 msgid "Tax rate cannot be greater than 100%."
 msgstr "لا يمكن أن تتجاوز نسبة الضريبة ١٠٠٪."
 
-#| msgid "Open POS"
 msgid "Open"
 msgstr "مفتوحة"
 
-#| msgid "Close"
 msgid "Closed"
 msgstr "مغلقة"
 
@@ -186,14 +427,12 @@ msgstr "السنة"
 msgid "Status"
 msgstr "الحالة"
 
-#| msgid "Closed At"
 msgid "Closed By"
 msgstr "أُغلقت بواسطة"
 
 msgid "Closed At"
 msgstr "وقت الإغلاق"
 
-#| msgid "Close Register"
 msgid "Close Reason"
 msgstr "سبب الإغلاق"
 
@@ -203,19 +442,15 @@ msgstr "السنة المالية"
 msgid "Fiscal Years"
 msgstr "السنوات المالية"
 
-#| msgid "Monthly"
 msgid "Month"
 msgstr "الشهر"
 
-#| msgid "Start date"
 msgid "Start Date"
 msgstr "تاريخ البداية"
 
-#| msgid "End date"
 msgid "End Date"
 msgstr "تاريخ النهاية"
 
-#| msgid "Opened At"
 msgid "Opened"
 msgstr "مفتوحة"
 
@@ -225,15 +460,12 @@ msgstr "الفترة المالية"
 msgid "Empty for an action on the complete fiscal year."
 msgstr "يُترك فارغًا إذا كان الإجراء على السنة المالية كاملة."
 
-#| msgid "Actions"
 msgid "Action"
 msgstr "الإجراء"
 
-#| msgid "Approved By"
 msgid "Performed By"
 msgstr "نفّذه"
 
-#| msgid "Reversed At"
 msgid "Performed At"
 msgstr "تاريخ التنفيذ"
 
@@ -252,12 +484,6 @@ msgstr "أصل"
 msgid "Liability"
 msgstr "التزام"
 
-msgid "Equity"
-msgstr "حقوق الملكية"
-
-msgid "Revenue"
-msgstr "إيراد"
-
 msgid "Expense"
 msgstr "مصروف"
 
@@ -275,9 +501,6 @@ msgstr "النقد وما في حكمه"
 
 msgid "Include this account in the cash-flow statement."
 msgstr "تضمين هذا الحساب في قائمة التدفقات النقدية."
-
-msgid "Account"
-msgstr "حساب"
 
 msgid "Accounts"
 msgstr "الحسابات"
@@ -318,7 +541,6 @@ msgstr "عكس قيد يومية"
 msgid "No Cash-Flow Effect"
 msgstr "لا أثر على التدفقات النقدية"
 
-#| msgid "POS activity"
 msgid "Operating Activity"
 msgstr "نشاط تشغيلي"
 
@@ -330,12 +552,6 @@ msgstr "نشاط تمويلي"
 
 msgid "Entry Number"
 msgstr "رقم القيد"
-
-msgid "Date"
-msgstr "التاريخ"
-
-msgid "Description"
-msgstr "الوصف"
 
 msgid "Source Type"
 msgstr "نوع المصدر"
@@ -373,12 +589,6 @@ msgstr "قيد يومية"
 msgid "Journal Entries"
 msgstr "قيود اليومية"
 
-msgid "Debit"
-msgstr "مدين"
-
-msgid "Credit"
-msgstr "دائن"
-
 msgid "Journal Entry Line"
 msgstr "بند قيد اليومية"
 
@@ -403,31 +613,24 @@ msgstr "هذا الحساب لا يسمح بالترحيل المباشر."
 msgid "This account is inactive."
 msgstr "هذا الحساب غير نشط."
 
-#| msgid "Received Date"
 msgid "Receivable"
 msgstr "ذمة مدينة"
 
 msgid "Payable"
 msgstr "ذمة دائنة"
 
-#| msgid "Credit sales require a customer."
 msgid "A receivable must reference only a customer."
 msgstr "يجب أن ترتبط الذمة المدينة بعميل واحد فقط."
 
-#| msgid ""
-#| "A journal line cannot reference both a customer and a supplier."
 msgid "A payable must reference only a supplier."
 msgstr "يجب أن ترتبط الذمة الدائنة بمورّد واحد فقط."
 
-#| msgid "Receipt voucher amount must be greater than zero."
 msgid "Open-item amount must be greater than zero."
 msgstr "يجب أن تكون قيمة البند المفتوح أكبر من صفر."
 
-#| msgid "Stock addition quantity must be greater than zero."
 msgid "Allocation amount must be greater than zero."
 msgstr "يجب أن تكون قيمة التخصيص أكبر من صفر."
 
-#| msgid "The start date cannot be later than the end date."
 msgid "Allocation date cannot precede the document date."
 msgstr "لا يجوز أن يسبق تاريخ التخصيص تاريخ المستند."
 
@@ -452,9 +655,6 @@ msgstr "رقم السند"
 msgid "Received From"
 msgstr "مستلم من"
 
-msgid "Amount"
-msgstr "المبلغ"
-
 msgid "Payment Method"
 msgstr "طريقة الدفع"
 
@@ -472,9 +672,6 @@ msgstr "سندات الصرف"
 
 msgid "Selected account does not exist."
 msgstr "الحساب المحدد غير موجود."
-
-msgid "Opening balance"
-msgstr "الرصيد الافتتاحي"
 
 msgid "This document has already been posted to accounting."
 msgstr "تم ترحيل هذا المستند إلى الحسابات مسبقًا."
@@ -508,7 +705,6 @@ msgstr "حساب الصندوق أو البنك المحدد غير نشط."
 msgid "The selected cash or bank account does not allow posting."
 msgstr "حساب الصندوق أو البنك المحدد لا يسمح بالترحيل."
 
-#| msgid "The selected batch is not stored in the source warehouse."
 msgid "The selected account is not marked as cash or a cash equivalent."
 msgstr "الحساب المحدد غير مصنّف ضمن النقد وما في حكمه."
 
@@ -587,7 +783,9 @@ msgstr "لا يمكن أن يكون المبلغ المدفوع سالبًا."
 msgid ""
 "A cash invoice must be paid in full before it can be confirmed. Paid: "
 "%(paid)s, required: %(total)s."
-msgstr "يجب سداد الفاتورة النقدية بالكامل قبل تأكيدها. المدفوع: %(paid)s، المطلوب: %(total)s."
+msgstr ""
+"يجب سداد الفاتورة النقدية بالكامل قبل تأكيدها. المدفوع: %(paid)s، المطلوب: "
+"%(total)s."
 
 msgid ""
 "A credit invoice cannot carry a paid amount. Confirm it with zero paid, then"
@@ -698,23 +896,18 @@ msgstr "عكس قيد اليومية %(number)s"
 msgid "This fiscal year already exists."
 msgstr "هذه السنة المالية موجودة بالفعل."
 
-#| msgid "Draft journals"
 msgid "draft journals"
 msgstr "قيود يومية مسودة"
 
-#| msgid "Print receipt"
 msgid "draft receipts"
 msgstr "سندات قبض مسودة"
 
-#| msgid "No payments."
 msgid "draft payments"
 msgstr "سندات صرف مسودة"
 
-#| msgid "New purchase"
 msgid "draft purchases"
 msgstr "مشتريات مسودة"
 
-#| msgid "POS Sales"
 msgid "draft POS sales"
 msgstr "مبيعات نقاط بيع مسودة"
 
@@ -726,11 +919,9 @@ msgstr "%(count)s %(label)s"
 msgid "This period cannot be closed while it contains: %(documents)s."
 msgstr "لا يمكن إغلاق هذه الفترة لوجود: %(documents)s."
 
-#| msgid "No items recorded for this sale."
 msgid "A reason is required for this status change."
 msgstr "يجب إدخال سبب لتغيير الحالة."
 
-#| msgid "No items recorded for this sale."
 msgid "No fiscal year has been configured for this date."
 msgstr "لم تُهيّأ سنة مالية لهذا التاريخ."
 
@@ -754,6 +945,20 @@ msgstr "افتح السنة المالية قبل إعادة فتح إحدى ف�
 
 msgid "Invalid fiscal-year status."
 msgstr "حالة السنة المالية غير صالحة."
+
+#, python-format
+msgid "Account %(account)s created successfully."
+msgstr "تم إنشاء الحساب %(account)s بنجاح."
+
+msgid "Create account"
+msgstr "إنشاء حساب"
+
+#, python-format
+msgid "Account %(account)s updated successfully."
+msgstr "تم تحديث الحساب %(account)s بنجاح."
+
+msgid "Edit account"
+msgstr "تعديل الحساب"
 
 msgid "Journal entry posted successfully."
 msgstr "تم ترحيل قيد اليومية بنجاح."
@@ -782,43 +987,32 @@ msgstr "تم حفظ قيد اليومية كمسودة."
 msgid "Journal entry reversed successfully."
 msgstr "تم عكس قيد اليومية بنجاح."
 
-#| msgid "Customer created successfully."
 msgid "Fiscal year created successfully."
 msgstr "أُنشئت السنة المالية بنجاح."
 
 msgid "Invalid period status."
 msgstr "حالة الفترة غير صالحة."
 
-#| msgid "Accounting overview"
 msgid "Accounting period updated."
 msgstr "حُدّثت الفترة المحاسبية."
 
 msgid "Fiscal year updated."
 msgstr "حُدّثت السنة المالية."
 
-#| msgid "Purchase invoice updated."
 msgid "Fiscal-period notes updated."
 msgstr "حُدّثت ملاحظات الفترة المالية."
 
 msgid "Fiscal-period notes could not be updated."
 msgstr "تعذّر تحديث ملاحظات الفترة المالية."
 
-#| msgid "Purchase invoice updated."
 msgid "Fiscal-year notes updated."
 msgstr "حُدّثت ملاحظات السنة المالية."
 
 msgid "Fiscal-year notes could not be updated."
 msgstr "تعذّر تحديث ملاحظات السنة المالية."
 
-msgid "Accounts receivable aging"
-msgstr "تقرير أعمار الذمم المدينة"
-
 msgid "Outstanding customer balances grouped by age."
 msgstr "أرصدة العملاء المستحقة مصنّفة حسب عمر الدين."
-
-#| msgid "Accounting"
-msgid "Accounts payable aging"
-msgstr "تقرير أعمار الذمم الدائنة"
 
 msgid "Outstanding supplier balances grouped by age."
 msgstr "أرصدة المورّدين المستحقة مصنّفة حسب عمر الدين."
@@ -1307,7 +1501,6 @@ msgstr ""
 msgid "%(count)s notification(s) marked as read."
 msgstr "تم وضع علامة على %(count)s تنبيه كمقروء."
 
-#| msgid "Sale Number"
 msgid "Session Number"
 msgstr "رقم الوردية"
 
@@ -1323,42 +1516,33 @@ msgstr "النقد المتوقع"
 msgid "Actual Counted Cash"
 msgstr "النقد الفعلي المعدود"
 
-#| msgid "Difference"
 msgid "Difference / Shortage"
 msgstr "الفرق / العجز"
 
-#| msgid "Session Logs"
 msgid "Session Notes"
 msgstr "ملاحظات الوردية"
 
-#| msgid "Session #"
 msgid "POS Session"
 msgstr "وردية نقطة البيع"
 
-#| msgid "Session Logs"
 msgid "POS Sessions"
 msgstr "ورديات نقاط البيع"
 
 msgid "Cash In / Add Float"
 msgstr "إيداع نقدي / إضافة للعهدة"
 
-#| msgid "Cash Out / Drawer Drop"
 msgid "Cash Out / Drop"
 msgstr "سحب نقدي / توريد نقدي"
 
-#| msgid "No transactions."
 msgid "Transaction Type"
 msgstr "نوع الحركة"
 
-#| msgid "Reason / Notes"
 msgid "Reason / Note"
 msgstr "السبب / الملاحظة"
 
-#| msgid "No transactions."
 msgid "POS Cash Transaction"
 msgstr "حركة نقدية لنقطة البيع"
 
-#| msgid "No transactions."
 msgid "POS Cash Transactions"
 msgstr "الحركات النقدية لنقاط البيع"
 
@@ -1376,9 +1560,6 @@ msgstr "قيمة الخصم"
 
 msgid "Tax Amount"
 msgstr "قيمة الضريبة"
-
-msgid "Total"
-msgstr "المجموع الكلي"
 
 msgid "Paid Amount"
 msgstr "المبلغ المدفوع"
@@ -1438,7 +1619,6 @@ msgstr ""
 "الكمية غير كافية للمنتج %(product_name)s. المتوفر: %(available)s، المطلوبة: "
 "%(quantity)s"
 
-#| msgid "Cannot complete a sale with an empty cart."
 msgid "Cannot hold an empty cart."
 msgstr "لا يمكن تعليق سلة فارغة."
 
@@ -1451,7 +1631,6 @@ msgstr "المنتج غير موجود أو نفدت كميته."
 msgid "No active register session found. Please open a session first."
 msgstr "لا توجد وردية صندوق نشطة. افتح وردية أولًا."
 
-#| msgid "Please select a warehouse first."
 msgid "Please select a warehouse."
 msgstr "يرجى اختيار مستودع."
 
@@ -1617,12 +1796,6 @@ msgstr "يتطلب المراجعة"
 msgid "Draft journal entries"
 msgstr "قيود يومية مسودة"
 
-msgid "Trial balance"
-msgstr "ميزان المراجعة"
-
-msgid "Entry"
-msgstr "القيد"
-
 msgid "Review"
 msgstr "مراجعة"
 
@@ -1770,31 +1943,18 @@ msgstr "الفترات المالية"
 msgid "Journals"
 msgstr "قيود اليومية"
 
-#| msgid "Income statement"
 msgid "Customer statements"
 msgstr "كشوف حسابات العملاء"
 
-#| msgid "Suppliers"
 msgid "Supplier statements"
 msgstr "كشوف حسابات الموردون"
 
-#| msgid "Received Date"
 msgid "Receivables aging"
 msgstr "تقرير أعمار الذمم المدينة"
 
 msgid "Payables aging"
 msgstr "تقرير أعمار الذمم الدائنة"
 
-msgid "General ledger"
-msgstr "دفتر الأستاذ العام"
-
-msgid "Income statement"
-msgstr "قائمة الدخل"
-
-msgid "Balance sheet"
-msgstr "قائمة المركز المالي"
-
-#| msgid "Cash"
 msgid "Cash flow"
 msgstr "قائمة التدفقات النقدية"
 
@@ -1981,9 +2141,6 @@ msgstr "أحدث الحركات"
 msgid "From"
 msgstr "من"
 
-msgid "Today"
-msgstr "اليوم"
-
 msgid "To"
 msgstr "إلى"
 
@@ -2017,21 +2174,64 @@ msgstr "تعديل"
 msgid "No customers found."
 msgstr "لم يتم العثور على عملاء."
 
+msgid "Place this account correctly in the chart-of-accounts hierarchy."
+msgstr "حدّد موضع هذا الحساب بصورة صحيحة ضمن التسلسل الهرمي لدليل الحسابات."
+
+msgid "Back to chart"
+msgstr "العودة إلى دليل الحسابات"
+
+msgid "Save account"
+msgstr "حفظ الحساب"
+
+msgid "Account hierarchy"
+msgstr "التسلسل الهرمي للحسابات"
+
+msgid ""
+"Summary accounts organize the chart. Posting accounts receive journal debits"
+" and credits."
+msgstr ""
+"تُنظّم الحسابات التجميعية دليل الحسابات، بينما تستقبل حسابات الترحيل الحركات"
+" المدينة والدائنة."
+
+msgid "Leave Parent account blank for a top-level account."
+msgstr "اترك الحساب الأب فارغًا لإنشاء حساب رئيسي."
+
+msgid "Disable Allow posting on summary and parent accounts."
+msgstr "عطّل السماح بالترحيل في الحسابات التجميعية والأب."
+
+msgid "Use Cash or Cash Equivalent only for posting asset accounts."
+msgstr "استخدم النقد وما في حكمه فقط مع حسابات الأصول القابلة للترحيل."
+
 msgid "Chart of accounts"
 msgstr "دليل الحسابات"
+
+msgid "Manage summary and posting accounts in a parent-child hierarchy."
+msgstr ""
+"إدارة الحسابات التجميعية وحسابات الترحيل ضمن تسلسل هرمي من الأب والفروع."
+
+msgid "New account"
+msgstr "حساب جديد"
+
+msgid "Summary account"
+msgstr "حساب تجميعي"
+
+msgid "Posting account"
+msgstr "حساب ترحيل"
 
 msgid "Type"
 msgstr "النوع"
 
-msgid "Posting"
-msgstr "الترحيل"
+msgid "Classification"
+msgstr "التصنيف"
+
+msgid "Actions"
+msgstr "إجراءات"
 
 msgid "Cash equivalent"
 msgstr "نقد وما في حكمه"
 
-#| msgid "Nov"
-msgid "No"
-msgstr "لا"
+msgid "No accounts have been created."
+msgstr "لم تُنشأ أي حسابات بعد."
 
 msgid ""
 "Review unfinished work, balances and the audit history before closing a "
@@ -2044,7 +2244,6 @@ msgstr "إنشاء سنة مالية"
 msgid "Fiscal year"
 msgstr "السنة المالية"
 
-#| msgid "Closing balance"
 msgid "Closing reason"
 msgstr "سبب الإغلاق"
 
@@ -2057,11 +2256,9 @@ msgstr ""
 "سيؤدي إغلاق السنة إلى إغلاق الأشهر الاثني عشر ومنع الترحيل. هل تريد "
 "المتابعة؟"
 
-#| msgid "Close Register"
 msgid "Close year"
 msgstr "إغلاق السنة"
 
-#| msgid "Reversal reason"
 msgid "Reopening reason"
 msgstr "سبب إعادة الفتح"
 
@@ -2071,7 +2268,6 @@ msgstr "وضّح سبب الحاجة إلى إعادة الفتح"
 msgid "Reopen this fiscal year?"
 msgstr "هل تريد إعادة فتح هذه السنة المالية؟"
 
-#| msgid "Open menu"
 msgid "Open year"
 msgstr "فتح السنة"
 
@@ -2084,29 +2280,24 @@ msgstr "آخر سبب للإغلاق"
 msgid "Add a note for this fiscal year…"
 msgstr "أضف ملاحظة لهذه السنة المالية…"
 
-#| msgid "Save and post"
 msgid "Save notes"
 msgstr "حفظ الملاحظات"
 
 msgid "Audit trail"
 msgstr "سجل التدقيق"
 
-#| msgid "Sales history"
 msgid "Open/close history"
 msgstr "سجل الفتح والإغلاق"
 
-#| msgid "Store Credit"
 msgid "Debit / Credit"
 msgstr "مدين / دائن"
 
 msgid "Unfinished work"
 msgstr "أعمال غير مكتملة"
 
-#| msgid "Closed At"
 msgid "Closed by"
 msgstr "أُغلقت بواسطة"
 
-#| msgid "POS Sales"
 msgid "POS sales"
 msgstr "مبيعات نقاط البيع"
 
@@ -2116,11 +2307,9 @@ msgstr "هل تريد إغلاق هذه الفترة ومنع الترحيل ا�
 msgid "Reopen this accounting period?"
 msgstr "هل تريد إعادة فتح هذه الفترة المحاسبية؟"
 
-#| msgid "Administrator"
 msgid "Administrator required"
 msgstr "يلزم مسؤول نظام"
 
-#| msgid "No sales recorded yet."
 msgid "No fiscal years have been created yet."
 msgstr "لم تُنشأ أي سنوات مالية بعد."
 
@@ -2137,14 +2326,12 @@ msgstr ""
 msgid "Fiscal year %(year)s status-change audit trail."
 msgstr "سجل تدقيق تغييرات حالة السنة المالية %(year)s."
 
-#| msgid "Back to sales"
 msgid "Back to fiscal periods"
 msgstr "العودة إلى الفترات المالية"
 
 msgid "Target"
 msgstr "النطاق"
 
-#| msgid "No sales recorded yet."
 msgid "No status changes recorded yet."
 msgstr "لم تُسجّل أي تغييرات في الحالة بعد."
 
@@ -2161,7 +2348,6 @@ msgstr "السابق"
 msgid "Next"
 msgstr "التالي"
 
-#| msgid "POS activity"
 msgid "Cash-flow activity"
 msgstr "نشاط التدفقات النقدية"
 
@@ -2572,7 +2758,11 @@ msgid ""
 "            <span class=\"badge bg-success mb-0\" style=\"font-size: 0.7rem;\">SHIFT #%(session_num)s</span>\n"
 "            <div class=\"small fw-bold text-dark\"></div>\n"
 "            "
-msgstr "\n      <span class=\"badge bg-success mb-0\" style=\"font-size: 0.7rem;\">الوردية رقم %(session_num)s</span>\n      <div class=\"small fw-bold text-dark\"></div>\n      "
+msgstr ""
+"\n"
+"      <span class=\"badge bg-success mb-0\" style=\"font-size: 0.7rem;\">الوردية رقم %(session_num)s</span>\n"
+"      <div class=\"small fw-bold text-dark\"></div>\n"
+"      "
 
 msgid "Close Register"
 msgstr "إغلاق الخزينة"
@@ -2674,9 +2864,6 @@ msgstr "رقم المرجع"
 msgid "Time"
 msgstr "الوقت"
 
-msgid "Actions"
-msgstr "إجراءات"
-
 msgid "Loading held orders..."
 msgstr "جارٍ تحميل الطلبات المعلّقة..."
 
@@ -2707,7 +2894,6 @@ msgstr "تم تسجيل الحركة النقدية بنجاح."
 msgid "Could not save cash movement."
 msgstr "تعذّر حفظ الحركة النقدية."
 
-#| msgid "No customers found."
 msgid "No orders on hold."
 msgstr "لا توجد طلبات معلّقة."
 
@@ -2717,11 +2903,9 @@ msgstr "استرجاع"
 msgid "Order placed on hold."
 msgstr "عُلّق الطلب."
 
-#| msgid "Could not connect to the server."
 msgid "Could not hold order."
 msgstr "تعذّر تعليق الطلب."
 
-#| msgid "Could not connect to the server."
 msgid "Could not connect to server."
 msgstr "تعذّر الاتصال بالخادم."
 
@@ -2733,7 +2917,6 @@ msgstr "ستُفرغ السلة الحالية ويحل محلها الطلب ا
 msgid "Held order restored to cart."
 msgstr "أُعيد الطلب المعلّق إلى السلة."
 
-#| msgid "Could not connect to the server."
 msgid "Could not recall held order."
 msgstr "تعذّر استرجاع الطلب المعلّق."
 
@@ -2788,11 +2971,9 @@ msgstr "عرض السند"
 msgid "No sales recorded yet."
 msgstr "لا توجد مبيعات مسجلة بعد."
 
-#| msgid "Main navigation"
 msgid "Page navigation"
 msgstr "التنقل بين الصفحات"
 
-#| msgid "Open Register Session"
 msgid "POS Register Sessions"
 msgstr "ورديات صندوق نقطة البيع"
 
@@ -2800,7 +2981,8 @@ msgid "Register Sessions & Cash Drawer"
 msgstr "جلسات نقطة البيع ودرج النقود"
 
 msgid "Manage cashier shifts, track daily floats, and reconcile cash."
-msgstr "إدارة ورديات أمناء الصندوق، وتتبع العهد النقدية اليومية، وتسوية النقدية."
+msgstr ""
+"إدارة ورديات أمناء الصندوق، وتتبع العهد النقدية اليومية، وتسوية النقدية."
 
 msgid "Open Terminal"
 msgstr "فتح شاشة البيع"
@@ -2817,7 +2999,6 @@ msgstr "مناوبة نشطة"
 msgid "Cashier / Warehouse"
 msgstr "أمين الصندوق / المستودع"
 
-#| msgid "Opening Cash Float"
 msgid "Opening Float"
 msgstr "العهدة النقدية الافتتاحية"
 
@@ -2875,9 +3056,6 @@ msgstr "فاتورة شراء"
 msgid "Payment type"
 msgstr "نوع الدفع"
 
-msgid "Due date"
-msgstr "تاريخ الاستحقاق"
-
 msgid "Discount"
 msgstr "الخصم"
 
@@ -2900,7 +3078,9 @@ msgstr ""
 msgid ""
 "A cash invoice must be paid in full, and a credit invoice must be confirmed "
 "with nothing paid. Use Edit to correct the paid amount."
-msgstr "الفاتورة النقدية يجب أن تُدفع بالكامل، والفاتورة الآجلة تُؤكَّد بدون مبلغ مدفوع. استخدم تعديل لتصحيح المبلغ المدفوع."
+msgstr ""
+"الفاتورة النقدية يجب أن تُدفع بالكامل، والفاتورة الآجلة تُؤكَّد بدون مبلغ "
+"مدفوع. استخدم تعديل لتصحيح المبلغ المدفوع."
 
 msgid "This invoice has been confirmed"
 msgstr "تم تأكيد هذه الفاتورة"
@@ -3019,11 +3199,18 @@ msgstr "كلمة المرور"
 msgid "Secure access to your company workspace"
 msgstr "وصول آمن إلى مساحة عمل شركتك"
 
-#| msgid "Finance"
+msgid "Download report"
+msgstr "تنزيل التقرير"
+
+msgid "Excel"
+msgstr "إكسل"
+
+msgid "PDF"
+msgstr "PDF"
+
 msgid "Finance reports"
 msgstr "التقارير المالية"
 
-#| msgid "Reports"
 msgid "Report filters"
 msgstr "مرشحات التقرير"
 
@@ -3031,14 +3218,12 @@ msgid ""
 "Choose a reporting date and optionally narrow the results to one account."
 msgstr "اختر تاريخ التقرير، ويمكنك حصر النتائج في حساب واحد."
 
-#| msgid "Reports"
 msgid "Run report"
 msgstr "إعداد التقرير"
 
 msgid "Reset"
 msgstr "إعادة تعيين"
 
-#| msgid "No equity balances."
 msgid "accounts with balances"
 msgstr "حسابات ذات أرصدة"
 
@@ -3048,88 +3233,32 @@ msgstr "تُخصّص الدفعات للأرصدة الأقدم أولًا."
 msgid "Net outstanding"
 msgstr "صافي الرصيد المستحق"
 
-#| msgid "Currency"
-msgid "Current"
-msgstr "حالي"
-
 msgid "Over 90 days"
 msgstr "أكثر من 90 يومًا"
 
 msgid "Unapplied credit"
 msgstr "دفعات دائنة غير مخصّصة"
 
-#| msgid "Balance sheet"
 msgid "Balance summary"
 msgstr "ملخص الأرصدة"
 
-#| msgid "Sign in to your account"
-msgid "Aging by account"
-msgstr "أعمار الديون حسب الحساب"
-
-#| msgid "As of date"
 msgid "As of"
 msgstr "كما في"
 
-#| msgid "days"
-msgid "1-30 days"
-msgstr "من 1 إلى 30 يومًا"
-
-msgid "31-60 days"
-msgstr "من 31 إلى 60 يومًا"
-
-msgid "61-90 days"
-msgstr "من 61 إلى 90 يومًا"
-
-#| msgid "days"
-msgid "90+ days"
-msgstr "أكثر من 90 يومًا"
-
-msgid "Balance"
-msgstr "الرصيد"
-
-#| msgid "Closing balance"
 msgid "No outstanding balances"
 msgstr "لا توجد أرصدة مستحقة"
 
 msgid "There are no open balances for the selected date and account."
 msgstr "لا توجد أرصدة مفتوحة للتاريخ والحساب المحددين."
 
-#| msgid "Reports"
-msgid "Report total"
-msgstr "إجمالي التقرير"
-
-#| msgid "Quotation details"
 msgid "Supporting detail"
 msgstr "التفاصيل المؤيدة"
-
-#| msgid "New document"
-msgid "Open documents"
-msgstr "المستندات المفتوحة"
 
 msgid "Expand an account to review the invoices behind its balance."
 msgstr "وسّع الحساب لمراجعة الفواتير المكوّنة لرصيده."
 
-#| msgid "New document"
 msgid "open documents"
 msgstr "مستندات مفتوحة"
-
-#| msgid "New document"
-msgid "Document"
-msgstr "المستند"
-
-#| msgid "Due date"
-msgid "Document date"
-msgstr "تاريخ المستند"
-
-msgid "Days overdue"
-msgstr "أيام التأخير"
-
-msgid "Original"
-msgstr "القيمة الأصلية"
-
-#| msgid "Quantity Remaining"
-msgid "Remaining"
-msgstr "المتبقي"
 
 msgid "Assets, liabilities, and equity as of the selected date."
 msgstr "الأصول والالتزامات وحقوق الملكية كما في التاريخ المحدد."
@@ -3137,29 +3266,14 @@ msgstr "الأصول والالتزامات وحقوق الملكية كما ف�
 msgid "Apply"
 msgstr "تطبيق"
 
-msgid "Assets"
-msgstr "الأصول"
-
 msgid "No asset balances."
 msgstr "لا توجد أرصدة أصول."
-
-msgid "Total assets"
-msgstr "إجمالي الأصول"
-
-msgid "Liabilities"
-msgstr "الالتزامات"
 
 msgid "No liability balances."
 msgstr "لا توجد أرصدة التزامات."
 
-msgid "Total liabilities"
-msgstr "إجمالي الالتزامات"
-
 msgid "No equity balances."
 msgstr "لا توجد أرصدة حقوق ملكية."
-
-msgid "Current earnings"
-msgstr "أرباح الفترة الحالية"
 
 msgid "Total equity and current earnings"
 msgstr "إجمالي حقوق الملكية وأرباح الفترة الحالية"
@@ -3176,10 +3290,6 @@ msgstr "قائمة المركز المالي غير متوازنة."
 msgid "Difference"
 msgstr "الفرق"
 
-#| msgid "Income statement"
-msgid "Cash-flow statement"
-msgstr "قائمة التدفقات النقدية"
-
 msgid ""
 "Direct-method cash inflows and outflows from operating, investing and "
 "financing activities."
@@ -3193,74 +3303,36 @@ msgstr "فترة التقرير"
 msgid "Leave both dates empty to include all posted activity."
 msgstr "اترك التاريخين فارغين لتضمين جميع الحركات المرحلة."
 
-#| msgid "Opening Cash Float"
-msgid "Opening cash"
-msgstr "رصيد النقد أول المدة"
-
-#| msgid "Total Cost"
-msgid "Total inflows"
-msgstr "إجمالي التدفقات الداخلة"
-
-#| msgid "Total Cost"
-msgid "Total outflows"
-msgstr "إجمالي التدفقات الخارجة"
-
-#| msgid "Closing balance"
-msgid "Closing cash"
-msgstr "رصيد النقد في نهاية الفترة"
-
-#| msgid "Stock movement"
 msgid "Net cash movement"
 msgstr "صافي التغير في النقد"
 
 msgid "Reconciled"
 msgstr "تمت المطابقة"
 
-#| msgid "Operations"
-msgid "Operating activities"
-msgstr "الأنشطة التشغيلية"
-
 msgid "Day-to-day receipts and payments"
 msgstr "المقبوضات والمدفوعات الناتجة عن النشاط اليومي"
 
-#| msgid "Chart of accounts"
 msgid "Cash account"
 msgstr "الحساب النقدي"
 
-msgid "Inflow"
-msgstr "تدفق نقدي داخل"
-
-msgid "Outflow"
-msgstr "تدفق نقدي خارج"
-
-#| msgid "No expense activity."
 msgid "No operating cash activity."
 msgstr "لا توجد تدفقات نقدية تشغيلية."
 
 msgid "Net operating cash"
 msgstr "صافي التدفقات النقدية من الأنشطة التشغيلية"
 
-msgid "Investing activities"
-msgstr "الأنشطة الاستثمارية"
-
 msgid "Long-term assets and investments"
 msgstr "الأصول طويلة الأجل والاستثمارات"
 
-#| msgid "No revenue activity."
 msgid "No investing cash activity."
 msgstr "لا توجد تدفقات نقدية استثمارية."
 
 msgid "Net investing cash"
 msgstr "صافي التدفقات النقدية من الأنشطة الاستثمارية"
 
-#| msgid "Finance navigation"
-msgid "Financing activities"
-msgstr "الأنشطة التمويلية"
-
 msgid "Capital, borrowing and repayments"
 msgstr "رأس المال والاقتراض والسداد"
 
-#| msgid "No expense activity."
 msgid "No financing cash activity."
 msgstr "لا توجد تدفقات نقدية تمويلية."
 
@@ -3273,23 +3345,14 @@ msgstr "حركات نقدية غير مصنفة"
 msgid "Review these historical journals and assign an activity"
 msgstr "راجع هذه القيود التاريخية وحدد نشاط التدفق النقدي المناسب"
 
-#| msgid "Income statement"
-msgid "Customer statement"
-msgstr "كشف حساب العميل"
-
 msgid "Receivable activity and running balance for one customer."
 msgstr "حركة الذمم المدينة والرصيد الجاري لعميل واحد."
 
-#| msgid "Income statement"
 msgid "View statement"
 msgstr "عرض كشف الحساب"
 
-#| msgid "No transactions."
 msgid "No transactions in this period."
 msgstr "لا توجد حركات خلال هذه الفترة."
-
-msgid "Closing balance"
-msgstr "الرصيد الختامي"
 
 msgid "Select account"
 msgstr "اختر الحساب"
@@ -3303,27 +3366,17 @@ msgstr "الإيرادات والمصروفات وصافي الربح للفتر
 msgid "No revenue activity."
 msgstr "لا توجد حركة إيرادات."
 
-msgid "Total revenue"
-msgstr "إجمالي الإيرادات"
-
-msgid "Expenses"
-msgstr "المصروفات"
-
 msgid "No expense activity."
 msgstr "لا توجد حركة مصروفات."
-
-msgid "Total expenses"
-msgstr "إجمالي المصروفات"
-
-msgid "Net profit"
-msgstr "صافي الربح"
 
 msgid "Net loss"
 msgstr "صافي الخسارة"
 
-#| msgid "Suppliers"
-msgid "Supplier statement"
-msgstr "كشف حساب المورد"
+msgid "No report data for the selected filters."
+msgstr "لا توجد بيانات تقرير وفق عوامل التصفية المحددة."
+
+msgid "Generated by Sphereka ERP"
+msgstr "تم إنشاؤه بواسطة نظام سفيريكا"
 
 msgid "Payable activity and running balance for one supplier."
 msgstr "حركة الذمم الدائنة والرصيد الجاري لمورد واحد."
@@ -3336,6 +3389,12 @@ msgstr "غير متوازن"
 
 msgid "No suppliers found."
 msgstr "لم يتم العثور على موردين."
+
+#~ msgid "Posting"
+#~ msgstr "الترحيل"
+
+#~ msgid "No"
+#~ msgstr "لا"
 
 #, python-format
 #~ msgid "Purchase invoice %(invoice_number)s settlement"

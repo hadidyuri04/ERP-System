@@ -1,0 +1,46 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block page_header %}
+  <h1>{{ page_title }}</h1>
+  <p>{% trans "Place this account correctly in the chart-of-accounts hierarchy." %}</p>
+{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{% url 'finance:account_list' %}" class="btn btn-ghost">
+    <i class="bi bi-arrow-left"></i>
+    {% trans "Back to chart" %}
+  </a>
+{% endblock %}
+
+{% block content %}
+  <div class="account-editor-layout">
+    <form method="post" class="card-soft card-pad account-editor-form">
+      {% csrf_token %}
+      {% include "core/_form_fields.html" with form=form %}
+
+      <div class="account-editor-actions">
+        <a href="{% url 'finance:account_list' %}" class="btn btn-ghost">
+          {% trans "Cancel" %}
+        </a>
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-check-lg"></i>
+          {% trans "Save account" %}
+        </button>
+      </div>
+    </form>
+
+    <aside class="card-soft card-pad account-editor-guide">
+      <div class="account-guide-icon"><i class="bi bi-diagram-3"></i></div>
+      <h2>{% trans "Account hierarchy" %}</h2>
+      <p>{% trans "Summary accounts organize the chart. Posting accounts receive journal debits and credits." %}</p>
+      <ul>
+        <li>{% trans "Leave Parent account blank for a top-level account." %}</li>
+        <li>{% trans "Disable Allow posting on summary and parent accounts." %}</li>
+        <li>{% trans "Use Cash or Cash Equivalent only for posting asset accounts." %}</li>
+      </ul>
+    </aside>
+  </div>
+{% endblock %}

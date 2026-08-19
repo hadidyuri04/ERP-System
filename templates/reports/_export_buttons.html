@@ -1,0 +1,12 @@
+{% load i18n %}
+<div class="report-export-actions no-print">
+  <span>{% trans "Download report" %}</span>
+  <a href="{% querystring export='xlsx' %}" class="btn btn-ghost btn-sm">
+    <i class="bi bi-file-earmark-excel"></i>
+    {% trans "Excel" %}
+  </a>
+  <a href="{% querystring export='pdf' %}" class="btn btn-ghost btn-sm">
+    <i class="bi bi-file-earmark-pdf"></i>
+    {% trans "PDF" %}
+  </a>
+</div>

@@ -43,6 +43,7 @@
   </section>
 
   {% if report %}
+    {% include "reports/_export_buttons.html" %}
     <section class="aging-report-meta">
       <div>
         <span class="badge-soft badge-neutral"><i class="bi bi-calendar3"></i>{{ report.as_of_date }}</span>

@@ -6,6 +6,12 @@ app_name = "finance"
 
 urlpatterns = [
     path("accounts/", views.account_list_view, name="account_list"),
+    path("accounts/create/", views.account_create_view, name="account_create"),
+    path(
+        "accounts/<int:pk>/edit/",
+        views.account_update_view,
+        name="account_update",
+    ),
 
     path("journals/", views.journal_list_view, name="journal_list"),
     path("journals/create/", views.journal_create_view, name="journal_create"),

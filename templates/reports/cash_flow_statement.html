@@ -23,6 +23,7 @@
   </section>
 
   {% if statement %}
+    {% include "reports/_export_buttons.html" %}
     <section class="cashflow-stats">
       <article class="cashflow-stat is-opening"><span><i class="bi bi-safe2"></i></span><div><small>{% trans "Opening cash" %}</small><strong>{{ statement.opening_cash|floatformat:3 }}</strong></div></article>
       <article class="cashflow-stat is-inflow"><span><i class="bi bi-arrow-down-left"></i></span><div><small>{% trans "Total inflows" %}</small><strong>{{ statement.total_inflows|floatformat:3 }}</strong></div></article>
