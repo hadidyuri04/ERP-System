@@ -10,7 +10,7 @@ from django.views.decorators.http import require_POST, require_GET
 from django.utils.translation import gettext as _
 from django.utils import timezone
 from django.contrib import messages
-
+from django.core.paginator import Paginator
 from core.permissions import cashier_required
 from customers.models import Customer
 from inventory.models import Product, Warehouse, StockBalance
@@ -239,9 +239,14 @@ def search_product(request):
 @login_required
 @cashier_required
 def sale_list(request):
-    """Renders the list of past POS sales with optimized querysets."""
-    sales = POSSale.objects.select_related("customer", "warehouse", "cashier", "session").order_by("-date")
-    return render(request, "pos/sale_list.html", {"sales": sales})
+    sales_query = POSSale.objects.all().order_by('-date')
+    
+    # Show 20 sales per page
+    paginator = Paginator(sales_query, 20) 
+    page_number = request.GET.get('page')
+    sales_page = paginator.get_page(page_number)
+    
+    return render(request, "pos/sale_list.html", {"sales": sales_page})
 
 
 @login_required
@@ -309,16 +314,14 @@ def complete_sale_view(request):
 @login_required
 @cashier_required
 def session_list(request):
-    """List all POS register sessions and check if user has an open register."""
-    sessions = POSSession.objects.select_related("cashier", "warehouse").order_by('-opened_at')
-    active_session = POSSession.objects.filter(cashier=request.user, status=POSSession.SessionStatus.OPEN).first()
-    warehouses = Warehouse.objects.filter(is_active=True).order_by("name")
-
-    return render(request, 'pos/session_list.html', {
-        'sessions': sessions,
-        'active_session': active_session,
-        'warehouses': warehouses,
-    })
+    sessions_query = POSSession.objects.all().order_by('-opened_at')
+    
+    # Show 15 sessions per page
+    paginator = Paginator(sessions_query, 15)
+    page_number = request.GET.get('page')
+    sessions_page = paginator.get_page(page_number)
+    
+    return render(request, "pos/session_list.html", {"sessions": sessions_page})
 
 
 @login_required

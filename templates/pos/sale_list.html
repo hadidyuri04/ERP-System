@@ -73,5 +73,32 @@
             </tbody>
         </table>
     </div>
+    
+    <!-- ADD THIS PAGINATION BLOCK -->
+    {% if sales.has_other_pages %}
+    <nav aria-label="{% trans 'Page navigation' %}" class="mt-4 pb-3">
+        <ul class="pagination justify-content-center">
+            {% if sales.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ sales.previous_page_number }}">&laquo;</a></li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+            {% endif %}
+
+            {% for num in sales.paginator.page_range %}
+                {% if sales.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% else %}
+                    <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if sales.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ sales.next_page_number }}">&raquo;</a></li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
 </div>
 {% endblock %}
