@@ -5,8 +5,15 @@ from django.core.exceptions import ValidationError
 from django.forms import BaseInlineFormSet, inlineformset_factory
 from django.utils.translation import gettext_lazy as _
 
-from .models import Account, JournalEntry, JournalEntryLine, PaymentVoucher, ReceiptVoucher
-
+from .models import (
+    Account,
+    FiscalPeriod,
+    FiscalYear,
+    JournalEntry,
+    JournalEntryLine,
+    PaymentVoucher,
+    ReceiptVoucher,
+)
 
 class ReportDateRangeForm(forms.Form):
     start_date = forms.DateField(
@@ -176,3 +183,27 @@ JournalEntryLineFormSet = inlineformset_factory(
     extra=2,
     can_delete=True,
 )
+
+
+class FiscalYearForm(forms.ModelForm):
+    class Meta:
+        model = FiscalYear
+        fields = ["year", "notes"]
+
+    def clean_year(self):
+        year = self.cleaned_data["year"]
+        if year < 2000 or year > 2100:
+            raise ValidationError(_("Enter a year between 2000 and 2100."))
+        return year
+
+
+class FiscalYearNotesForm(forms.ModelForm):
+    class Meta:
+        model = FiscalYear
+        fields = ["notes"]
+
+
+class FiscalPeriodNotesForm(forms.ModelForm):
+    class Meta:
+        model = FiscalPeriod
+        fields = ["notes"]

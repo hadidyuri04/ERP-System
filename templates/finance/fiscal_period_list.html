@@ -1,0 +1,135 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Fiscal periods" %}{% endblock %}
+
+{% block page_header %}
+  <h1>{% trans "Fiscal periods" %}</h1>
+  <p>{% trans "Review unfinished work, balances and the audit history before closing a period." %}</p>
+{% endblock %}
+
+{% block page_actions %}
+  <a href="{% url 'finance:fiscal_year_create' %}" class="btn btn-primary">
+    <i class="bi bi-plus-lg me-1"></i>{% trans "Create fiscal year" %}
+  </a>
+{% endblock %}
+
+{% block content %}
+  {% for fiscal_year in years %}
+    <section class="card-soft mb-3 fiscal-year-card">
+      <div class="fiscal-year-head">
+        <div class="fiscal-year-identity">
+          <span class="fiscal-year-icon"><i class="bi bi-calendar3"></i></span>
+          <div>
+            <span class="fiscal-year-kicker">{% trans "Fiscal year" %}</span>
+            <h3>{{ fiscal_year.year }}</h3>
+          </div>
+          <span class="fiscal-status {% if fiscal_year.status == 'open' %}is-open{% else %}is-closed{% endif %}">
+            <span></span>{{ fiscal_year.get_status_display }}
+          </span>
+        </div>
+        <form method="post" action="{% url 'finance:fiscal_year_status' fiscal_year.pk %}" class="fiscal-year-status-form">
+          {% csrf_token %}
+          {% if fiscal_year.status == "open" %}
+            <input type="hidden" name="status" value="closed">
+            <label class="fiscal-reason-field">
+              <span>{% trans "Closing reason" %}</span>
+              <input type="text" name="reason" required placeholder="{% trans 'e.g. Year-end review completed' %}">
+            </label>
+            <button type="submit" class="btn btn-danger fiscal-year-action" data-confirm="{% trans 'Closing the year closes all twelve months and prevents posting. Continue?' %}">
+              <i class="bi bi-lock-fill"></i>{% trans "Close year" %}
+            </button>
+          {% elif request.user.role == "admin" or request.user.is_superuser %}
+            <input type="hidden" name="status" value="open">
+            <label class="fiscal-reason-field">
+              <span>{% trans "Reopening reason" %}</span>
+              <input type="text" name="reason" required placeholder="{% trans 'Explain why access is needed' %}">
+            </label>
+            <button type="submit" class="btn btn-primary fiscal-year-action" data-confirm="{% trans 'Reopen this fiscal year?' %}">
+              <i class="bi bi-unlock-fill"></i>{% trans "Open year" %}
+            </button>
+          {% else %}
+            <span class="fiscal-admin-note"><i class="bi bi-shield-lock"></i>{% trans "Administrator required to reopen" %}</span>
+          {% endif %}
+        </form>
+      </div>
+
+      <div class="fiscal-year-meta">
+        <div class="fiscal-year-notes-wrap">
+          {% if fiscal_year.close_reason %}<p class="fiscal-last-reason"><i class="bi bi-info-circle"></i><strong>{% trans "Last closing reason" %}:</strong> {{ fiscal_year.close_reason }}</p>{% endif %}
+          <form method="post" action="{% url 'finance:fiscal_year_notes' fiscal_year.pk %}" class="fiscal-year-notes-form">
+            {% csrf_token %}
+            <label class="fiscal-notes-field">
+              <i class="bi bi-journal-text"></i>
+              <textarea name="notes" rows="1" placeholder="{% trans 'Add a note for this fiscal year…' %}">{{ fiscal_year.notes }}</textarea>
+            </label>
+            <button type="submit" class="btn btn-soft fiscal-meta-action"><i class="bi bi-check2"></i>{% trans "Save notes" %}</button>
+          </form>
+        </div>
+        <a href="{% url 'finance:fiscal_year_history' fiscal_year.pk %}" class="btn fiscal-history-btn">
+          <i class="bi bi-clock-history"></i>
+          <span><small>{% trans "Audit trail" %}</small>{% trans "Open/close history" %}</span>
+          <i class="bi bi-chevron-right fiscal-history-arrow"></i>
+        </a>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table-erp">
+          <thead>
+            <tr><th>{% trans "Month" %}</th><th>{% trans "Status" %}</th><th>{% trans "Journals" %}</th><th>{% trans "Debit / Credit" %}</th><th>{% trans "Unfinished work" %}</th><th>{% trans "Closed by" %}</th><th>{% trans "Action" %}</th></tr>
+          </thead>
+          <tbody>
+            {% for period in fiscal_year.periods.all %}
+              <tr>
+                <td>
+                  <strong>{{ period.start_date|date:"F" }}</strong>
+                  <div class="small text-muted">{{ period.start_date }} – {{ period.end_date }}</div>
+                  <details class="mt-1">
+                    <summary class="small">{% trans "Notes" %}</summary>
+                    <form method="post" action="{% url 'finance:fiscal_period_notes' period.pk %}" class="mt-2">
+                      {% csrf_token %}
+                      <textarea name="notes" class="form-control mb-1" rows="2">{{ period.notes }}</textarea>
+                      <button type="submit" class="btn btn-soft btn-sm">{% trans "Save" %}</button>
+                    </form>
+                  </details>
+                </td>
+                <td>{{ period.get_status_display }}{% if period.close_reason %}<div class="small text-muted">{{ period.close_reason }}</div>{% endif %}</td>
+                <td><div>{% trans "Posted" %}: {{ period.summary.posted_journals }}</div><div>{% trans "Draft" %}: {{ period.summary.draft_journals }}</div></td>
+                <td class="tnum"><div>{{ period.summary.total_debit|floatformat:3 }}</div><div>{{ period.summary.total_credit|floatformat:3 }}</div></td>
+                <td class="small">
+                  <div>{% trans "Receipts" %}: {{ period.summary.unfinished.receipts }}</div>
+                  <div>{% trans "Payments" %}: {{ period.summary.unfinished.payments }}</div>
+                  <div>{% trans "Purchases" %}: {{ period.summary.unfinished.purchases }}</div>
+                  <div>{% trans "POS sales" %}: {{ period.summary.unfinished.sales }}</div>
+                </td>
+                <td>{{ period.closed_by|default:"-" }}{% if period.closed_at %}<div class="small text-muted">{{ period.closed_at }}</div>{% endif %}</td>
+                <td>
+                  <form method="post" action="{% url 'finance:fiscal_period_status' period.pk %}" class="d-grid gap-1">
+                    {% csrf_token %}
+                    {% if period.status == "open" %}
+                      <input type="hidden" name="status" value="closed">
+                      <input type="text" name="reason" class="form-control form-control-sm" required placeholder="{% trans 'Closing reason' %}">
+                      <button type="submit" class="btn btn-danger btn-sm" data-confirm="{% trans 'Close this period and prevent financial posting?' %}">{% trans "Close" %}</button>
+                    {% elif request.user.role == "admin" or request.user.is_superuser %}
+                      <input type="hidden" name="status" value="open">
+                      <input type="text" name="reason" class="form-control form-control-sm" required placeholder="{% trans 'Reopening reason' %}">
+                      <button type="submit" class="btn btn-primary btn-sm" {% if fiscal_year.status == "closed" %}disabled{% endif %} data-confirm="{% trans 'Reopen this accounting period?' %}">{% trans "Open" %}</button>
+                    {% else %}
+                      <span class="text-muted small">{% trans "Administrator required" %}</span>
+                    {% endif %}
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    </section>
+  {% empty %}
+    <div class="card-soft card-pad text-center">
+      <p>{% trans "No fiscal years have been created yet." %}</p>
+      <a href="{% url 'finance:fiscal_year_create' %}" class="btn btn-primary">{% trans "Create fiscal year" %}</a>
+    </div>
+  {% endfor %}
+{% endblock %}

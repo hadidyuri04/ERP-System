@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+from django.core.paginator import Paginator
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext_lazy as _
@@ -10,13 +11,24 @@ from core.permissions import accountant_required
 
 from .forms import (
     AsOfDateForm,
+    FiscalPeriodNotesForm,
+    FiscalYearForm,
+    FiscalYearNotesForm,
     JournalEntryForm,
     JournalEntryLineFormSet,
     PaymentVoucherForm,
     ReceiptVoucherForm,
     ReportDateRangeForm,
 )
-from .models import Account, JournalEntry, PaymentVoucher, ReceiptVoucher
+from .models import (
+    Account,
+    FiscalPeriod,
+    FiscalYear,
+    JournalEntry,
+    PaymentVoucher,
+    PeriodStatus,
+    ReceiptVoucher,
+)
 from .reports import (
     generate_balance_sheet,
     generate_general_ledger,
@@ -24,10 +36,14 @@ from .reports import (
     generate_trial_balance,
 )
 from .services import (
+    create_fiscal_year,
+    get_period_summary,
     post_journal_entry,
     post_payment_voucher,
     post_receipt_voucher,
     reverse_journal_entry,
+    set_fiscal_year_status,
+    set_period_status,
 )
 
 
@@ -306,3 +322,139 @@ def balance_sheet_view(request):
             "date_form": date_form,
         },
     )
+
+@login_required
+@accountant_required
+def fiscal_period_list_view(request):
+    years = list(
+        FiscalYear.objects.prefetch_related(
+            "periods__closed_by",
+            "actions__performed_by",
+        ).order_by("-year")
+    )
+    for fiscal_year in years:
+        for period in fiscal_year.periods.all():
+            period.summary = get_period_summary(period)
+    return render(
+        request,
+        "finance/fiscal_period_list.html",
+        {"years": years},
+    )
+
+
+@login_required
+@accountant_required
+def fiscal_year_history_view(request, pk):
+    fiscal_year = get_object_or_404(FiscalYear, pk=pk)
+    actions = fiscal_year.actions.select_related(
+        "period",
+        "performed_by",
+    ).order_by("-performed_at", "-id")
+    page_obj = Paginator(actions, 10).get_page(request.GET.get("page"))
+    return render(
+        request,
+        "finance/fiscal_year_history.html",
+        {
+            "fiscal_year": fiscal_year,
+            "page_obj": page_obj,
+        },
+    )
+
+
+@login_required
+@accountant_required
+def fiscal_year_create_view(request):
+    form = FiscalYearForm(request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        try:
+            create_fiscal_year(
+                form.cleaned_data["year"],
+                notes=form.cleaned_data["notes"],
+            )
+            messages.success(request, _("Fiscal year created successfully."))
+            return redirect("finance:fiscal_period_list")
+        except ValidationError as exc:
+            _message_validation_error(request, exc)
+
+    return render(
+        request,
+        "finance/fiscal_year_form.html",
+        {"form": form},
+    )
+
+
+@login_required
+@accountant_required
+@require_POST
+def fiscal_period_status_view(request, pk):
+    get_object_or_404(FiscalPeriod, pk=pk)
+    status = request.POST.get("status")
+
+    if status not in PeriodStatus.values:
+        messages.error(request, _("Invalid period status."))
+    else:
+        try:
+            set_period_status(
+                pk,
+                status,
+                request.user,
+                reason=request.POST.get("reason", ""),
+            )
+            messages.success(request, _("Accounting period updated."))
+        except ValidationError as exc:
+            _message_validation_error(request, exc)
+
+    return redirect("finance:fiscal_period_list")
+
+
+@login_required
+@accountant_required
+@require_POST
+def fiscal_year_status_view(request, pk):
+    get_object_or_404(FiscalYear, pk=pk)
+    status = request.POST.get("status")
+
+    if status not in PeriodStatus.values:
+        messages.error(request, _("Invalid fiscal-year status."))
+    else:
+        try:
+            set_fiscal_year_status(
+                pk,
+                status,
+                request.user,
+                reason=request.POST.get("reason", ""),
+            )
+            messages.success(request, _("Fiscal year updated."))
+        except ValidationError as exc:
+            _message_validation_error(request, exc)
+
+    return redirect("finance:fiscal_period_list")
+
+
+@login_required
+@accountant_required
+@require_POST
+def fiscal_period_notes_view(request, pk):
+    period = get_object_or_404(FiscalPeriod, pk=pk)
+    form = FiscalPeriodNotesForm(request.POST, instance=period)
+    if form.is_valid():
+        form.save()
+        messages.success(request, _("Fiscal-period notes updated."))
+    else:
+        messages.error(request, _("Fiscal-period notes could not be updated."))
+    return redirect("finance:fiscal_period_list")
+
+
+@login_required
+@accountant_required
+@require_POST
+def fiscal_year_notes_view(request, pk):
+    fiscal_year = get_object_or_404(FiscalYear, pk=pk)
+    form = FiscalYearNotesForm(request.POST, instance=fiscal_year)
+    if form.is_valid():
+        form.save()
+        messages.success(request, _("Fiscal-year notes updated."))
+    else:
+        messages.error(request, _("Fiscal-year notes could not be updated."))
+    return redirect("finance:fiscal_period_list")

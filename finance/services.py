@@ -1,15 +1,22 @@
+import calendar
 import uuid
+from datetime import date
 from decimal import Decimal
 
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
+from django.db.models import Sum
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from .models import (
     Account,
+    FiscalPeriod,
+    FiscalPeriodAction,
+    FiscalYear,
     JournalEntry,
     JournalEntryLine,
+    PeriodStatus,
     ReceiptVoucher,
     PaymentVoucher,
 )
@@ -92,6 +99,8 @@ def post_journal_entry(entry_id, user):
         raise ValidationError(
             _("Only draft journal entries can be posted.")
         )
+
+    ensure_posting_period_open(entry.date)
 
     # Get all journal lines
     lines = list(
@@ -911,3 +920,284 @@ def reverse_journal_entry(entry_id, user, reason):
     )
 
     return reversal
+
+
+@transaction.atomic
+def create_fiscal_year(year, notes=""):
+    if FiscalYear.objects.filter(year=year).exists():
+        raise ValidationError(_("This fiscal year already exists."))
+
+    fiscal_year = FiscalYear.objects.create(year=year, notes=(notes or "").strip())
+
+    periods = []
+    for month in range(1, 13):
+        last_day = calendar.monthrange(year, month)[1]
+        periods.append(
+            FiscalPeriod(
+                fiscal_year=fiscal_year,
+                month=month,
+                start_date=date(year, month, 1),
+                end_date=date(year, month, last_day),
+            )
+        )
+
+    FiscalPeriod.objects.bulk_create(periods)
+    return fiscal_year
+
+
+def get_unfinished_document_counts(start_date, end_date):
+    """Return draft financial source documents in an inclusive date range."""
+    from pos.models import POSSale
+    from purchasing.models import PurchaseInvoice
+
+    date_range = (start_date, end_date)
+    return {
+        "journals": JournalEntry.objects.filter(
+            date__range=date_range,
+            status=JournalEntry.Status.DRAFT,
+        ).count(),
+        "receipts": ReceiptVoucher.objects.filter(
+            date__range=date_range,
+            status=ReceiptVoucher.Status.DRAFT,
+        ).count(),
+        "payments": PaymentVoucher.objects.filter(
+            date__range=date_range,
+            status=PaymentVoucher.Status.DRAFT,
+        ).count(),
+        "purchases": PurchaseInvoice.objects.filter(
+            invoice_date__range=date_range,
+            status=PurchaseInvoice.Status.DRAFT,
+        ).count(),
+        "sales": POSSale.objects.filter(
+            date__date__range=date_range,
+            status=POSSale.SaleStatus.DRAFT,
+        ).count(),
+    }
+
+
+def get_period_summary(period):
+    journals = JournalEntry.objects.filter(
+        date__range=(period.start_date, period.end_date)
+    )
+    posted_journals = journals.filter(
+        status__in=[JournalEntry.Status.POSTED, JournalEntry.Status.REVERSED]
+    )
+    totals = JournalEntryLine.objects.filter(
+        journal_entry__in=posted_journals
+    ).aggregate(total_debit=Sum("debit"), total_credit=Sum("credit"))
+
+    return {
+        "posted_journals": posted_journals.count(),
+        "draft_journals": journals.filter(status=JournalEntry.Status.DRAFT).count(),
+        "total_debit": totals["total_debit"] or Decimal("0.000"),
+        "total_credit": totals["total_credit"] or Decimal("0.000"),
+        "unfinished": get_unfinished_document_counts(
+            period.start_date,
+            period.end_date,
+        ),
+    }
+
+
+def ensure_date_range_can_close(start_date, end_date):
+    unfinished = get_unfinished_document_counts(start_date, end_date)
+    labels = {
+        "journals": _("draft journals"),
+        "receipts": _("draft receipts"),
+        "payments": _("draft payments"),
+        "purchases": _("draft purchases"),
+        "sales": _("draft POS sales"),
+    }
+    blockers = [
+        _("%(count)s %(label)s") % {"count": count, "label": labels[key]}
+        for key, count in unfinished.items()
+        if count
+    ]
+    if blockers:
+        raise ValidationError(
+            _("This period cannot be closed while it contains: %(documents)s.")
+            % {"documents": ", ".join(str(item) for item in blockers)}
+        )
+
+
+def normalize_status_reason(reason):
+    reason = (reason or "").strip()
+    if not reason:
+        raise ValidationError(_("A reason is required for this status change."))
+    return reason
+
+
+def ensure_posting_period_open(posting_date):
+    fiscal_year = (
+        FiscalYear.objects.select_for_update()
+        .filter(year=posting_date.year)
+        .first()
+    )
+
+    if fiscal_year is None:
+        raise ValidationError(
+            _("No fiscal year has been configured for this date.")
+        )
+
+    if fiscal_year.status == PeriodStatus.CLOSED:
+        raise ValidationError(_("The fiscal year is closed."))
+
+    period = (
+        FiscalPeriod.objects.select_for_update()
+        .filter(
+            fiscal_year=fiscal_year,
+            month=posting_date.month,
+            start_date__lte=posting_date,
+            end_date__gte=posting_date,
+        )
+        .first()
+    )
+
+    if period is None:
+        raise ValidationError(
+            _("No accounting period exists for this date.")
+        )
+
+    if period.status == PeriodStatus.CLOSED:
+        raise ValidationError(
+            _("The accounting period for this date is closed.")
+        )
+
+
+def ensure_user_can_reopen(user):
+    is_admin = user.is_superuser or getattr(user, "role", None) == "admin"
+
+    if not is_admin:
+        raise PermissionDenied(
+            _("Only administrators can reopen accounting periods.")
+        )
+
+
+@transaction.atomic
+def set_period_status(period_id, status, user, reason=""):
+    period_year_id = FiscalPeriod.objects.values_list(
+        "fiscal_year_id", flat=True
+    ).get(pk=period_id)
+    fiscal_year = FiscalYear.objects.select_for_update().get(pk=period_year_id)
+    period = FiscalPeriod.objects.select_for_update().get(pk=period_id)
+
+    if status not in PeriodStatus.values:
+        raise ValidationError(_("Invalid accounting-period status."))
+
+    if period.status == status:
+        return period
+
+    if status == PeriodStatus.OPEN:
+        ensure_user_can_reopen(user)
+
+    if (
+        status == PeriodStatus.OPEN
+        and fiscal_year.status == PeriodStatus.CLOSED
+    ):
+        raise ValidationError(
+            _("Open the fiscal year before reopening one of its periods.")
+        )
+
+    reason = normalize_status_reason(reason)
+
+    if status == PeriodStatus.CLOSED:
+        ensure_date_range_can_close(period.start_date, period.end_date)
+
+    period.status = status
+    if status == PeriodStatus.CLOSED:
+        period.closed_by = user
+        period.closed_at = timezone.now()
+        period.close_reason = reason
+    else:
+        period.closed_by = None
+        period.closed_at = None
+        period.close_reason = ""
+
+    period.save(
+        update_fields=("status", "closed_by", "closed_at", "close_reason")
+    )
+    FiscalPeriodAction.objects.create(
+        fiscal_year=fiscal_year,
+        period=period,
+        action=(
+            FiscalPeriodAction.Action.CLOSED
+            if status == PeriodStatus.CLOSED
+            else FiscalPeriodAction.Action.OPENED
+        ),
+        performed_by=user,
+        reason=reason,
+    )
+    return period
+
+
+@transaction.atomic
+def set_fiscal_year_status(fiscal_year_id, status, user, reason=""):
+    fiscal_year = FiscalYear.objects.select_for_update().get(
+        pk=fiscal_year_id
+    )
+
+    if status not in PeriodStatus.values:
+        raise ValidationError(_("Invalid fiscal-year status."))
+
+    if fiscal_year.status == status:
+        return fiscal_year
+
+    if status == PeriodStatus.OPEN:
+        ensure_user_can_reopen(user)
+
+    reason = normalize_status_reason(reason)
+
+    if status == PeriodStatus.CLOSED:
+        ensure_date_range_can_close(
+            date(fiscal_year.year, 1, 1),
+            date(fiscal_year.year, 12, 31),
+        )
+
+    fiscal_year.status = status
+    if status == PeriodStatus.CLOSED:
+        fiscal_year.closed_by = user
+        fiscal_year.closed_at = timezone.now()
+        fiscal_year.close_reason = reason
+
+        periods = list(
+            FiscalPeriod.objects.select_for_update().filter(
+                fiscal_year=fiscal_year
+            )
+        )
+        FiscalPeriod.objects.filter(pk__in=[period.pk for period in periods]).update(
+            status=PeriodStatus.CLOSED,
+            closed_by=user,
+            closed_at=timezone.now(),
+            close_reason=reason,
+        )
+        FiscalPeriodAction.objects.bulk_create(
+            [
+                FiscalPeriodAction(
+                    fiscal_year=fiscal_year,
+                    period=period,
+                    action=FiscalPeriodAction.Action.CLOSED,
+                    performed_by=user,
+                    reason=reason,
+                )
+                for period in periods
+                if period.status != PeriodStatus.CLOSED
+            ]
+        )
+    else:
+        fiscal_year.closed_by = None
+        fiscal_year.closed_at = None
+        fiscal_year.close_reason = ""
+
+    fiscal_year.save(
+        update_fields=("status", "closed_by", "closed_at", "close_reason")
+    )
+    FiscalPeriodAction.objects.create(
+        fiscal_year=fiscal_year,
+        action=(
+            FiscalPeriodAction.Action.CLOSED
+            if status == PeriodStatus.CLOSED
+            else FiscalPeriodAction.Action.OPENED
+        ),
+        performed_by=user,
+        reason=reason,
+    )
+    return fiscal_year

@@ -63,6 +63,141 @@ class TaxRate(models.Model):
             Decimal("0.001"), rounding=ROUND_HALF_UP
         )
 
+class PeriodStatus(models.TextChoices):
+    OPEN = "open", _("Open")
+    CLOSED = "closed", _("Closed")
+
+
+class FiscalYear(models.Model):
+    year = models.PositiveSmallIntegerField(_("Year"), unique=True)
+    status = models.CharField(
+        _("Status"),
+        max_length=10,
+        choices=PeriodStatus.choices,
+        default=PeriodStatus.OPEN,
+    )
+    closed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("Closed By"),
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="closed_fiscal_years",
+    )
+    closed_at = models.DateTimeField(_("Closed At"), null=True, blank=True)
+    close_reason = models.CharField(
+        _("Close Reason"),
+        max_length=255,
+        blank=True,
+    )
+    notes = models.TextField(_("Notes"), blank=True)
+    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+
+    class Meta:
+        ordering = ("-year",)
+        verbose_name = _("Fiscal Year")
+        verbose_name_plural = _("Fiscal Years")
+
+    def __str__(self):
+        return str(self.year)
+
+
+class FiscalPeriod(models.Model):
+    fiscal_year = models.ForeignKey(
+        FiscalYear,
+        verbose_name=_("Fiscal Year"),
+        on_delete=models.CASCADE,
+        related_name="periods",
+    )
+    month = models.PositiveSmallIntegerField(_("Month"))
+    start_date = models.DateField(_("Start Date"))
+    end_date = models.DateField(_("End Date"))
+    status = models.CharField(
+        _("Status"),
+        max_length=10,
+        choices=PeriodStatus.choices,
+        default=PeriodStatus.OPEN,
+    )
+    closed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("Closed By"),
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="closed_fiscal_periods",
+    )
+    closed_at = models.DateTimeField(_("Closed At"), null=True, blank=True)
+    close_reason = models.CharField(
+        _("Close Reason"),
+        max_length=255,
+        blank=True,
+    )
+    notes = models.TextField(_("Notes"), blank=True)
+
+    class Meta:
+        ordering = ("fiscal_year__year", "month")
+        constraints = [
+            models.UniqueConstraint(
+                fields=("fiscal_year", "month"),
+                name="unique_month_per_fiscal_year",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(month__gte=1, month__lte=12),
+                name="fiscal_period_month_1_to_12",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(end_date__gte=models.F("start_date")),
+                name="fiscal_period_valid_date_range",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.fiscal_year.year}-{self.month:02d}"
+
+
+class FiscalPeriodAction(models.Model):
+    class Action(models.TextChoices):
+        OPENED = "opened", _("Opened")
+        CLOSED = "closed", _("Closed")
+
+    fiscal_year = models.ForeignKey(
+        FiscalYear,
+        verbose_name=_("Fiscal Year"),
+        on_delete=models.PROTECT,
+        related_name="actions",
+    )
+    period = models.ForeignKey(
+        FiscalPeriod,
+        verbose_name=_("Fiscal Period"),
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="actions",
+        help_text=_("Empty for an action on the complete fiscal year."),
+    )
+    action = models.CharField(
+        _("Action"),
+        max_length=10,
+        choices=Action.choices,
+    )
+    performed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("Performed By"),
+        on_delete=models.PROTECT,
+        related_name="fiscal_period_actions",
+    )
+    performed_at = models.DateTimeField(_("Performed At"), auto_now_add=True)
+    reason = models.TextField(_("Reason"), blank=True)
+
+    class Meta:
+        ordering = ("-performed_at", "-id")
+        verbose_name = _("Fiscal Period Action")
+        verbose_name_plural = _("Fiscal Period Actions")
+
+    def __str__(self):
+        target = self.period or self.fiscal_year
+        return f"{target} - {self.get_action_display()}"
+
 
 class Account(models.Model):
     class AccountType(models.TextChoices):

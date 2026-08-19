@@ -47,4 +47,39 @@ urlpatterns = [
         views.balance_sheet_view,
         name="balance_sheet",
     ),
+    path(
+        "periods/",
+        views.fiscal_period_list_view,
+        name="fiscal_period_list",
+    ),
+    path(
+        "periods/create-year/",
+        views.fiscal_year_create_view,
+        name="fiscal_year_create",
+    ),
+    path(
+        "periods/<int:pk>/status/",
+        views.fiscal_period_status_view,
+        name="fiscal_period_status",
+    ),
+    path(
+        "fiscal-years/<int:pk>/status/",
+        views.fiscal_year_status_view,
+        name="fiscal_year_status",
+    ),
+    path(
+        "fiscal-years/<int:pk>/history/",
+        views.fiscal_year_history_view,
+        name="fiscal_year_history",
+    ),
+    path(
+        "periods/<int:pk>/notes/",
+        views.fiscal_period_notes_view,
+        name="fiscal_period_notes",
+    ),
+    path(
+        "fiscal-years/<int:pk>/notes/",
+        views.fiscal_year_notes_view,
+        name="fiscal_year_notes",
+    ),
 ]

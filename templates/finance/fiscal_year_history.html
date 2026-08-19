@@ -1,0 +1,64 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Open/close history" %} · {{ fiscal_year.year }}{% endblock %}
+
+{% block page_header %}
+  <h1>{% trans "Open/close history" %}</h1>
+  <p>{% blocktrans with year=fiscal_year.year %}Fiscal year {{ year }} status-change audit trail.{% endblocktrans %}</p>
+{% endblock %}
+
+{% block page_actions %}
+  <a href="{% url 'finance:fiscal_period_list' %}" class="btn btn-ghost">
+    <i class="bi bi-arrow-left me-1"></i>{% trans "Back to fiscal periods" %}
+  </a>
+{% endblock %}
+
+{% block content %}
+  <div class="card-soft">
+    <div class="table-responsive">
+      <table class="table-erp">
+        <thead>
+          <tr>
+            <th>{% trans "Date" %}</th>
+            <th>{% trans "Target" %}</th>
+            <th>{% trans "Action" %}</th>
+            <th>{% trans "User" %}</th>
+            <th>{% trans "Reason" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for action in page_obj %}
+            <tr>
+              <td>{{ action.performed_at }}</td>
+              <td>{{ action.period|default:fiscal_year }}</td>
+              <td>{{ action.get_action_display }}</td>
+              <td>{{ action.performed_by }}</td>
+              <td>{{ action.reason }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5">{% trans "No status changes recorded yet." %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+      <nav class="card-pad border-top" aria-label="{% trans 'History pages' %}">
+        <div class="d-flex justify-content-between align-items-center gap-2">
+          <span class="small text-muted">
+            {% blocktrans with current=page_obj.number total=page_obj.paginator.num_pages %}Page {{ current }} of {{ total }}{% endblocktrans %}
+          </span>
+          <div class="d-flex gap-2">
+            {% if page_obj.has_previous %}
+              <a class="btn btn-soft btn-sm" href="?page={{ page_obj.previous_page_number }}">{% trans "Previous" %}</a>
+            {% endif %}
+            {% if page_obj.has_next %}
+              <a class="btn btn-soft btn-sm" href="?page={{ page_obj.next_page_number }}">{% trans "Next" %}</a>
+            {% endif %}
+          </div>
+        </div>
+      </nav>
+    {% endif %}
+  </div>
+{% endblock %}
