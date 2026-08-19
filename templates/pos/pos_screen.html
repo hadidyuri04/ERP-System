@@ -113,41 +113,70 @@
 {% endif %}
 
 <div class="pos-layout">
-  <section>
-    <div class="pos-search mb-3">
-      <i class="bi bi-search text-purple"></i>
-      <input id="product-search" type="search" placeholder="{% trans 'Search products by name or code...' %}" autocomplete="off">
-      <span id="product-count" class="badge-soft badge-info">{{ products|length }} {% trans "items" %}</span>
-    </div>
-    <div class="pos-product-grid" id="product-grid">
-      {% for product in products %}
-        <button type="button" class="pos-tile product-button {% if product.available_stock <= 0 %}opacity-50{% endif %}" 
-          data-id="{{ product.pk }}" 
-          data-code="{{ product.code }}" 
-          data-barcode="{{ product.barcode|default:'' }}" 
-          data-name="{{ product.name }}" 
-          data-price="{{ product.selling_price|unlocalize }}"
-          data-stock="{{ product.available_stock|default:0|unlocalize }}"
-          data-tax-rate="{% if product.tax_rate and product.tax_rate.subject_to_tax %}{{ product.tax_rate.rate|unlocalize }}{% else %}0{% endif %}">
-          <span class="t-thumb"><i class="bi bi-box-seam"></i></span>
-          <span class="t-stock {% if product.available_stock <= 0 %}text-danger fw-bold{% endif %}">
-            {{ product.code }} · 
-            {% if product.available_stock <= 0 %}
-              {% trans "Out of stock" %}
-            {% else %}
-              {{ product.available_stock|default:0|floatformat:3 }} {% trans "in stock" %}
-            {% endif %}
-          </span>
-          <span class="t-name">{{ product.name }}</span>
-          <span class="t-price">{{ product.selling_price|floatformat:3 }}</span>
-        </button>
-      {% empty %}
-      <div class="empty-state">
-        <i class="bi bi-box-seam"></i>
-        <p>{% trans "No active products are available." %}</p>
+  <section class="d-flex flex-column justify-content-between">
+    <div>
+      <div class="pos-search mb-3">
+        <i class="bi bi-search text-purple"></i>
+        <input id="product-search" type="search" placeholder="{% trans 'Search products by name or code...' %}" autocomplete="off">
+        <span id="product-count" class="badge-soft badge-info">{{ products.paginator.count }} {% trans "items" %}</span>
       </div>
-      {% endfor %}
+      <div class="pos-product-grid" id="product-grid">
+        {% for product in products %}
+          <button type="button" class="pos-tile product-button {% if product.available_stock <= 0 %}opacity-50{% endif %}" 
+            data-id="{{ product.pk }}" 
+            data-code="{{ product.code }}" 
+            data-barcode="{{ product.barcode|default:'' }}" 
+            data-name="{{ product.name }}" 
+            data-price="{{ product.selling_price|unlocalize }}"
+            data-stock="{{ product.available_stock|default:0|unlocalize }}"
+            data-tax-rate="{% if product.tax_rate and product.tax_rate.subject_to_tax %}{{ product.tax_rate.rate|unlocalize }}{% else %}0{% endif %}">
+            <span class="t-thumb"><i class="bi bi-box-seam"></i></span>
+            <span class="t-stock {% if product.available_stock <= 0 %}text-danger fw-bold{% endif %}">
+              {{ product.code }} · 
+              {% if product.available_stock <= 0 %}
+                {% trans "Out of stock" %}
+              {% else %}
+                {{ product.available_stock|default:0|floatformat:3 }} {% trans "in stock" %}
+              {% endif %}
+            </span>
+            <span class="t-name">{{ product.name }}</span>
+            <span class="t-price">{{ product.selling_price|floatformat:3 }}</span>
+          </button>
+        {% empty %}
+        <div class="empty-state">
+          <i class="bi bi-box-seam"></i>
+          <p>{% trans "No active products are available." %}</p>
+        </div>
+        {% endfor %}
+      </div>
     </div>
+
+    <!-- Pagination Controls Bar -->
+    {% if products.paginator.num_pages > 1 %}
+    <nav class="mt-3 d-flex justify-content-center" aria-label="Product Grid Navigation">
+      <ul class="pagination pagination-sm mb-0">
+        {% if products.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ products.previous_page_number }}">{% trans "Previous" %}</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">{% trans "Previous" %}</span></li>
+        {% endif %}
+
+        <li class="page-item disabled">
+          <span class="page-link">{% trans "Page" %} {{ products.number }} / {{ products.paginator.num_pages }}</span>
+        </li>
+
+        {% if products.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ products.next_page_number }}">{% trans "Next" %}</a>
+          </li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">{% trans "Next" %}</span></li>
+        {% endif %}
+      </ul>
+    </nav>
+    {% endif %}
   </section>
   
   <aside class="card-soft pos-cart">
@@ -623,19 +652,31 @@
         }
 
         tbody.innerHTML = data.held_sales.map(s => `
-          <tr>
-            <td class="fw-bold">${s.sale_number}</td>
+          <tr style="cursor: pointer;" onclick="document.getElementById('held-details-${s.id}').classList.toggle('d-none')" title="{% trans 'Click to view items' %}">
+            <td class="fw-bold">
+              <i class="bi bi-chevron-expand me-1 text-muted"></i>
+              ${s.sale_number}
+            </td>
             <td>${s.customer_name}</td>
             <td>${s.created_at}</td>
             <td class="text-center">${s.items_count}</td>
             <td class="text-end fw-bold">${s.total} JOD</td>
-            <td class="text-center">
+            <td class="text-center" onclick="event.stopPropagation()">
               <button type="button" class="btn btn-sm btn-primary me-1" onclick="recallHeldOrder(${s.id})">
                 <i class="bi bi-arrow-return-left me-1"></i>{% trans "Recall" %}
               </button>
               <button type="button" class="btn btn-sm btn-outline-danger" onclick="cancelHeldOrder(${s.id})">
                 <i class="bi bi-trash"></i>
               </button>
+            </td>
+          </tr>
+          <!-- Hidden details row for items -->
+          <tr id="held-details-${s.id}" class="d-none bg-light">
+            <td colspan="6" class="p-3 border-bottom">
+              <div class="fw-bold mb-2 text-secondary" style="font-size: 0.85rem;">{% trans "Order Items:" %}</div>
+              <ul class="mb-0 small text-dark" style="list-style-type: disc; padding-left: 1.5rem;">
+                ${s.items_detail.map(i => `<li>${i.name} &mdash; ${i.quantity} &times; ${i.price} JOD</li>`).join('')}
+              </ul>
             </td>
           </tr>
         `).join('');

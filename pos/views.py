@@ -64,16 +64,27 @@ def hold_sale_view(request):
 @cashier_required
 @require_GET
 def list_held_sales_view(request):
-    sales = POSSale.objects.filter(status=POSSale.SaleStatus.HELD).order_by('-date')
+    # Added prefetch_related to optimize database queries for the items
+    sales = POSSale.objects.filter(status=POSSale.SaleStatus.HELD).order_by('-date').prefetch_related('items__product')
     data = []
     for s in sales:
+        # Construct a detailed list for the items in this specific held sale
+        items_detail = []
+        for item in s.items.all():
+            items_detail.append({
+                "name": item.product.name,
+                "quantity": str(item.quantity),
+                "price": str(item.unit_price)
+            })
+            
         data.append({
             "id": s.id,
             "sale_number": s.sale_number,
             "customer_name": s.customer.name if s.customer else "Walk-in",
             "created_at": s.date.strftime("%Y-%m-%d %H:%M"),
             "items_count": s.items.count(),
-            "total": str(s.total)
+            "total": str(s.total),
+            "items_detail": items_detail  # Added the new items detail payload
         })
     return JsonResponse({"ok": True, "held_sales": data})
 
@@ -168,6 +179,18 @@ def pos_terminal(request):
 
     for p in products:
         p.available_stock = stock_dict.get(p.id, 0)
+
+    all_products = Product.objects.filter(is_active=True) # or your existing query
+    
+    # Setup 8-item pagination
+    paginator = Paginator(all_products, 8)
+    page_number = request.GET.get('page', 1)
+    products_page = paginator.get_page(page_number)
+    
+    context = {
+        'products': products_page, # Pass the page object instead of full queryset
+        # ... other context variables like warehouses, customers, active_session
+    }
 
     return render(request, "pos/pos_screen.html", {
         "active_session": active_session,
