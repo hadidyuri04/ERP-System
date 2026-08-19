@@ -182,6 +182,7 @@ def pos_terminal(request):
         Product.objects
         .select_related("tax_rate")
         .filter(is_active=True, is_sellable=True)
+        .order_by("code", "pk")
     )
     stock_balances = StockBalance.objects.filter(warehouse=active_session.warehouse)
     reserved = {sb.product_id: sb.reserved_quantity for sb in stock_balances}
@@ -212,21 +213,14 @@ def pos_terminal(request):
     for p in products:
         p.available_stock = stock_dict.get(p.id, 0)
 
-    all_products = Product.objects.filter(is_active=True) # or your existing query
-    
     # Setup 8-item pagination
-    paginator = Paginator(all_products, 8)
+    paginator = Paginator(products, 8)
     page_number = request.GET.get('page', 1)
     products_page = paginator.get_page(page_number)
-    
-    context = {
-        'products': products_page, # Pass the page object instead of full queryset
-        # ... other context variables like warehouses, customers, active_session
-    }
 
     return render(request, "pos/pos_screen.html", {
         "active_session": active_session,
-        "products": products,  # Now passing the populated products list to the template
+        "products": products_page,
         "customers": Customer.objects.filter(is_active=True).order_by("name"),
         # "warehouses" query is removed as it's no longer needed
     })

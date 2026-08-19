@@ -9,8 +9,10 @@ from django.db.models import Sum
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+from .audit import record_finance_audit
 from .models import (
     Account,
+    FinanceAuditLog,
     FiscalPeriod,
     FiscalPeriodAction,
     FiscalYear,
@@ -138,18 +140,15 @@ def validate_cash_bank_account(account):
         )
 
 
-@transaction.atomic
-def post_journal_entry(entry_id, user):
-    # Lock the journal entry while we are posting it
-    entry = JournalEntry.objects.select_for_update().get(pk=entry_id)
-
+def validate_journal_entry_for_posting(entry, *, lock_period=True):
+    """Validate a journal without changing it and return its posting totals."""
     # 1. Only draft entries can be posted
     if entry.status != JournalEntry.Status.DRAFT:
         raise ValidationError(
             _("Only draft journal entries can be posted.")
         )
 
-    ensure_posting_period_open(entry.date)
+    ensure_posting_period_open(entry.date, lock=lock_period)
 
     # Get all journal lines
     lines = list(
@@ -208,6 +207,15 @@ def post_journal_entry(entry_id, user):
         )
 
     # 6. Everything is valid → POST it
+    return lines, total_debit, total_credit
+
+
+@transaction.atomic
+def post_journal_entry(entry_id, user):
+    # Lock the journal entry while we are posting it.
+    entry = JournalEntry.objects.select_for_update().get(pk=entry_id)
+    lines, total_debit, total_credit = validate_journal_entry_for_posting(entry)
+
     entry.status = JournalEntry.Status.POSTED
     entry.approved_by = user
 
@@ -217,6 +225,16 @@ def post_journal_entry(entry_id, user):
             "approved_by",
             "updated_at",
         ]
+    )
+    record_finance_audit(
+        actor=user,
+        action=FinanceAuditLog.Action.POSTED,
+        instance=entry,
+        changes={
+            "status": {"before": JournalEntry.Status.DRAFT, "after": entry.status},
+            "total_debit": {"before": None, "after": str(total_debit)},
+            "total_credit": {"before": None, "after": str(total_credit)},
+        },
     )
 
     return entry
@@ -305,6 +323,16 @@ def post_receipt_voucher(voucher_id, user):
             "updated_at",
         ]
     )
+    record_finance_audit(
+        actor=user,
+        action=FinanceAuditLog.Action.POSTED,
+        instance=voucher,
+        changes={
+            "status": {"before": ReceiptVoucher.Status.DRAFT, "after": voucher.status},
+            "journal_entry": {"before": None, "after": journal.entry_number},
+            "amount": {"before": None, "after": str(voucher.amount)},
+        },
+    )
 
     return voucher
 
@@ -392,6 +420,16 @@ def post_payment_voucher(voucher_id, user):
             "status",
             "updated_at",
         ]
+    )
+    record_finance_audit(
+        actor=user,
+        action=FinanceAuditLog.Action.POSTED,
+        instance=voucher,
+        changes={
+            "status": {"before": PaymentVoucher.Status.DRAFT, "after": voucher.status},
+            "journal_entry": {"before": None, "after": journal.entry_number},
+            "amount": {"before": None, "after": str(voucher.amount)},
+        },
     )
 
     return voucher
@@ -625,10 +663,20 @@ def post_purchase_invoice(invoice_id, user):
         )
 
     # 12. Post the journal
-    return post_journal_entry(
+    posted_journal = post_journal_entry(
         journal.id,
         user,
     )
+    record_finance_audit(
+        actor=user,
+        action=FinanceAuditLog.Action.POSTED,
+        instance=invoice,
+        changes={
+            "journal_entry": {"before": None, "after": posted_journal.entry_number},
+            "total": {"before": None, "after": str(invoice.total)},
+        },
+    )
+    return posted_journal
 @transaction.atomic
 def post_pos_sale(sale_id, user):
     from pos.models import POSSale, POSPayment
@@ -875,6 +923,15 @@ def post_pos_sale(sale_id, user):
         )
 
     post_journal_entry(journal.id, user)
+    record_finance_audit(
+        actor=user,
+        action=FinanceAuditLog.Action.POSTED,
+        instance=sale,
+        changes={
+            "journal_entry": {"before": None, "after": journal.entry_number},
+            "total": {"before": None, "after": str(sale.total)},
+        },
+    )
 
     return journal
 
@@ -938,7 +995,17 @@ def post_waste_loss(waste_id, user):
         credit=total_waste_cost,
     )
 
-    return post_journal_entry(journal.id, user)
+    posted_journal = post_journal_entry(journal.id, user)
+    record_finance_audit(
+        actor=user,
+        action=FinanceAuditLog.Action.POSTED,
+        instance=waste,
+        changes={
+            "journal_entry": {"before": None, "after": posted_journal.entry_number},
+            "total_cost": {"before": None, "after": str(total_waste_cost)},
+        },
+    )
+    return posted_journal
 
 
 @transaction.atomic
@@ -1035,12 +1102,22 @@ def reverse_journal_entry(entry_id, user, reason):
             "updated_at",
         ]
     )
+    record_finance_audit(
+        actor=user,
+        action=FinanceAuditLog.Action.REVERSED,
+        instance=original,
+        changes={
+            "status": {"before": JournalEntry.Status.POSTED, "after": original.status},
+            "reason": {"before": None, "after": reason},
+            "reversal_entry": {"before": None, "after": reversal.entry_number},
+        },
+    )
 
     return reversal
 
 
 @transaction.atomic
-def create_fiscal_year(year, notes=""):
+def create_fiscal_year(year, notes="", user=None):
     if FiscalYear.objects.filter(year=year).exists():
         raise ValidationError(_("This fiscal year already exists."))
 
@@ -1059,6 +1136,15 @@ def create_fiscal_year(year, notes=""):
         )
 
     FiscalPeriod.objects.bulk_create(periods)
+    record_finance_audit(
+        actor=user,
+        action=FinanceAuditLog.Action.CREATED,
+        instance=fiscal_year,
+        changes={
+            "year": {"before": None, "after": year},
+            "periods_created": {"before": 0, "after": 12},
+        },
+    )
     return fiscal_year
 
 
@@ -1143,12 +1229,11 @@ def normalize_status_reason(reason):
     return reason
 
 
-def ensure_posting_period_open(posting_date):
-    fiscal_year = (
-        FiscalYear.objects.select_for_update()
-        .filter(year=posting_date.year)
-        .first()
-    )
+def ensure_posting_period_open(posting_date, *, lock=True):
+    fiscal_year_query = FiscalYear.objects
+    if lock:
+        fiscal_year_query = fiscal_year_query.select_for_update()
+    fiscal_year = fiscal_year_query.filter(year=posting_date.year).first()
 
     if fiscal_year is None:
         raise ValidationError(
@@ -1158,16 +1243,15 @@ def ensure_posting_period_open(posting_date):
     if fiscal_year.status == PeriodStatus.CLOSED:
         raise ValidationError(_("The fiscal year is closed."))
 
-    period = (
-        FiscalPeriod.objects.select_for_update()
-        .filter(
-            fiscal_year=fiscal_year,
-            month=posting_date.month,
-            start_date__lte=posting_date,
-            end_date__gte=posting_date,
-        )
-        .first()
-    )
+    period_query = FiscalPeriod.objects
+    if lock:
+        period_query = period_query.select_for_update()
+    period = period_query.filter(
+        fiscal_year=fiscal_year,
+        month=posting_date.month,
+        start_date__lte=posting_date,
+        end_date__gte=posting_date,
+    ).first()
 
     if period is None:
         raise ValidationError(
@@ -1243,6 +1327,24 @@ def set_period_status(period_id, status, user, reason=""):
         performed_by=user,
         reason=reason,
     )
+    record_finance_audit(
+        actor=user,
+        action=(
+            FinanceAuditLog.Action.CLOSED
+            if status == PeriodStatus.CLOSED
+            else FinanceAuditLog.Action.REOPENED
+        ),
+        instance=period,
+        changes={
+            "status": {
+                "before": (
+                    PeriodStatus.OPEN if status == PeriodStatus.CLOSED else PeriodStatus.CLOSED
+                ),
+                "after": status,
+            },
+            "reason": {"before": None, "after": reason},
+        },
+    )
     return period
 
 
@@ -1316,5 +1418,23 @@ def set_fiscal_year_status(fiscal_year_id, status, user, reason=""):
         ),
         performed_by=user,
         reason=reason,
+    )
+    record_finance_audit(
+        actor=user,
+        action=(
+            FinanceAuditLog.Action.CLOSED
+            if status == PeriodStatus.CLOSED
+            else FinanceAuditLog.Action.REOPENED
+        ),
+        instance=fiscal_year,
+        changes={
+            "status": {
+                "before": (
+                    PeriodStatus.OPEN if status == PeriodStatus.CLOSED else PeriodStatus.CLOSED
+                ),
+                "after": status,
+            },
+            "reason": {"before": None, "after": reason},
+        },
     )
     return fiscal_year

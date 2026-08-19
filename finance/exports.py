@@ -1,11 +1,13 @@
 from datetime import date, datetime
 from decimal import Decimal
 from io import BytesIO
+import json
 
 from django.contrib import messages
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django.utils.formats import date_format
+from django.utils import timezone
 from django.utils.translation import get_language, gettext as _
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font, PatternFill
@@ -103,6 +105,8 @@ def excel_response(filename, document):
             for cell in worksheet[worksheet.max_row]:
                 if isinstance(cell.value, (Decimal, float, int)):
                     cell.number_format = MONEY_FORMAT
+                if isinstance(cell.value, str) and "\n" in cell.value:
+                    cell.alignment = Alignment(vertical="top", wrap_text=True)
 
         for values in section.get("footer_rows", []):
             worksheet.append([_display(value) for value in values])
@@ -403,4 +407,62 @@ def aging_document(data, kind):
         "title": title,
         "metadata": [(_("As of date"), data["as_of_date"])],
         "sections": sections,
+    }
+
+
+def _audit_value(value):
+    if value in (None, ""):
+        return "—"
+    if isinstance(value, (dict, list, tuple)):
+        return json.dumps(value, ensure_ascii=False, default=str)
+    return str(value)
+
+
+def _audit_changes(changes):
+    rows = []
+    for field, change in (changes or {}).items():
+        label = str(field).replace("_", " ").title()
+        if isinstance(change, dict) and ("before" in change or "after" in change):
+            rows.append(
+                f"{label}: {_audit_value(change.get('before'))} → "
+                f"{_audit_value(change.get('after'))}"
+            )
+        else:
+            rows.append(f"{label}: {_audit_value(change)}")
+    return "\n".join(rows) or "—"
+
+
+def audit_log_document(logs, *, query="", action_label="", entity_label=""):
+    rows = [
+        [
+            date_format(timezone.localtime(log.created_at), "SHORT_DATETIME_FORMAT"),
+            log.get_action_display(),
+            log.entity_label,
+            log.object_id,
+            log.object_repr,
+            log.actor_label or _("System"),
+            _audit_changes(log.changes),
+        ]
+        for log in logs
+    ]
+    return {
+        "title": _("Finance audit log"),
+        "metadata": [
+            (_("Records"), len(rows)),
+            (_("Search"), query or _("All")),
+            (_("Action"), action_label or _("All actions")),
+            (_("Record type"), entity_label or _("All record types")),
+        ],
+        "sections": [{
+            "headers": [
+                _("Date and time"),
+                _("Action"),
+                _("Record type"),
+                _("Record ID"),
+                _("Record"),
+                _("Performed by"),
+                _("Before and after changes"),
+            ],
+            "rows": rows,
+        }],
     }

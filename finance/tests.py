@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
-from django.test import TestCase
+from django.test import TestCase, TransactionTestCase
 from django.urls import reverse
 from openpyxl import load_workbook
 from playwright.sync_api import Error as PlaywrightError
@@ -38,6 +38,7 @@ from .models import (
     FiscalPeriod,
     FiscalPeriodAction,
     FiscalYear,
+    FinanceAuditLog,
     JournalEntry,
     JournalEntryLine,
     OpenItem,
@@ -273,6 +274,235 @@ class AccountHierarchyViewTests(TestCase):
         self.assertIn("account_type", form.errors)
 
 
+class FinanceAuditLogTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="audit-accountant",
+            password="test-password",
+            role="accountant",
+        )
+        self.client.force_login(self.user)
+
+    def test_account_create_and_update_record_before_and_after_values(self):
+        create_response = self.client.post(
+            reverse("finance:account_create"),
+            {
+                "code": "AUD1000",
+                "name": "Audit cash",
+                "account_type": Account.AccountType.ASSET,
+                "allow_posting": "on",
+                "is_cash_equivalent": "on",
+                "is_active": "on",
+            },
+        )
+        account = Account.objects.get(code="AUD1000")
+        created_log = FinanceAuditLog.objects.get(
+            entity_type="finance.account",
+            object_id=str(account.pk),
+            action=FinanceAuditLog.Action.CREATED,
+        )
+
+        self.assertRedirects(create_response, reverse("finance:account_list"))
+        self.assertEqual(created_log.actor, self.user)
+        self.assertEqual(created_log.changes["name"]["after"], "Audit cash")
+
+        update_response = self.client.post(
+            reverse("finance:account_update", args=[account.pk]),
+            {
+                "code": account.code,
+                "name": "Main audit cash",
+                "account_type": Account.AccountType.ASSET,
+                "allow_posting": "on",
+                "is_cash_equivalent": "on",
+                "is_active": "on",
+            },
+        )
+        updated_log = FinanceAuditLog.objects.get(
+            entity_type="finance.account",
+            object_id=str(account.pk),
+            action=FinanceAuditLog.Action.UPDATED,
+        )
+
+        self.assertRedirects(update_response, reverse("finance:account_list"))
+        self.assertEqual(
+            updated_log.changes["name"],
+            {"before": "Audit cash", "after": "Main audit cash"},
+        )
+        self.assertEqual(set(updated_log.changes), {"name"})
+
+    def test_successful_post_is_logged_and_failed_post_is_not(self):
+        create_fiscal_year(2026, user=self.user)
+        cash = Account.objects.create(
+            code="AUD1100",
+            name="Audit posting cash",
+            account_type=Account.AccountType.ASSET,
+        )
+        capital = Account.objects.create(
+            code="AUD3100",
+            name="Audit posting capital",
+            account_type=Account.AccountType.EQUITY,
+        )
+        journal = JournalEntry.objects.create(
+            entry_number="AUD-JE-001",
+            date=date(2026, 8, 19),
+            description="Audit posting",
+            created_by=self.user,
+        )
+        JournalEntryLine.objects.create(
+            journal_entry=journal,
+            account=cash,
+            debit=Decimal("25.000"),
+        )
+        JournalEntryLine.objects.create(
+            journal_entry=journal,
+            account=capital,
+            credit=Decimal("25.000"),
+        )
+
+        post_journal_entry(journal.pk, self.user)
+
+        posted_log = FinanceAuditLog.objects.get(
+            entity_type="finance.journalentry",
+            object_id=str(journal.pk),
+            action=FinanceAuditLog.Action.POSTED,
+        )
+        self.assertEqual(posted_log.actor, self.user)
+        self.assertEqual(posted_log.changes["total_debit"]["after"], "25.000")
+
+        invalid = JournalEntry.objects.create(
+            entry_number="AUD-JE-002",
+            date=date(2026, 8, 19),
+            created_by=self.user,
+        )
+        with self.assertRaises(ValidationError):
+            post_journal_entry(invalid.pk, self.user)
+        self.assertFalse(
+            FinanceAuditLog.objects.filter(
+                entity_type="finance.journalentry",
+                object_id=str(invalid.pk),
+                action=FinanceAuditLog.Action.POSTED,
+            ).exists()
+        )
+
+    def test_audit_page_is_filterable_and_paginated(self):
+        FinanceAuditLog.objects.bulk_create(
+            [
+                FinanceAuditLog(
+                    actor=self.user,
+                    actor_label=self.user.username,
+                    action=(
+                        FinanceAuditLog.Action.CREATED
+                        if index % 2
+                        else FinanceAuditLog.Action.UPDATED
+                    ),
+                    entity_type="finance.account",
+                    entity_label="Account",
+                    object_id=str(index),
+                    object_repr=f"AUD-{index:03d}",
+                    changes={},
+                )
+                for index in range(25)
+            ]
+        )
+
+        first_page = self.client.get(reverse("finance:audit_log"))
+        second_page = self.client.get(reverse("finance:audit_log"), {"page": 2})
+        third_page = self.client.get(reverse("finance:audit_log"), {"page": 3})
+        filtered = self.client.get(
+            reverse("finance:audit_log"),
+            {"action": FinanceAuditLog.Action.CREATED, "q": "AUD-001"},
+        )
+
+        self.assertEqual(len(first_page.context["page_obj"]), 10)
+        self.assertEqual(len(second_page.context["page_obj"]), 10)
+        self.assertEqual(len(third_page.context["page_obj"]), 5)
+        self.assertEqual(first_page.context["page_obj"].paginator.num_pages, 3)
+        self.assertEqual(filtered.context["page_obj"].paginator.count, 1)
+        self.assertContains(first_page, "Audit records are read-only.")
+
+    def test_ajax_audit_request_returns_only_dynamic_results(self):
+        FinanceAuditLog.objects.create(
+            actor=self.user,
+            actor_label=self.user.username,
+            action=FinanceAuditLog.Action.UPDATED,
+            entity_type="finance.account",
+            entity_label="Account",
+            object_id="42",
+            object_repr="AJAX account",
+            changes={},
+        )
+
+        response = self.client.get(
+            reverse("finance:audit_log"),
+            {"q": "AJAX account"},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "finance/partials/audit_log_results.html")
+        self.assertContains(response, "AJAX account")
+        self.assertNotContains(response, "audit-filter-form")
+
+    def test_audit_log_exports_filtered_excel_with_change_details(self):
+        FinanceAuditLog.objects.create(
+            actor=self.user,
+            actor_label=self.user.username,
+            action=FinanceAuditLog.Action.CREATED,
+            entity_type="finance.account",
+            entity_label="Account",
+            object_id="51",
+            object_repr="Audit export account",
+            changes={"name": {"before": "Old name", "after": "New name"}},
+        )
+        FinanceAuditLog.objects.create(
+            actor=self.user,
+            actor_label=self.user.username,
+            action=FinanceAuditLog.Action.UPDATED,
+            entity_type="finance.account",
+            entity_label="Account",
+            object_id="52",
+            object_repr="Excluded account",
+            changes={},
+        )
+
+        response = self.client.get(
+            reverse("finance:audit_log"),
+            {
+                "q": "Audit export",
+                "action": FinanceAuditLog.Action.CREATED,
+                "export": "xlsx",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response["Content-Type"],
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        self.assertIn("finance-audit-log.xlsx", response["Content-Disposition"])
+        workbook = load_workbook(BytesIO(response.content), read_only=True)
+        values = "\n".join(
+            str(value)
+            for row in workbook.active.iter_rows(values_only=True)
+            for value in row
+            if value is not None
+        )
+        self.assertIn("Audit export account", values)
+        self.assertIn("Old name → New name", values)
+        self.assertNotIn("Excluded account", values)
+
+    def test_audit_page_shows_excel_and_pdf_exports(self):
+        response = self.client.get(
+            reverse("finance:audit_log"),
+            {"q": "journal", "action": FinanceAuditLog.Action.POSTED},
+        )
+
+        self.assertContains(response, "q=journal")
+        self.assertContains(response, "action=posted")
+        self.assertContains(response, "export=xlsx")
+        self.assertContains(response, "export=pdf")
+
+
 class ReportExportViewTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
@@ -452,6 +682,96 @@ class ManualJournalViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'id="add-journal-line"')
         self.assertContains(response, 'id="journal-empty-line"')
+
+    def test_draft_posting_error_is_shown_and_can_be_corrected(self):
+        create_fiscal_year(date.today().year, user=self.user)
+        self.cash.is_cash_equivalent = True
+        self.cash.save(update_fields=["is_cash_equivalent"])
+        self.client.post(reverse("finance:journal_create"), self.journal_data())
+        journal = JournalEntry.objects.get(entry_number="MJE-001")
+
+        detail = self.client.get(reverse("finance:journal_detail", args=[journal.pk]))
+
+        self.assertContains(detail, "This journal is not ready to post")
+        self.assertContains(detail, "Select a cash-flow activity")
+        self.assertContains(detail, reverse("finance:journal_update", args=[journal.pk]))
+        self.assertNotContains(detail, 'type="submit"><i class="bi bi-check2-circle"></i>Post entry')
+
+        lines = list(journal.lines.order_by("pk"))
+        update_data = self.journal_data()
+        update_data.update(
+            {
+                "description": "Corrected manual journal",
+                "cash_flow_activity": JournalEntry.CashFlowActivity.OPERATING,
+                "lines-INITIAL_FORMS": "2",
+                "lines-0-id": str(lines[0].pk),
+                "lines-1-id": str(lines[1].pk),
+            }
+        )
+        response = self.client.post(
+            reverse("finance:journal_update", args=[journal.pk]),
+            update_data,
+        )
+
+        self.assertRedirects(response, reverse("finance:journal_detail", args=[journal.pk]))
+        journal.refresh_from_db()
+        self.assertEqual(journal.description, "Corrected manual journal")
+        self.assertEqual(journal.cash_flow_activity, JournalEntry.CashFlowActivity.OPERATING)
+        self.assertTrue(
+            FinanceAuditLog.objects.filter(
+                action=FinanceAuditLog.Action.UPDATED,
+                entity_type="finance.journalentry",
+                object_id=str(journal.pk),
+            ).exists()
+        )
+
+        corrected_detail = self.client.get(reverse("finance:journal_detail", args=[journal.pk]))
+        self.assertNotContains(corrected_detail, "This journal is not ready to post")
+        self.assertContains(corrected_detail, "Post entry")
+
+    def test_posted_journal_cannot_be_edited(self):
+        journal = JournalEntry.objects.create(
+            entry_number="MJE-LOCKED",
+            date=date.today(),
+            source_type=JournalEntry.SourceType.MANUAL,
+            status=JournalEntry.Status.POSTED,
+            created_by=self.user,
+        )
+
+        response = self.client.get(
+            reverse("finance:journal_update", args=[journal.pk]),
+            follow=True,
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("finance:journal_detail", args=[journal.pk]),
+        )
+        self.assertContains(response, "Only draft manual journal entries can be edited.")
+
+
+class JournalDetailTransactionTests(TransactionTestCase):
+    def test_draft_detail_uses_read_only_period_validation(self):
+        user = get_user_model().objects.create_user(
+            username="journal-detail-accountant",
+            password="test-password",
+            role="accountant",
+        )
+        journal = JournalEntry.objects.create(
+            entry_number="MJE-READ-ONLY",
+            date=date.today(),
+            source_type=JournalEntry.SourceType.MANUAL,
+            status=JournalEntry.Status.DRAFT,
+            created_by=user,
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("finance:journal_detail", args=[journal.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "This journal is not ready to post")
+        self.assertContains(response, "No fiscal year has been configured")
+        self.assertContains(response, reverse("finance:journal_update", args=[journal.pk]))
 
 
 class FinancePostingTests(TestCase):

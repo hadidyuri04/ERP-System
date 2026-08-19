@@ -3,14 +3,17 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 
 from core.permissions import accountant_required
+from .audit import compare_snapshots, record_finance_audit, snapshot
 from .exports import (
     aging_document,
+    audit_log_document,
     balance_sheet_document,
     cash_flow_document,
     export_response,
@@ -37,6 +40,7 @@ from .forms import (
 )
 from .models import (
     Account,
+    FinanceAuditLog,
     FiscalPeriod,
     FiscalYear,
     JournalEntry,
@@ -64,6 +68,7 @@ from .services import (
     reverse_journal_entry,
     set_fiscal_year_status,
     set_period_status,
+    validate_journal_entry_for_posting,
 )
 
 
@@ -112,6 +117,17 @@ def _build_account_tree():
     return rows
 
 
+ACCOUNT_AUDIT_FIELDS = (
+    "code",
+    "name",
+    "account_type",
+    "parent",
+    "allow_posting",
+    "is_cash_equivalent",
+    "is_active",
+)
+
+
 @login_required
 @accountant_required
 def account_list_view(request):
@@ -124,11 +140,22 @@ def account_list_view(request):
 
 @login_required
 @accountant_required
+@transaction.atomic
 def account_create_view(request):
     if request.method == "POST":
         form = AccountForm(request.POST)
         if form.is_valid():
             account = form.save()
+            after = snapshot(account, ACCOUNT_AUDIT_FIELDS)
+            record_finance_audit(
+                actor=request.user,
+                action=FinanceAuditLog.Action.CREATED,
+                instance=account,
+                changes={
+                    field: {"before": None, "after": value}
+                    for field, value in after.items()
+                },
+            )
             messages.success(
                 request,
                 _("Account %(account)s created successfully.")
@@ -150,13 +177,26 @@ def account_create_view(request):
 
 @login_required
 @accountant_required
+@transaction.atomic
 def account_update_view(request, pk):
     account = get_object_or_404(Account, pk=pk)
+    before = snapshot(account, ACCOUNT_AUDIT_FIELDS)
 
     if request.method == "POST":
         form = AccountForm(request.POST, instance=account)
         if form.is_valid():
             account = form.save()
+            changes = compare_snapshots(
+                before,
+                snapshot(account, ACCOUNT_AUDIT_FIELDS),
+            )
+            if changes:
+                record_finance_audit(
+                    actor=request.user,
+                    action=FinanceAuditLog.Action.UPDATED,
+                    instance=account,
+                    changes=changes,
+                )
             messages.success(
                 request,
                 _("Account %(account)s updated successfully.")
@@ -193,7 +233,17 @@ def journal_detail_view(request, pk):
         JournalEntry.objects.select_related("created_by", "approved_by").prefetch_related("lines__account"),
         pk=pk,
     )
-    return render(request, "finance/journal_detail.html", {"entry": entry})
+    posting_errors = []
+    if entry.status == JournalEntry.Status.DRAFT:
+        try:
+            validate_journal_entry_for_posting(entry, lock_period=False)
+        except ValidationError as exc:
+            posting_errors = exc.messages if hasattr(exc, "messages") else [str(exc)]
+    return render(
+        request,
+        "finance/journal_detail.html",
+        {"entry": entry, "posting_errors": posting_errors},
+    )
 
 
 @login_required
@@ -217,12 +267,23 @@ def receipt_list_view(request):
 
 @login_required
 @accountant_required
+@transaction.atomic
 def receipt_create_view(request):
     form = ReceiptVoucherForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         voucher = form.save(commit=False)
         voucher.created_by = request.user
         voucher.save()
+        record_finance_audit(
+            actor=request.user,
+            action=FinanceAuditLog.Action.CREATED,
+            instance=voucher,
+            changes={
+                "status": {"before": None, "after": voucher.status},
+                "amount": {"before": None, "after": str(voucher.amount)},
+                "customer": {"before": None, "after": str(voucher.customer)},
+            },
+        )
         if request.POST.get("action") == "confirm":
             try:
                 post_receipt_voucher(voucher.id, request.user)
@@ -262,12 +323,23 @@ def payment_list_view(request):
 
 @login_required
 @accountant_required
+@transaction.atomic
 def payment_create_view(request):
     form = PaymentVoucherForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         voucher = form.save(commit=False)
         voucher.created_by = request.user
         voucher.save()
+        record_finance_audit(
+            actor=request.user,
+            action=FinanceAuditLog.Action.CREATED,
+            instance=voucher,
+            changes={
+                "status": {"before": None, "after": voucher.status},
+                "amount": {"before": None, "after": str(voucher.amount)},
+                "supplier": {"before": None, "after": str(voucher.supplier)},
+            },
+        )
         if request.POST.get("action") == "confirm":
             try:
                 post_payment_voucher(voucher.id, request.user)
@@ -376,7 +448,9 @@ def journal_create_view(request):
         prefix="lines",
     )
 
-    if request.method == "POST" and form.is_valid() and formset.is_valid():
+    form_is_valid = form.is_valid() if request.method == "POST" else False
+    formset_is_valid = formset.is_valid() if request.method == "POST" else False
+    if request.method == "POST" and form_is_valid and formset_is_valid:
         journal = form.save(commit=False)
         journal.created_by = request.user
         journal.source_type = JournalEntry.SourceType.MANUAL
@@ -385,6 +459,16 @@ def journal_create_view(request):
 
         formset.instance = journal
         formset.save()
+        record_finance_audit(
+            actor=request.user,
+            action=FinanceAuditLog.Action.CREATED,
+            instance=journal,
+            changes={
+                "status": {"before": None, "after": journal.status},
+                "date": {"before": None, "after": journal.date.isoformat()},
+                "lines": {"before": 0, "after": journal.lines.count()},
+            },
+        )
 
         messages.success(request, _("Journal entry saved as draft."))
 
@@ -399,6 +483,84 @@ def journal_create_view(request):
         {
             "form": form,
             "formset": formset,
+            "page_title": _("New journal entry"),
+        },
+    )
+
+
+def _journal_lines_snapshot(journal):
+    return [
+        {
+            "account": line.account.code,
+            "customer": str(line.customer_id or ""),
+            "supplier": str(line.supplier_id or ""),
+            "description": line.description,
+            "debit": str(line.debit),
+            "credit": str(line.credit),
+        }
+        for line in journal.lines.select_related("account").order_by("pk")
+    ]
+
+
+@login_required
+@accountant_required
+@transaction.atomic
+def journal_update_view(request, pk):
+    queryset = JournalEntry.objects.prefetch_related("lines__account")
+    if request.method == "POST":
+        queryset = queryset.select_for_update()
+    journal = get_object_or_404(queryset, pk=pk)
+
+    if (
+        journal.status != JournalEntry.Status.DRAFT
+        or journal.source_type != JournalEntry.SourceType.MANUAL
+    ):
+        messages.error(request, _("Only draft manual journal entries can be edited."))
+        return redirect("finance:journal_detail", pk=journal.pk)
+
+    before = snapshot(
+        journal,
+        ["entry_number", "date", "description", "cash_flow_activity"],
+    )
+    before_lines = _journal_lines_snapshot(journal)
+    form = JournalEntryForm(request.POST or None, instance=journal)
+    formset = JournalEntryLineFormSet(
+        request.POST or None,
+        instance=journal,
+        prefix="lines",
+    )
+
+    form_is_valid = form.is_valid() if request.method == "POST" else False
+    formset_is_valid = formset.is_valid() if request.method == "POST" else False
+    if request.method == "POST" and form_is_valid and formset_is_valid:
+        journal = form.save()
+        formset.save()
+        after = snapshot(
+            journal,
+            ["entry_number", "date", "description", "cash_flow_activity"],
+        )
+        changes = compare_snapshots(before, after)
+        after_lines = _journal_lines_snapshot(journal)
+        if before_lines != after_lines:
+            changes["lines"] = {"before": before_lines, "after": after_lines}
+        if changes:
+            record_finance_audit(
+                actor=request.user,
+                action=FinanceAuditLog.Action.UPDATED,
+                instance=journal,
+                changes=changes,
+            )
+        messages.success(request, _("Journal entry updated successfully."))
+        return redirect("finance:journal_detail", pk=journal.pk)
+
+    return render(
+        request,
+        "finance/journal_form.html",
+        {
+            "form": form,
+            "formset": formset,
+            "journal": journal,
+            "page_title": _("Edit journal entry"),
         },
     )
 
@@ -576,6 +738,7 @@ def fiscal_year_create_view(request):
             create_fiscal_year(
                 form.cleaned_data["year"],
                 notes=form.cleaned_data["notes"],
+                user=request.user,
             )
             messages.success(request, _("Fiscal year created successfully."))
             return redirect("finance:fiscal_period_list")
@@ -639,12 +802,21 @@ def fiscal_year_status_view(request, pk):
 
 @login_required
 @accountant_required
+@transaction.atomic
 @require_POST
 def fiscal_period_notes_view(request, pk):
     period = get_object_or_404(FiscalPeriod, pk=pk)
+    before = period.notes
     form = FiscalPeriodNotesForm(request.POST, instance=period)
     if form.is_valid():
-        form.save()
+        period = form.save()
+        if before != period.notes:
+            record_finance_audit(
+                actor=request.user,
+                action=FinanceAuditLog.Action.UPDATED,
+                instance=period,
+                changes={"notes": {"before": before, "after": period.notes}},
+            )
         messages.success(request, _("Fiscal-period notes updated."))
     else:
         messages.error(request, _("Fiscal-period notes could not be updated."))
@@ -653,16 +825,83 @@ def fiscal_period_notes_view(request, pk):
 
 @login_required
 @accountant_required
+@transaction.atomic
 @require_POST
 def fiscal_year_notes_view(request, pk):
     fiscal_year = get_object_or_404(FiscalYear, pk=pk)
+    before = fiscal_year.notes
     form = FiscalYearNotesForm(request.POST, instance=fiscal_year)
     if form.is_valid():
-        form.save()
+        fiscal_year = form.save()
+        if before != fiscal_year.notes:
+            record_finance_audit(
+                actor=request.user,
+                action=FinanceAuditLog.Action.UPDATED,
+                instance=fiscal_year,
+                changes={"notes": {"before": before, "after": fiscal_year.notes}},
+            )
         messages.success(request, _("Fiscal-year notes updated."))
     else:
         messages.error(request, _("Fiscal-year notes could not be updated."))
     return redirect("finance:fiscal_period_list")
+
+
+@login_required
+@accountant_required
+def audit_log_view(request):
+    logs = FinanceAuditLog.objects.select_related("actor")
+    action = request.GET.get("action", "")
+    entity_type = request.GET.get("entity_type", "")
+    query = request.GET.get("q", "").strip()
+
+    if action in FinanceAuditLog.Action.values:
+        logs = logs.filter(action=action)
+    if entity_type:
+        logs = logs.filter(entity_type=entity_type)
+    if query:
+        logs = logs.filter(
+            Q(actor_label__icontains=query)
+            | Q(object_repr__icontains=query)
+            | Q(object_id__icontains=query)
+            | Q(entity_label__icontains=query)
+        )
+
+    entity_types = list(
+        FinanceAuditLog.objects.order_by("entity_label")
+        .values_list("entity_type", "entity_label")
+        .distinct()
+    )
+    export_type = request.GET.get("export")
+    if export_type in {"xlsx", "pdf"}:
+        export = export_response(
+            request,
+            export_type,
+            "finance-audit-log",
+            audit_log_document(
+                logs,
+                query=query,
+                action_label=dict(FinanceAuditLog.Action.choices).get(action, ""),
+                entity_label=dict(entity_types).get(entity_type, ""),
+            ),
+        )
+        if export:
+            return export
+
+    page_obj = Paginator(logs, 10).get_page(request.GET.get("page"))
+    context = {
+        "page_obj": page_obj,
+        "actions": FinanceAuditLog.Action.choices,
+        "entity_types": entity_types,
+        "selected_action": action,
+        "selected_entity_type": entity_type,
+        "query": query,
+    }
+    template_name = (
+        "finance/partials/audit_log_results.html"
+        if request.headers.get("x-requested-with") == "XMLHttpRequest"
+        else "finance/audit_log.html"
+    )
+    return render(request, template_name, context)
 
 
 @login_required
