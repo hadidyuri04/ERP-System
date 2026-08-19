@@ -543,8 +543,9 @@
           }]
         })
       }); 
+      
       const data = await response.json(); 
-      if (data.ok) {
+      if (response.ok && data.ok) {
         window.location = data.detail_url; 
       } else {
         notify(data.error || '{% trans "Could not complete the sale." %}', 'error'); 

@@ -3,7 +3,6 @@ from decimal import Decimal
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db.models import Q, Sum
-from django.http import JsonResponse, request
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template import context
 from django.urls import reverse
@@ -274,10 +273,14 @@ def complete_sale_view(request):
         ).first()
 
         if not active_session:
-            return JsonResponse({"ok": False, "error": str(_("No active register session found. Please open a session first."))}, status=400)
+            return JsonResponse({"ok": False, "error": str(_("No active register session found. Please open a session first."))})
 
         payload = json.loads(request.body or "{}")
-        warehouse = Warehouse.objects.get(pk=payload["warehouse_id"], is_active=True)
+        warehouse_id = payload.get("warehouse_id")
+        if not warehouse_id:
+            return JsonResponse({"ok": False, "error": str(_("Warehouse selection is required."))})
+
+        warehouse = Warehouse.objects.get(pk=warehouse_id, is_active=True)
         customer_id = payload.get("customer_id")
         customer = Customer.objects.get(pk=customer_id, is_active=True) if customer_id else None
         
@@ -292,12 +295,20 @@ def complete_sale_view(request):
                 "tax_amount": item.get("tax_amount", "0.000"),
             })
 
+        payments_data = []
+        for p in payload.get("payments", []):
+            payments_data.append({
+                "payment_method": p["payment_method"],
+                "amount": str(p["amount"]),
+                "reference_number": p.get("reference_number", "")
+            })
+
         sale = complete_sale(
             warehouse=warehouse,
             cashier=request.user,
             session=active_session,  # Pass active session instance to service
             items_data=items_data,
-            payments_data=payload.get("payments", []),
+            payments_data=payments_data,
             customer=customer,
             notes=payload.get("notes", ""),
         )
@@ -307,9 +318,13 @@ def complete_sale_view(request):
             "sale_number": sale.sale_number,
             "detail_url": reverse("pos:sale_detail", args=[sale.id]),
         })
-    except (KeyError, ValueError, json.JSONDecodeError, ValidationError, Product.DoesNotExist, Warehouse.DoesNotExist, Customer.DoesNotExist) as exc:
+    except ValidationError as exc:
         message = "; ".join(exc.messages) if hasattr(exc, "messages") else str(exc)
-        return JsonResponse({"ok": False, "error": message}, status=400)
+        return JsonResponse({"ok": False, "error": message})
+    except (KeyError, ValueError, json.JSONDecodeError, Product.DoesNotExist, Warehouse.DoesNotExist, Customer.DoesNotExist) as exc:
+        return JsonResponse({"ok": False, "error": str(exc)})
+    except Exception as exc:
+        return JsonResponse({"ok": False, "error": str(exc)})
 
 
 @login_required
