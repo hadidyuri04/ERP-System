@@ -1,0 +1,50 @@
+{% load i18n %}
+{% trans "System" as system_label %}
+<section class="audit-summary">
+  <span><i class="bi bi-shield-check"></i>{% blocktrans count counter=page_obj.paginator.count %}{{ counter }} audit event{% plural %}{{ counter }} audit events{% endblocktrans %}</span>
+  <span>{% trans "Audit records are read-only." %}</span>
+</section>
+
+<section class="audit-timeline">
+  {% for log in page_obj %}
+    <article class="card-soft audit-event">
+      <div class="audit-event-marker is-{{ log.action }}"><i class="bi {% if log.action == 'posted' %}bi-check2-circle{% elif log.action == 'reversed' %}bi-arrow-counterclockwise{% elif log.action == 'closed' %}bi-lock{% elif log.action == 'reopened' %}bi-unlock{% elif log.action == 'created' %}bi-plus-lg{% else %}bi-pencil{% endif %}"></i></div>
+      <div class="audit-event-main">
+        <div class="audit-event-head">
+          <div>
+            <span class="audit-action-badge is-{{ log.action }}">{{ log.get_action_display }}</span>
+            <strong>{{ log.object_repr }}</strong>
+            <small>{{ log.entity_label }} &middot; #{{ log.object_id }}</small>
+          </div>
+          <time datetime="{{ log.created_at|date:'c' }}">{{ log.created_at|date:"M j, Y" }}<small>{{ log.created_at|time:"H:i:s" }}</small></time>
+        </div>
+        <div class="audit-actor"><i class="bi bi-person-circle"></i><span>{% trans "Performed by" %}</span><strong>{{ log.actor_label|default:system_label }}</strong></div>
+        {% if log.changes %}
+          <details class="audit-changes">
+            <summary>{% blocktrans count counter=log.changes|length %}View {{ counter }} change{% plural %}View {{ counter }} changes{% endblocktrans %}<i class="bi bi-chevron-down"></i></summary>
+            <div class="audit-change-grid">
+              {% for field, change in log.changes.items %}
+                <div class="audit-change-row">
+                  <span>{{ field|title }}</span>
+                  <del>{{ change.before|default_if_none:"—" }}</del>
+                  <i class="bi bi-arrow-right"></i>
+                  <ins>{{ change.after|default_if_none:"—" }}</ins>
+                </div>
+              {% endfor %}
+            </div>
+          </details>
+        {% endif %}
+      </div>
+    </article>
+  {% empty %}
+    <div class="card-soft audit-empty"><i class="bi bi-shield-check"></i><h3>{% trans "No audit events found" %}</h3><p>{% trans "Financial changes will appear here as they occur." %}</p></div>
+  {% endfor %}
+</section>
+
+{% if page_obj.paginator.num_pages > 1 %}
+  <nav class="pagination-row" aria-label="{% trans 'Audit log pages' %}">
+    {% if page_obj.has_previous %}<a class="btn btn-ghost btn-sm" href="{% querystring page=page_obj.previous_page_number %}"><i class="bi bi-chevron-left"></i>{% trans "Previous" %}</a>{% endif %}
+    <span>{% blocktrans with current=page_obj.number total=page_obj.paginator.num_pages %}Page {{ current }} of {{ total }}{% endblocktrans %}</span>
+    {% if page_obj.has_next %}<a class="btn btn-ghost btn-sm" href="{% querystring page=page_obj.next_page_number %}">{% trans "Next" %}<i class="bi bi-chevron-right"></i></a>{% endif %}
+  </nav>
+{% endif %}

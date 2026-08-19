@@ -58,10 +58,26 @@
   </div>
 
   {% if entry.status == "draft" %}
-    <form method="post" action="{% url 'finance:journal_post' entry.pk %}" class="mt-3">
-      {% csrf_token %}
-      <button class="btn btn-primary" type="submit">{% trans "Post entry" %}</button>
-    </form>
+    {% if posting_errors %}
+      <div class="journal-posting-alert" role="alert">
+        <div class="journal-posting-alert-icon"><i class="bi bi-exclamation-triangle"></i></div>
+        <div>
+          <strong>{% trans "This journal is not ready to post" %}</strong>
+          <ul>{% for error in posting_errors %}<li>{{ error }}</li>{% endfor %}</ul>
+        </div>
+      </div>
+    {% endif %}
+    <div class="journal-detail-actions">
+      {% if entry.source_type == "manual" %}
+        <a class="btn btn-soft" href="{% url 'finance:journal_update' entry.pk %}"><i class="bi bi-pencil"></i>{% trans "Edit draft" %}</a>
+      {% endif %}
+      {% if not posting_errors %}
+        <form method="post" action="{% url 'finance:journal_post' entry.pk %}">
+          {% csrf_token %}
+          <button class="btn btn-primary" type="submit"><i class="bi bi-check2-circle"></i>{% trans "Post entry" %}</button>
+        </form>
+      {% endif %}
+    </div>
   {% elif entry.status == "posted" and entry.source_type != "reversal" %}
     <form method="post" action="{% url 'finance:journal_reverse' entry.pk %}" class="mt-3">
       {% csrf_token %}

@@ -199,6 +199,41 @@ class FiscalPeriodAction(models.Model):
         return f"{target} - {self.get_action_display()}"
 
 
+class FinanceAuditLog(models.Model):
+    class Action(models.TextChoices):
+        CREATED = "created", _("Created")
+        UPDATED = "updated", _("Updated")
+        POSTED = "posted", _("Posted")
+        REVERSED = "reversed", _("Reversed")
+        CLOSED = "closed", _("Closed")
+        REOPENED = "reopened", _("Reopened")
+
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("User"),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="finance_audit_logs",
+    )
+    actor_label = models.CharField(_("User snapshot"), max_length=150, blank=True)
+    action = models.CharField(_("Action"), max_length=20, choices=Action.choices)
+    entity_type = models.CharField(_("Record type"), max_length=80, db_index=True)
+    entity_label = models.CharField(_("Record type label"), max_length=120)
+    object_id = models.CharField(_("Record ID"), max_length=64, db_index=True)
+    object_repr = models.CharField(_("Record"), max_length=255)
+    changes = models.JSONField(_("Changes"), default=dict, blank=True)
+    created_at = models.DateTimeField(_("Date and time"), auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ("-created_at", "-id")
+        verbose_name = _("Finance Audit Log")
+        verbose_name_plural = _("Finance Audit Logs")
+
+    def __str__(self):
+        return f"{self.get_action_display()} - {self.object_repr}"
+
+
 class Account(models.Model):
     class AccountType(models.TextChoices):
         ASSET = "asset", _("Asset")

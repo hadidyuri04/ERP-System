@@ -1,16 +1,16 @@
 {% extends "core/base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "New journal entry" %}{% endblock %}
+{% block title %}{{ page_title }}{% endblock %}
 
 {% block page_header %}
 <span class="eyebrow">{% trans "Finance" %}</span>
-<h1>{% trans "New journal entry" %}</h1>
+<h1>{{ page_title }}</h1>
 <p>{% trans "Enter at least two lines with equal debit and credit totals." %}</p>
 {% endblock %}
 
 {% block content %}
-<form method="post" id="journal-form">
+<form method="post" id="journal-form" data-lines-error="{% trans 'Add at least two debit or credit lines before saving.' %}" data-balance-error="{% trans 'Debit and credit totals must match before saving.' %}">
   {% csrf_token %}
   <div class="card-soft card-pad mb-3">
     <div class="form-section-title">{% trans "Journal details" %}</div>
@@ -61,8 +61,12 @@
   </template>
 
   <div class="journal-form-actions">
-    <a href="{% url 'finance:journal_list' %}" class="btn btn-ghost">{% trans "Cancel" %}</a>
-    <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>{% trans "Save draft" %}</button>
+    {% if journal %}
+      <a href="{% url 'finance:journal_detail' journal.pk %}" class="btn btn-ghost">{% trans "Cancel" %}</a>
+    {% else %}
+      <a href="{% url 'finance:journal_list' %}" class="btn btn-ghost">{% trans "Cancel" %}</a>
+    {% endif %}
+    <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>{% if journal %}{% trans "Save changes" %}{% else %}{% trans "Save draft" %}{% endif %}</button>
   </div>
 </form>
 {% endblock %}
@@ -97,6 +101,18 @@
   document.getElementById('add-journal-line').addEventListener('click', () => {
     const index = Number(totalForms.value); const fragment = template.content.cloneNode(true); const row = fragment.querySelector('tr');
     row.innerHTML = row.innerHTML.replaceAll('__prefix__', index); totalForms.value = index + 1; body.appendChild(row); bindRow(row); row.querySelector('select, input')?.focus(); recalculate();
+  });
+  document.getElementById('journal-form').addEventListener('submit', event => {
+    const rows = visibleRows().filter(row => amount(row, 'debit') > 0 || amount(row, 'credit') > 0);
+    const debit = rows.reduce((total, row) => total + amount(row, 'debit'), 0);
+    const credit = rows.reduce((total, row) => total + amount(row, 'credit'), 0);
+    let message = '';
+    if (rows.length < 2) message = event.currentTarget.dataset.linesError;
+    else if (debit <= 0 || Math.abs(debit - credit) >= 0.0005) message = event.currentTarget.dataset.balanceError;
+    if (!message) return;
+    event.preventDefault();
+    window.ERP?.toast.error(window.ERP.t('save_failed', 'Could not save'), message);
+    document.getElementById('journal-lines-table').scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
   recalculate();
 })();

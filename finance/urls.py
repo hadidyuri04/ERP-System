@@ -12,10 +12,12 @@ urlpatterns = [
         views.account_update_view,
         name="account_update",
     ),
+    path("audit-log/", views.audit_log_view, name="audit_log"),
 
     path("journals/", views.journal_list_view, name="journal_list"),
     path("journals/create/", views.journal_create_view, name="journal_create"),
     path("journals/<int:pk>/", views.journal_detail_view, name="journal_detail"),
+    path("journals/<int:pk>/edit/", views.journal_update_view, name="journal_update"),
     path("journals/<int:pk>/post/", views.post_journal_view, name="journal_post"),
 
     path("receipts/", views.receipt_list_view, name="receipt_list"),

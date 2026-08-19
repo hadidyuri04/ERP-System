@@ -1,0 +1,54 @@
+{% extends "core/base.html" %}
+{% load i18n static %}
+
+{% block title %}{% trans "Finance audit log" %}{% endblock %}
+
+{% block page_header %}
+  <span class="eyebrow">{% trans "Finance controls" %}</span>
+  <h1>{% trans "Finance audit log" %}</h1>
+  <p>{% trans "A permanent record of financial changes, posting, reversal and period controls." %}</p>
+{% endblock %}
+
+{% block content %}
+  <div class="audit-page">
+    <section class="card-soft audit-filter-card">
+      <form method="get" action="{% url 'finance:audit_log' %}" class="audit-filter-form" id="audit-filter-form">
+        <div class="audit-search-field">
+          <label for="audit-search">{% trans "Search" %}</label>
+          <div class="audit-search-control"><i class="bi bi-search" aria-hidden="true"></i><input class="form-control" id="audit-search" type="search" name="q" value="{{ query }}" placeholder="{% trans 'User, record or ID' %}" autocomplete="off"></div>
+        </div>
+        <div>
+          <label for="audit-action">{% trans "Action" %}</label>
+          <select class="form-select" id="audit-action" name="action">
+            <option value="">{% trans "All actions" %}</option>
+            {% for value, label in actions %}<option value="{{ value }}" {% if selected_action == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select>
+        </div>
+        <div>
+          <label for="audit-entity">{% trans "Record type" %}</label>
+          <select class="form-select" id="audit-entity" name="entity_type">
+            <option value="">{% trans "All record types" %}</option>
+            {% for value, label in entity_types %}<option value="{{ value }}" {% if selected_entity_type == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="audit-filter-actions">
+          <button class="btn btn-primary" type="submit"><i class="bi bi-funnel"></i>{% trans "Filter" %}</button>
+          <a class="btn btn-ghost" href="{% url 'finance:audit_log' %}">{% trans "Reset" %}</a>
+          <button class="btn btn-soft audit-refresh" type="button" data-audit-refresh><i class="bi bi-arrow-clockwise"></i>{% trans "Refresh" %}</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card-soft audit-export-card">
+      {% include "reports/_export_buttons.html" %}
+    </section>
+
+    <div id="audit-results" aria-live="polite" aria-busy="false">
+      {% include "finance/partials/audit_log_results.html" %}
+    </div>
+  </div>
+{% endblock %}
+
+{% block extra_js %}
+  <script src="{% static 'js/finance-audit.js' %}?v=20260819-ajax3"></script>
+{% endblock %}

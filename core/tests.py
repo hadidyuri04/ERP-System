@@ -29,6 +29,7 @@ class ConnectedViewsSmokeTests(TestCase):
         "purchasing:create",
         "finance:account_list",
         "finance:account_create",
+        "finance:audit_log",
         "finance:journal_list",
         "finance:receipt_list",
         "finance:receipt_create",

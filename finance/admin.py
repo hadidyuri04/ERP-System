@@ -1,10 +1,12 @@
 from django.contrib import admin
 
+from .audit import compare_snapshots, record_finance_audit, snapshot
 from .models import (
     Account,
     FiscalPeriod,
     FiscalPeriodAction,
     FiscalYear,
+    FinanceAuditLog,
     JournalEntry,
     JournalEntryLine,
     ReceiptVoucher,
@@ -18,8 +20,66 @@ from .services import (
 )
 
 
+class FinanceAuditedAdminMixin:
+    """Record model and inline changes made through Django Admin."""
+
+    def save_model(self, request, obj, form, change):
+        field_names = [
+            name for name in form.fields
+            if hasattr(obj, name) and name not in {"created_at", "updated_at"}
+        ]
+        before = {}
+        if change:
+            current = type(obj).objects.get(pk=obj.pk)
+            before = snapshot(current, field_names)
+
+        super().save_model(request, obj, form, change)
+        after = snapshot(obj, field_names)
+        changes = compare_snapshots(before, after)
+        if not change:
+            changes = {
+                field: {"before": None, "after": value}
+                for field, value in after.items()
+            }
+        if changes:
+            record_finance_audit(
+                actor=request.user,
+                action=(
+                    FinanceAuditLog.Action.UPDATED
+                    if change
+                    else FinanceAuditLog.Action.CREATED
+                ),
+                instance=obj,
+                changes=changes,
+            )
+
+    def save_related(self, request, form, formsets, change):
+        related_changes = []
+        for formset in formsets:
+            for related_form in formset.forms:
+                if related_form.has_changed():
+                    related_changes.append({
+                        "record": str(related_form.instance),
+                        "fields": list(related_form.changed_data),
+                    })
+
+        super().save_related(request, form, formsets, change)
+        if change and related_changes:
+            record_finance_audit(
+                actor=request.user,
+                action=FinanceAuditLog.Action.UPDATED,
+                instance=form.instance,
+                changes={
+                    "related_records": {
+                        "before": None,
+                        "after": related_changes,
+                    }
+                },
+            )
+
+
 @admin.register(TaxRate)
-class TaxRateAdmin(admin.ModelAdmin):
+class TaxRateAdmin(FinanceAuditedAdminMixin, admin.ModelAdmin):
     list_display = ("code", "name", "rate", "subject_to_tax", "is_active")
     list_filter = ("subject_to_tax", "is_active")
     search_fields = ("code", "name")
@@ -27,7 +87,7 @@ class TaxRateAdmin(admin.ModelAdmin):
 
 
 @admin.register(FiscalYear)
-class FiscalYearAdmin(admin.ModelAdmin):
+class FiscalYearAdmin(FinanceAuditedAdminMixin, admin.ModelAdmin):
     list_display = ("year", "status", "closed_by", "closed_at")
     list_filter = ("status",)
     readonly_fields = (
@@ -43,7 +103,7 @@ class FiscalYearAdmin(admin.ModelAdmin):
 
 
 @admin.register(FiscalPeriod)
-class FiscalPeriodAdmin(admin.ModelAdmin):
+class FiscalPeriodAdmin(FinanceAuditedAdminMixin, admin.ModelAdmin):
     list_display = (
         "fiscal_year",
         "month",
@@ -92,6 +152,39 @@ class FiscalPeriodActionAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(FinanceAuditLog)
+class FinanceAuditLogAdmin(admin.ModelAdmin):
+    list_display = (
+        "created_at",
+        "actor_label",
+        "action",
+        "entity_label",
+        "object_repr",
+    )
+    list_filter = ("action", "entity_type", "created_at")
+    search_fields = ("actor_label", "entity_label", "object_id", "object_repr")
+    readonly_fields = (
+        "actor",
+        "actor_label",
+        "action",
+        "entity_type",
+        "entity_label",
+        "object_id",
+        "object_repr",
+        "changes",
+        "created_at",
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return request.method in ("GET", "HEAD", "OPTIONS")
 
     def has_delete_permission(self, request, obj=None):
         return False
@@ -150,7 +243,7 @@ def post_selected_payments(modeladmin, request, queryset):
 # =========================
 
 @admin.register(Account)
-class AccountAdmin(admin.ModelAdmin):
+class AccountAdmin(FinanceAuditedAdminMixin, admin.ModelAdmin):
     list_display = (
         "code",
         "name",
@@ -225,7 +318,7 @@ class JournalEntryLineInline(admin.TabularInline):
 # =========================
 
 @admin.register(JournalEntry)
-class JournalEntryAdmin(admin.ModelAdmin):
+class JournalEntryAdmin(FinanceAuditedAdminMixin, admin.ModelAdmin):
     list_display = (
         "entry_number",
         "date",
@@ -301,7 +394,7 @@ class JournalEntryAdmin(admin.ModelAdmin):
 # =========================
 
 @admin.register(ReceiptVoucher)
-class ReceiptVoucherAdmin(admin.ModelAdmin):
+class ReceiptVoucherAdmin(FinanceAuditedAdminMixin, admin.ModelAdmin):
     list_display = (
         "voucher_number",
         "date",
@@ -366,7 +459,7 @@ class ReceiptVoucherAdmin(admin.ModelAdmin):
 # =========================
 
 @admin.register(PaymentVoucher)
-class PaymentVoucherAdmin(admin.ModelAdmin):
+class PaymentVoucherAdmin(FinanceAuditedAdminMixin, admin.ModelAdmin):
     list_display = (
         "voucher_number",
         "date",
