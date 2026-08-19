@@ -3,8 +3,9 @@ from decimal import Decimal
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db.models import Q, Sum
-from django.http import JsonResponse
+from django.http import JsonResponse, request
 from django.shortcuts import get_object_or_404, render, redirect
+from django.template import context
 from django.urls import reverse
 from django.views.decorators.http import require_POST, require_GET
 from django.utils.translation import gettext as _
@@ -320,9 +321,20 @@ def session_list(request):
     paginator = Paginator(sessions_query, 15)
     page_number = request.GET.get('page')
     sessions_page = paginator.get_page(page_number)
-    
-    return render(request, "pos/session_list.html", {"sessions": sessions_page})
 
+    # Fetch active session if any
+    active_session = POSSession.objects.filter(cashier=request.user, status='OPEN').first()
+    
+    # FETCH ALL WAREHOUSES FOR THE DROPDOWN
+    warehouses = Warehouse.objects.all() # Or filter by active/company if needed
+    
+    context = {
+        'sessions': sessions_page,
+        'active_session': active_session,
+        'warehouses': warehouses,  # <-- Pass warehouses into the context here!
+    }
+    
+    return render(request, "pos/session_list.html", context)
 
 @login_required
 @cashier_required
