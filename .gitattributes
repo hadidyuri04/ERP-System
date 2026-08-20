@@ -1,7 +1,17 @@
+# Normalise line endings so Windows and Linux checkouts do not show every
+# file as modified.
 * text=auto
-*.py text eol=lf
-*.html text eol=lf
-*.css text eol=lf
-*.js text eol=lf
-*.json text eol=lf
-*.md text eol=lf
+
+# Compiled translations. Git cannot merge these, so mark them binary to get a
+# clean conflict instead of a corrupted text merge.
+#
+# When they conflict, do not try to resolve the .mo by hand. Resolve the .po
+# (which merges normally), then rebuild the .mo from it:
+#
+#   python -c "import polib; po=polib.pofile('locale/ar/LC_MESSAGES/django.po'); po.save_as_mofile('locale/ar/LC_MESSAGES/django.mo')"
+#   git add locale/ar/LC_MESSAGES/django.po locale/ar/LC_MESSAGES/django.mo
+#
+*.mo binary
+
+# Keep translation sources as text so they merge line by line.
+*.po text
