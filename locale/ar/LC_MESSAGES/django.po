@@ -2267,6 +2267,50 @@ msgstr "السجلات"
 msgid "Before and after changes"
 msgstr "التغييرات قبل وبعد"
 
+msgid "Only confirmed stock adjustments can be posted to accounting."
+msgstr "لا يمكن ترحيل سوى تسويات المخزون المؤكدة إلى الحسابات."
+
+#, python-format
+msgid "Stock count adjustment %(number)s"
+msgstr "قيد تسوية جرد المخزون %(number)s"
+
+#, python-format
+msgid "Inventory shortage for stock count %(number)s"
+msgstr "عجز المخزون في الجرد %(number)s"
+
+#, python-format
+msgid "Inventory decrease for stock count %(number)s"
+msgstr "انخفاض المخزون الناتج عن الجرد %(number)s"
+
+#, python-format
+msgid "Inventory increase for stock count %(number)s"
+msgstr "زيادة المخزون الناتجة عن الجرد %(number)s"
+
+#, python-format
+msgid "Inventory gain for stock count %(number)s"
+msgstr "فائض المخزون في الجرد %(number)s"
+
+msgid "The selected batch does not contain the full shortage quantity."
+msgstr "دفعة المخزون المحددة لا تحتوي على كامل كمية العجز."
+
+msgid "Stock batches do not contain the full shortage quantity."
+msgstr "دفعات المخزون لا تحتوي على كامل كمية العجز."
+
+msgid "Adjustment confirmed. Stock and accounting are updated."
+msgstr "تم تأكيد التسوية وتحديث المخزون والحسابات."
+
+msgid "Confirming changes stock and posts the financial gain or loss. This cannot be undone. Continue?"
+msgstr "يؤدي التأكيد إلى تغيير المخزون وترحيل الربح أو الخسارة المالية، ولا يمكن التراجع عنه. هل تريد المتابعة؟"
+
+msgid "The system re-reads current quantities, values the variance, updates stock, and posts the inventory gain or loss automatically."
+msgstr "يعيد النظام قراءة الكميات الحالية ويقيّم الفرق ويحدّث المخزون ويرحّل ربح أو خسارة المخزون تلقائياً."
+
+msgid "View finance journal"
+msgstr "عرض القيد المالي"
+
+msgid "No journal was required because the count had no financial variance."
+msgstr "لم يلزم إنشاء قيد لأن الجرد لم ينتج عنه فرق مالي."
+
 msgid "Review unfinished work, balances and the audit history before closing a period."
 msgstr "راجع الأعمال غير المكتملة والأرصدة وسجل التدقيق قبل إغلاق الفترة."
 

@@ -166,5 +166,33 @@
       "created_at": "2026-08-18T00:00:00Z",
       "updated_at": "2026-08-18T00:00:00Z"
     }
+  },
+  {
+    "model": "finance.account",
+    "pk": 13,
+    "fields": {
+      "code": "4300",
+      "name": "Inventory Adjustment Gain",
+      "account_type": "revenue",
+      "parent": null,
+      "allow_posting": true,
+      "is_active": true,
+      "created_at": "2026-08-18T00:00:00Z",
+      "updated_at": "2026-08-18T00:00:00Z"
+    }
+  },
+  {
+    "model": "finance.account",
+    "pk": 14,
+    "fields": {
+      "code": "6310",
+      "name": "Inventory Adjustment Loss",
+      "account_type": "expense",
+      "parent": null,
+      "allow_posting": true,
+      "is_active": true,
+      "created_at": "2026-08-18T00:00:00Z",
+      "updated_at": "2026-08-18T00:00:00Z"
+    }
   }
 ]
