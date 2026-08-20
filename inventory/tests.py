@@ -28,6 +28,38 @@ from .services import (
 User = get_user_model()
 
 
+def seed_posting_setup(user, today):
+    """
+    Minimum finance setup for any service that posts to accounting.
+
+    Confirming a waste document or a stock adjustment ends in a journal entry,
+    and those services are atomic: without these the posting fails and the
+    stock changes roll back with it.
+    """
+    from finance.models import Account, FiscalYear
+    from finance.services import create_fiscal_year
+
+    accounts = [
+        ("1400", "Inventory", Account.AccountType.ASSET),
+        ("6300", "Waste and Loss", Account.AccountType.EXPENSE),
+        ("6310", "Inventory Adjustment Loss", Account.AccountType.EXPENSE),
+        ("4300", "Inventory Adjustment Gain", Account.AccountType.REVENUE),
+    ]
+    for code, name, account_type in accounts:
+        Account.objects.get_or_create(
+            code=code,
+            defaults={
+                "name": name,
+                "account_type": account_type,
+                "allow_posting": True,
+            },
+        )
+
+    # Posting is refused unless the date falls inside an open fiscal period.
+    if not FiscalYear.objects.filter(year=today.year).exists():
+        create_fiscal_year(today.year, user=user)
+
+
 class InventoryTestBase(TestCase):
     def setUp(self):
         self.user = User.objects.create_superuser(
@@ -143,6 +175,11 @@ class WarehouseTransferTests(InventoryTestBase):
 
 
 class StockAdjustmentTests(InventoryTestBase):
+    def setUp(self):
+        super().setUp()
+        # Confirming an adjustment now posts the inventory gain or loss.
+        seed_posting_setup(self.user, self.today)
+
     def _adjustment(self, counted):
         adjustment = StockAdjustment.objects.create(
             adjustment_number=f"ADJ-{counted}",
@@ -199,21 +236,7 @@ class WasteLossTests(InventoryTestBase):
 
     def setUp(self):
         super().setUp()
-        # confirm_waste_loss is atomic and ends by posting to accounting, so
-        # without these the whole thing rolls back, stock included.
-        from finance.models import Account
-        from finance.services import create_fiscal_year
-
-        Account.objects.create(
-            code="1400", name="Inventory",
-            account_type=Account.AccountType.ASSET, allow_posting=True,
-        )
-        Account.objects.create(
-            code="6300", name="Waste and Loss",
-            account_type=Account.AccountType.EXPENSE, allow_posting=True,
-        )
-        # Posting is blocked unless the date falls in an open fiscal period.
-        create_fiscal_year(self.today.year, user=self.user)
+        seed_posting_setup(self.user, self.today)
 
     def test_confirm_reduces_stock_and_writes_a_waste_movement(self):
         self.give_stock(self.source, "50.000")

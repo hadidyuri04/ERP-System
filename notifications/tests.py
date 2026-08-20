@@ -15,6 +15,7 @@ from inventory.models import (
     Warehouse,
 )
 from inventory.services import confirm_stock_adjustment
+from inventory.tests import seed_posting_setup
 
 from .models import Notification
 from .services import generate_notifications
@@ -47,6 +48,8 @@ class NotificationGenerationTests(TestCase):
         StockBalance.objects.create(
             product=self.product, warehouse=self.warehouse, quantity=Decimal("5.000")
         )
+        # One test restocks via a stock adjustment, which posts to accounting.
+        seed_posting_setup(self.user, self.today)
 
     def _batch(self, number, expires_in_days, quantity="10.000"):
         return StockBatch.objects.create(
