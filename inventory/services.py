@@ -211,7 +211,11 @@ def confirm_stock_adjustment(adjustment_id, user):
                     raise ValidationError(
                         _("The selected batch is not stored in this warehouse.")
                     )
-                allocations = [(item.batch, min(item.batch.quantity_remaining, shortfall))]
+                if item.batch.quantity_remaining < shortfall:
+                    raise ValidationError(
+                        _("The selected batch does not contain the full shortage quantity.")
+                    )
+                allocations = [(item.batch, shortfall)]
             else:
                 candidates = (
                     StockBatch.objects
@@ -232,6 +236,10 @@ def confirm_stock_adjustment(adjustment_id, user):
                     outstanding -= take
                     if outstanding <= 0:
                         break
+                if outstanding > 0:
+                    raise ValidationError(
+                        _("Stock batches do not contain the full shortage quantity.")
+                    )
 
             for batch, qty in allocations:
                 if qty <= 0:
@@ -307,6 +315,11 @@ def confirm_stock_adjustment(adjustment_id, user):
 
     adjustment.status = StockAdjustment.Status.CONFIRMED
     adjustment.save(update_fields=["status"])
+
+    # Stock and accounting must succeed or roll back together.
+    from finance.services import post_stock_adjustment
+
+    post_stock_adjustment(adjustment.id, user)
 
     return adjustment
 

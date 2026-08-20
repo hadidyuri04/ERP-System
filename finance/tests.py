@@ -19,13 +19,15 @@ from inventory.models import (
     Product,
     StockBalance,
     StockBatch,
+    StockAdjustment,
+    StockAdjustmentItem,
     StockMovement,
     Unit,
     Warehouse,
     WasteLoss,
     WasteLossItem,
 )
-from inventory.services import confirm_waste_loss
+from inventory.services import confirm_stock_adjustment, confirm_waste_loss
 from pos.models import POSPayment, POSSale, POSSaleItem
 from pos.services import complete_sale
 from purchasing.models import PurchaseInvoice, PurchaseInvoiceItem
@@ -118,12 +120,17 @@ class AccountHierarchyViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         rows = response.context["account_rows"]
+        hierarchy_rows = [
+            row
+            for row in rows
+            if row["account"].code in {"1000", "1100", "1110", "4000"}
+        ]
         self.assertEqual(
-            [(row["account"].code, row["depth"]) for row in rows],
+            [(row["account"].code, row["depth"]) for row in hierarchy_rows],
             [("1000", 0), ("1100", 1), ("1110", 2), ("4000", 0)],
         )
-        self.assertTrue(rows[0]["has_children"])
-        self.assertFalse(rows[2]["has_children"])
+        self.assertTrue(hierarchy_rows[0]["has_children"])
+        self.assertFalse(hierarchy_rows[2]["has_children"])
         self.assertContains(response, reverse("finance:account_create"))
         self.assertContains(
             response,
@@ -806,6 +813,20 @@ class FinancePostingTests(TestCase):
             )
             for code, (name, account_type) in account_data.items()
         }
+        self.accounts["4300"], _created = Account.objects.get_or_create(
+            code="4300",
+            defaults={
+                "name": "Inventory adjustment gain",
+                "account_type": Account.AccountType.REVENUE,
+            },
+        )
+        self.accounts["6310"], _created = Account.objects.get_or_create(
+            code="6310",
+            defaults={
+                "name": "Inventory adjustment loss",
+                "account_type": Account.AccountType.EXPENSE,
+            },
+        )
 
     def close_period_for(self, posting_date):
         period = FiscalPeriod.objects.get(
@@ -1147,6 +1168,211 @@ class FinancePostingTests(TestCase):
         self.assertEqual(
             journal.lines.get(account=self.accounts["1400"]).credit,
             Decimal("24.000"),
+        )
+
+    def test_stock_count_shortage_and_surplus_post_valued_journal(self):
+        category = Category.objects.create(
+            code="ACAT", name_en="Adjustment Category", name_ar="Adjustment Category"
+        )
+        unit = Unit.objects.create(
+            name_en="Adjustment Unit", name_ar="Adjustment Unit", symbol="au"
+        )
+        warehouse = Warehouse.objects.create(code="AWH", name="Adjustment Warehouse")
+        shortage_product = Product.objects.create(
+            code="ADJ-SHORT",
+            name_en="Shortage product",
+            name_ar="Shortage product",
+            category=category,
+            unit=unit,
+            purchase_price=Decimal("8.000"),
+            selling_price=Decimal("12.000"),
+        )
+        surplus_product = Product.objects.create(
+            code="ADJ-SURPLUS",
+            name_en="Surplus product",
+            name_ar="Surplus product",
+            category=category,
+            unit=unit,
+            purchase_price=Decimal("5.000"),
+            selling_price=Decimal("9.000"),
+        )
+        shortage_batch = StockBatch.objects.create(
+            product=shortage_product,
+            warehouse=warehouse,
+            batch_number="ADJ-SHORT-BATCH",
+            received_date=date.today(),
+            unit_cost=Decimal("8.000"),
+            quantity_received=Decimal("10.000"),
+            quantity_remaining=Decimal("10.000"),
+        )
+        StockBalance.objects.create(
+            product=shortage_product,
+            warehouse=warehouse,
+            quantity=Decimal("10.000"),
+        )
+        StockBalance.objects.create(
+            product=surplus_product,
+            warehouse=warehouse,
+            quantity=Decimal("2.000"),
+        )
+        adjustment = StockAdjustment.objects.create(
+            adjustment_number="COUNT-001",
+            warehouse=warehouse,
+            date=date.today(),
+            created_by=self.user,
+        )
+        StockAdjustmentItem.objects.create(
+            adjustment=adjustment,
+            product=shortage_product,
+            batch=shortage_batch,
+            system_quantity=Decimal("10.000"),
+            counted_quantity=Decimal("7.000"),
+        )
+        StockAdjustmentItem.objects.create(
+            adjustment=adjustment,
+            product=surplus_product,
+            system_quantity=Decimal("2.000"),
+            counted_quantity=Decimal("6.000"),
+        )
+
+        confirmed = confirm_stock_adjustment(adjustment.pk, self.user)
+
+        journal = JournalEntry.objects.get(
+            source_type=JournalEntry.SourceType.STOCK_ADJUSTMENT,
+            source_id=adjustment.pk,
+        )
+        self.assertEqual(confirmed.status, StockAdjustment.Status.CONFIRMED)
+        self.assertEqual(journal.status, JournalEntry.Status.POSTED)
+        self.assertEqual(
+            journal.lines.get(account=self.accounts["6310"]).debit,
+            Decimal("24.000"),
+        )
+        self.assertEqual(
+            journal.lines.get(account=self.accounts["4300"]).credit,
+            Decimal("20.000"),
+        )
+        inventory_lines = journal.lines.filter(account=self.accounts["1400"])
+        self.assertEqual(sum(line.debit for line in inventory_lines), Decimal("20.000"))
+        self.assertEqual(sum(line.credit for line in inventory_lines), Decimal("24.000"))
+        self.assertTrue(
+            FinanceAuditLog.objects.filter(
+                entity_type="inventory.stockadjustment",
+                object_id=str(adjustment.pk),
+                action=FinanceAuditLog.Action.POSTED,
+            ).exists()
+        )
+
+    def test_closed_period_rolls_back_stock_count_and_finance(self):
+        self.close_period_for(date.today())
+        category = Category.objects.create(
+            code="CLOSED-ACAT", name_en="Closed adjustment", name_ar="Closed adjustment"
+        )
+        unit = Unit.objects.create(
+            name_en="Closed adjustment unit", name_ar="Closed adjustment unit", symbol="cau"
+        )
+        warehouse = Warehouse.objects.create(code="CLOSED-AWH", name="Closed adjustment")
+        product = Product.objects.create(
+            code="CLOSED-ADJ",
+            name_en="Closed adjustment product",
+            name_ar="Closed adjustment product",
+            category=category,
+            unit=unit,
+            purchase_price=Decimal("7.000"),
+            selling_price=Decimal("10.000"),
+        )
+        batch = StockBatch.objects.create(
+            product=product,
+            warehouse=warehouse,
+            batch_number="CLOSED-ADJ-BATCH",
+            received_date=date.today(),
+            unit_cost=Decimal("7.000"),
+            quantity_received=Decimal("5.000"),
+            quantity_remaining=Decimal("5.000"),
+        )
+        balance = StockBalance.objects.create(
+            product=product,
+            warehouse=warehouse,
+            quantity=Decimal("5.000"),
+        )
+        adjustment = StockAdjustment.objects.create(
+            adjustment_number="CLOSED-COUNT",
+            warehouse=warehouse,
+            date=date.today(),
+            created_by=self.user,
+        )
+        StockAdjustmentItem.objects.create(
+            adjustment=adjustment,
+            product=product,
+            batch=batch,
+            system_quantity=Decimal("5.000"),
+            counted_quantity=Decimal("3.000"),
+        )
+
+        with self.assertRaisesMessage(ValidationError, "period"):
+            confirm_stock_adjustment(adjustment.pk, self.user)
+
+        adjustment.refresh_from_db()
+        batch.refresh_from_db()
+        balance.refresh_from_db()
+        self.assertEqual(adjustment.status, StockAdjustment.Status.DRAFT)
+        self.assertEqual(batch.quantity_remaining, Decimal("5.000"))
+        self.assertEqual(balance.quantity, Decimal("5.000"))
+        self.assertFalse(
+            StockMovement.objects.filter(
+                reference_type="StockAdjustment",
+                reference_id=adjustment.pk,
+            ).exists()
+        )
+        self.assertFalse(
+            JournalEntry.objects.filter(
+                source_type=JournalEntry.SourceType.STOCK_ADJUSTMENT,
+                source_id=adjustment.pk,
+            ).exists()
+        )
+
+    def test_stock_count_without_variance_needs_no_journal(self):
+        category = Category.objects.create(
+            code="ZERO-ACAT", name_en="Zero adjustment", name_ar="Zero adjustment"
+        )
+        unit = Unit.objects.create(
+            name_en="Zero adjustment unit", name_ar="Zero adjustment unit", symbol="zau"
+        )
+        warehouse = Warehouse.objects.create(code="ZERO-AWH", name="Zero adjustment")
+        product = Product.objects.create(
+            code="ZERO-ADJ",
+            name_en="Zero adjustment product",
+            name_ar="Zero adjustment product",
+            category=category,
+            unit=unit,
+            purchase_price=Decimal("4.000"),
+            selling_price=Decimal("6.000"),
+        )
+        StockBalance.objects.create(
+            product=product,
+            warehouse=warehouse,
+            quantity=Decimal("5.000"),
+        )
+        adjustment = StockAdjustment.objects.create(
+            adjustment_number="ZERO-COUNT",
+            warehouse=warehouse,
+            date=date.today(),
+            created_by=self.user,
+        )
+        StockAdjustmentItem.objects.create(
+            adjustment=adjustment,
+            product=product,
+            system_quantity=Decimal("5.000"),
+            counted_quantity=Decimal("5.000"),
+        )
+
+        confirmed = confirm_stock_adjustment(adjustment.pk, self.user)
+
+        self.assertEqual(confirmed.status, StockAdjustment.Status.CONFIRMED)
+        self.assertFalse(
+            JournalEntry.objects.filter(
+                source_type=JournalEntry.SourceType.STOCK_ADJUSTMENT,
+                source_id=adjustment.pk,
+            ).exists()
         )
 
     def test_waste_confirmation_rolls_back_when_finance_posting_fails(self):

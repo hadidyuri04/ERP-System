@@ -292,6 +292,7 @@ class JournalEntry(models.Model):
         RECEIPT = "receipt", _("Receipt Voucher")
         PAYMENT = "payment", _("Payment Voucher")
         WASTE = "waste", _("Waste & Loss")
+        STOCK_ADJUSTMENT = "stock_adjustment", _("Stock Adjustment")
         SALES_RETURN = "sales_return", _("Sales Return")
         REVERSAL = "reversal", _("Journal Reversal")
 

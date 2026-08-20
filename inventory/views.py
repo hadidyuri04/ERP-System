@@ -12,6 +12,7 @@ from django.views.decorators.http import require_POST
 from django.utils.translation import get_language
 
 from core.permissions import accountant_required
+from finance.models import JournalEntry
 
 from .forms import (
     CategoryForm,
@@ -331,8 +332,13 @@ def adjustment_detail_view(request, pk):
         .prefetch_related("items__product", "items__batch"),
         pk=pk,
     )
+    journal = JournalEntry.objects.filter(
+        source_type=JournalEntry.SourceType.STOCK_ADJUSTMENT,
+        source_id=adjustment.pk,
+    ).first()
     return render(request, "inventory/adjustment_detail.html", {
         "adjustment": adjustment,
+        "journal": journal,
     })
 
 
@@ -342,7 +348,10 @@ def adjustment_detail_view(request, pk):
 def adjustment_confirm_view(request, pk):
     try:
         confirm_stock_adjustment(pk, request.user)
-        messages.success(request, _("Adjustment confirmed. Stock now matches the count."))
+        messages.success(
+            request,
+            _("Adjustment confirmed. Stock and accounting are updated."),
+        )
     except ValidationError as exc:
         messages.error(request, "; ".join(exc.messages))
     return redirect("inventory:adjustment_detail", pk=pk)

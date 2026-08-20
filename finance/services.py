@@ -1009,6 +1009,116 @@ def post_waste_loss(waste_id, user):
 
 
 @transaction.atomic
+def post_stock_adjustment(adjustment_id, user):
+    """Post the inventory value gained or lost by a confirmed stock count."""
+    from inventory.models import StockAdjustment, StockMovement
+
+    adjustment = (
+        StockAdjustment.objects.select_for_update()
+        .select_related("warehouse")
+        .get(pk=adjustment_id)
+    )
+    if adjustment.status != StockAdjustment.Status.CONFIRMED:
+        raise ValidationError(
+            _("Only confirmed stock adjustments can be posted to accounting.")
+        )
+
+    ensure_not_posted(JournalEntry.SourceType.STOCK_ADJUSTMENT, adjustment.id)
+    movements = StockMovement.objects.filter(
+        reference_type="StockAdjustment",
+        reference_id=adjustment.id,
+        movement_type__in=[
+            StockMovement.MovementType.ADJUSTMENT_IN,
+            StockMovement.MovementType.ADJUSTMENT_OUT,
+        ],
+    )
+    shortage_value = sum(
+        (-movement.quantity * movement.unit_cost for movement in movements if movement.quantity < 0),
+        Decimal("0.000"),
+    )
+    surplus_value = sum(
+        (movement.quantity * movement.unit_cost for movement in movements if movement.quantity > 0),
+        Decimal("0.000"),
+    )
+
+    # A count with no variance changes no inventory value and needs no journal.
+    if shortage_value == 0 and surplus_value == 0:
+        return None
+
+    inventory_account = get_posting_account("1400", Account.AccountType.ASSET)
+    loss_account = (
+        get_posting_account("6310", Account.AccountType.EXPENSE)
+        if shortage_value > 0
+        else None
+    )
+    gain_account = (
+        get_posting_account("4300", Account.AccountType.REVENUE)
+        if surplus_value > 0
+        else None
+    )
+    journal = JournalEntry.objects.create(
+        entry_number=f"ADJ-{adjustment.adjustment_number}",
+        date=adjustment.date,
+        description=_("Stock count adjustment %(number)s") % {
+            "number": adjustment.adjustment_number,
+        },
+        source_type=JournalEntry.SourceType.STOCK_ADJUSTMENT,
+        source_id=adjustment.id,
+        status=JournalEntry.Status.DRAFT,
+        created_by=user,
+    )
+
+    if shortage_value > 0:
+        JournalEntryLine.objects.create(
+            journal_entry=journal,
+            account=loss_account,
+            description=_("Inventory shortage for stock count %(number)s") % {
+                "number": adjustment.adjustment_number,
+            },
+            debit=shortage_value,
+        )
+        JournalEntryLine.objects.create(
+            journal_entry=journal,
+            account=inventory_account,
+            description=_("Inventory decrease for stock count %(number)s") % {
+                "number": adjustment.adjustment_number,
+            },
+            credit=shortage_value,
+        )
+
+    if surplus_value > 0:
+        JournalEntryLine.objects.create(
+            journal_entry=journal,
+            account=inventory_account,
+            description=_("Inventory increase for stock count %(number)s") % {
+                "number": adjustment.adjustment_number,
+            },
+            debit=surplus_value,
+        )
+        JournalEntryLine.objects.create(
+            journal_entry=journal,
+            account=gain_account,
+            description=_("Inventory gain for stock count %(number)s") % {
+                "number": adjustment.adjustment_number,
+            },
+            credit=surplus_value,
+        )
+
+    posted_journal = post_journal_entry(journal.id, user)
+    record_finance_audit(
+        actor=user,
+        action=FinanceAuditLog.Action.POSTED,
+        instance=adjustment,
+        changes={
+            "journal_entry": {"before": None, "after": posted_journal.entry_number},
+            "shortage_value": {"before": None, "after": str(shortage_value)},
+            "surplus_value": {"before": None, "after": str(surplus_value)},
+        },
+    )
+    return posted_journal
+
+
+@transaction.atomic
 def reverse_journal_entry(entry_id, user, reason):
     original = (
         JournalEntry.objects
