@@ -434,3 +434,100 @@ class SalesInvoiceGuardTests(SalesTestBase):
 
         numbers = {generate_invoice_number() for _ in range(5)}
         self.assertEqual(len(numbers), 5)
+
+
+class SalesInvoiceEditFormTests(SalesTestBase):
+    """
+    Editing a draft through the actual view.
+
+    The line grid renumbers rows in JavaScript. When it did not, a removed row
+    left a gap in the formset indexes, Django rejected the whole submit, and a
+    deleted line reappeared while an empty row seemed to be added each time.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.client.force_login(self.user)
+        self.invoice = self.make_invoice()
+        self.second = SalesInvoiceItem.objects.create(
+            invoice=self.invoice, product=self.product, quantity=Decimal("3"),
+            unit_price=Decimal("10"), line_total=Decimal("30"),
+        )
+
+    def payload(self, total_forms=3, **overrides):
+        first = self.invoice.items.order_by("pk").first()
+        data = {
+            "customer": self.customer.pk,
+            "warehouse": self.warehouse.pk,
+            "invoice_date": str(self.today),
+            "due_date": str(self.today + timedelta(days=30)),
+            "payment_type": "credit",
+            "payment_account": "",
+            "notes": "",
+            "items-TOTAL_FORMS": str(total_forms),
+            "items-INITIAL_FORMS": "2",
+            "items-MIN_NUM_FORMS": "0",
+            "items-MAX_NUM_FORMS": "1000",
+            "items-0-id": first.pk, "items-0-product": self.product.pk,
+            "items-0-quantity": "2", "items-0-unit_price": "10",
+            "items-0-discount_amount": "0",
+            "items-1-id": self.second.pk, "items-1-product": self.product.pk,
+            "items-1-quantity": "3", "items-1-unit_price": "10",
+            "items-1-discount_amount": "0",
+            "items-2-id": "", "items-2-product": "", "items-2-quantity": "",
+            "items-2-unit_price": "", "items-2-discount_amount": "0",
+        }
+        data.update(overrides)
+        return data
+
+    def post(self, data):
+        return self.client.post(f"/sales/{self.invoice.pk}/edit/", data)
+
+    def test_saving_unchanged_does_not_add_an_empty_item(self):
+        self.post(self.payload())
+
+        self.assertEqual(self.invoice.items.count(), 2)
+        self.assertFalse(self.invoice.items.filter(product__isnull=True).exists())
+
+    def test_saving_repeatedly_does_not_accumulate_items(self):
+        for _ in range(3):
+            self.post(self.payload())
+
+        self.assertEqual(self.invoice.items.count(), 2)
+
+    def test_deleting_a_line_actually_removes_it(self):
+        response = self.post(self.payload(**{"items-1-DELETE": "on"}))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.invoice.items.count(), 1)
+        self.assertFalse(
+            self.invoice.items.filter(pk=self.second.pk).exists()
+        )
+
+    def test_a_gap_in_the_row_numbering_is_rejected_rather_than_saved_wrong(self):
+        """
+        The old JavaScript produced this. It must not silently half-save; the
+        fixed grid renumbers so it never happens, but the guard stays.
+        """
+        data = self.payload()
+        for key in list(data):
+            if key.startswith("items-2-"):
+                del data[key]
+
+        response = self.post(data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.invoice.items.count(), 2)
+
+    def test_editing_a_quantity_is_saved(self):
+        self.post(self.payload(**{"items-0-quantity": "7"}))
+        first = self.invoice.items.order_by("pk").first()
+
+        self.assertEqual(first.quantity, Decimal("7"))
+
+    def test_a_posted_invoice_cannot_be_edited(self):
+        confirm_sales_invoice(self.invoice.id, self.user)
+
+        response = self.client.get(f"/sales/{self.invoice.pk}/edit/")
+
+        self.assertEqual(response.status_code, 302)

@@ -12,4 +12,92 @@
 </form>
 <template id="emptyRow"><div class="p-3 mb-2 rounded-3 bg-lavender position-relative" data-formset-row>{{ formset.empty_form.id }}<div class="d-none">{{ formset.empty_form.DELETE }}</div><button type="button" class="btn-icon danger position-absolute" style="inset-inline-end:.75rem;top:.75rem" data-del-row><i class="bi bi-trash3"></i></button><div class="row g-3 pe-5"><div class="col-md-5"><label class="form-label">{% trans "Product" %}</label>{{ formset.empty_form.product }}</div><div class="col-md-2"><label class="form-label">{% trans "Quantity" %}</label>{{ formset.empty_form.quantity }}</div><div class="col-md-2"><label class="form-label">{% trans "Unit price" %}</label>{{ formset.empty_form.unit_price }}</div><div class="col-md-2"><label class="form-label">{% trans "Discount" %}</label>{{ formset.empty_form.discount_amount }}</div><div class="col-md-1"><label class="form-label">{% trans "Tax" %}</label><div class="pt-2 tnum" data-line-tax>0.000</div></div></div></div></template>
 {% endblock %}
-{% block extra_js %}<script>(function(){var grid=document.getElementById('salesGrid'), rows=grid.querySelector('[data-formset-rows]'), total=document.getElementById('id_items-TOTAL_FORMS'), rates={{ tax_rates_json|safe }}; function num(e){return e?(parseFloat(e.value)||0):0} function recalc(){var sub=0,disc=0,tax=0;rows.querySelectorAll('[data-formset-row]:not([hidden])').forEach(function(r){var q=num(r.querySelector('[name$="-quantity"]')),p=num(r.querySelector('[name$="-unit_price"]')),d=num(r.querySelector('[name$="-discount_amount"]')),s=r.querySelector('[name$="-product"]'),t=Math.max(0,(q*p-d)*(rates[s?s.value:'']||0)/100);sub+=q*p;disc+=d;tax+=t;r.querySelector('[data-line-tax]').textContent=t.toFixed(3)});document.querySelector('[data-out="subtotal"]').textContent=sub.toFixed(3);document.querySelector('[data-out="discount"]').textContent=disc.toFixed(3);document.querySelector('[data-out="tax"]').textContent=tax.toFixed(3);document.querySelector('[data-out="total"]').textContent=(sub-disc+tax).toFixed(3)} grid.querySelector('[data-add-row]').onclick=function(){var i=parseInt(total.value),html=document.getElementById('emptyRow').innerHTML.replaceAll('__prefix__',i);rows.insertAdjacentHTML('beforeend',html);total.value=i+1;recalc()};rows.onclick=function(e){var b=e.target.closest('[data-del-row]');if(!b)return;var r=b.closest('[data-formset-row]'),id=r.querySelector('[name$="-id"]'),del=r.querySelector('[name$="-DELETE"]');if(id&&id.value){del.checked=true;r.hidden=true}else r.remove();recalc()};document.getElementById('salesInvoiceForm').addEventListener('input',recalc);document.getElementById('salesInvoiceForm').addEventListener('change',recalc);recalc()})();</script>{% endblock %}
+{% block extra_js %}
+<script>
+  (function () {
+    var grid = document.getElementById('salesGrid');
+    if (!grid) return;
+
+    var rows  = grid.querySelector('[data-formset-rows]');
+    var total = document.getElementById('id_items-TOTAL_FORMS');
+    var rates = {{ tax_rates_json|safe }};
+
+    function num(el) { return el ? (parseFloat(el.value) || 0) : 0; }
+
+    // Django reads formset fields by index: items-0-product, items-1-product...
+    // A gap in that sequence makes the whole formset invalid, which silently
+    // rejected the entire save and brought deleted lines back.
+    function reindex() {
+      var visible = rows.querySelectorAll('[data-formset-row]');
+      visible.forEach(function (row, i) {
+        row.querySelectorAll('input, select, textarea, label').forEach(function (el) {
+          ['name', 'id', 'for'].forEach(function (attr) {
+            var v = el.getAttribute(attr);
+            if (v) el.setAttribute(attr, v.replace(/items-(\d+|__prefix__)-/, 'items-' + i + '-'));
+          });
+        });
+      });
+      total.value = visible.length;
+    }
+
+    function recalc() {
+      var sub = 0, disc = 0, tax = 0;
+
+      rows.querySelectorAll('[data-formset-row]:not([hidden])').forEach(function (r) {
+        var q = num(r.querySelector('[name$="-quantity"]'));
+        var p = num(r.querySelector('[name$="-unit_price"]'));
+        var d = num(r.querySelector('[name$="-discount_amount"]'));
+        var s = r.querySelector('[name$="-product"]');
+        var t = Math.max(0, Math.round((q * p - d) * ((rates[s ? s.value : ''] || 0)) * 10) / 1000);
+
+        sub  += q * p;
+        disc += d;
+        tax  += t;
+        r.querySelector('[data-line-tax]').textContent = t.toFixed(3);
+      });
+
+      document.querySelector('[data-out="subtotal"]').textContent = sub.toFixed(3);
+      document.querySelector('[data-out="discount"]').textContent = disc.toFixed(3);
+      document.querySelector('[data-out="tax"]').textContent = tax.toFixed(3);
+      document.querySelector('[data-out="total"]').textContent = (sub - disc + tax).toFixed(3);
+    }
+
+    grid.querySelector('[data-add-row]').addEventListener('click', function () {
+      var html = document.getElementById('emptyRow').innerHTML;
+      rows.insertAdjacentHTML('beforeend', html);
+      reindex();
+      recalc();
+    });
+
+    rows.addEventListener('click', function (e) {
+      var button = e.target.closest('[data-del-row]');
+      if (!button) return;
+
+      var row = button.closest('[data-formset-row]');
+      var id  = row.querySelector('[name$="-id"]');
+      var del = row.querySelector('[name$="-DELETE"]');
+
+      if (id && id.value) {
+        // Already saved: tick DELETE and hide it so Django removes it on save.
+        if (del) del.checked = true;
+        row.hidden = true;
+      } else if (rows.querySelectorAll('[data-formset-row]:not([hidden])').length > 1) {
+        // Never saved: drop it, then renumber so there is no gap.
+        row.remove();
+        reindex();
+      } else {
+        row.querySelectorAll('input, select').forEach(function (el) {
+          if (el.type !== 'checkbox' && !el.name.endsWith('-id')) el.value = '';
+        });
+      }
+
+      recalc();
+    });
+
+    var formEl = document.getElementById('salesInvoiceForm');
+    formEl.addEventListener('input', recalc);
+    formEl.addEventListener('change', recalc);
+    recalc();
+  })();
+</script>
+{% endblock %}
