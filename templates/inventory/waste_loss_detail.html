@@ -101,8 +101,7 @@
   </div>
 </div>
 
-{# Status values on WasteLoss are UPPERCASE. Comparing against 'draft' here
-   silently hides the button, which is exactly what used to happen. #}
+{# WasteLoss status values are UPPERCASE; comparing to 'draft' hides this button. #}
 {% if waste.status == 'DRAFT' %}
   <div class="card-soft card-pad no-print">
     <form method="post" action="{% url 'inventory:waste_confirm' waste.pk %}">

@@ -3373,3 +3373,131 @@ msgstr "غير متوازن"
 
 msgid "No suppliers found."
 msgstr "لم يتم العثور على موردين."
+
+#: templates/pos/ templates/core/
+msgid "34% more than last month"
+msgstr "٣٤٪ أكثر من الشهر الماضي"
+
+#: templates/pos/ templates/core/
+msgid "Activity Actions"
+msgstr "إجراءات النشاط"
+
+#: templates/pos/ templates/core/
+msgid "Always"
+msgstr "دائماً"
+
+#: templates/pos/ templates/core/
+msgid "Cart subtotal must be greater than zero."
+msgstr "يجب أن يكون مجموع السلة أكبر من صفر."
+
+#: templates/pos/ templates/core/
+msgid "Create Discount Code"
+msgstr "إنشاء كود خصم"
+
+#: templates/pos/ templates/core/
+msgid "Create and manage promotional discounts for POS checkout"
+msgstr "إنشاء وإدارة أكواد الخصم المستخدمة عند الدفع في نقاط البيع"
+
+#: templates/pos/ templates/core/
+msgid "Discount Code"
+msgstr "كود الخصم"
+
+#: templates/pos/ templates/core/
+msgid "Discount Code Details"
+msgstr "تفاصيل كود الخصم"
+
+#: templates/pos/ templates/core/
+msgid "Discount Codes"
+msgstr "أكواد الخصم"
+
+#: templates/pos/ templates/core/
+msgid "Discount Type"
+msgstr "نوع الخصم"
+
+#: templates/pos/ templates/core/
+msgid "Discount applied successfully!"
+msgstr "تم تطبيق الخصم بنجاح."
+
+#: templates/pos/ templates/core/
+msgid "Error validating discount code."
+msgstr "تعذّر التحقق من كود الخصم."
+
+#: templates/pos/ templates/core/
+msgid "Invalid discount code."
+msgstr "كود الخصم غير صالح."
+
+#: templates/pos/ templates/core/
+msgid "Max Discount"
+msgstr "أقصى خصم"
+
+#: templates/pos/ templates/core/
+msgid "Max Discount Amount"
+msgstr "أقصى مبلغ خصم"
+
+#: templates/pos/ templates/core/
+msgid "Max Discount Cap"
+msgstr "الحد الأعلى للخصم"
+
+#: templates/pos/ templates/core/
+msgid "Min Order"
+msgstr "أقل قيمة طلب"
+
+#: templates/pos/ templates/core/
+msgid "Minimum Order Amount"
+msgstr "أقل قيمة للطلب"
+
+#: templates/pos/ templates/core/
+msgid "No discount codes found. Click above to create one."
+msgstr "لا توجد أكواد خصم. اضغط بالأعلى لإنشاء واحد."
+
+#: templates/pos/ templates/core/
+msgid "No expiry"
+msgstr "بدون تاريخ انتهاء"
+
+#: templates/pos/ templates/core/
+msgid "Order Items:"
+msgstr "أصناف الطلب:"
+
+#: templates/pos/ templates/core/
+msgid "Page"
+msgstr "صفحة"
+
+#: templates/pos/ templates/core/
+msgid "Please enter a discount code."
+msgstr "الرجاء إدخال كود الخصم."
+
+#: templates/pos/ templates/core/
+msgid "Save Discount Code"
+msgstr "حفظ كود الخصم"
+
+#: templates/pos/ templates/core/
+msgid "Toggle"
+msgstr "تفعيل / تعطيل"
+
+#: templates/pos/ templates/core/
+msgid "Usage"
+msgstr "الاستخدام"
+
+#: templates/pos/ templates/core/
+msgid "Usage Count / Limit"
+msgstr "عدد الاستخدامات / الحد"
+
+#: templates/pos/ templates/core/
+msgid "Usage Limit"
+msgstr "حد الاستخدام"
+
+#: templates/pos/ templates/core/
+msgid "Valid From"
+msgstr "صالح من"
+
+#: templates/pos/ templates/core/
+msgid "Valid To"
+msgstr "صالح حتى"
+
+#: templates/pos/ templates/core/
+msgid "Validity Period"
+msgstr "فترة الصلاحية"
+
+#: templates/pos/ templates/core/
+msgid "Value"
+msgstr "القيمة"
