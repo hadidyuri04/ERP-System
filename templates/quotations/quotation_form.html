@@ -1,14 +1,261 @@
-{% extends "core/base.html" %}{% load i18n %}
+{% extends "core/base.html" %}
+{% load i18n %}
+
 {% block title %}{% trans "New quotation" %}{% endblock %}
-{% block page_header %}<h1>{% trans "New quotation" %}</h1><p>{% trans "Quotations do not affect stock or accounting until converted." %}</p>{% endblock %}
+
+{% block page_header %}
+  <h1>{% trans "New quotation" %}</h1>
+  <p>{% trans "Quotations do not affect stock or accounting until converted." %}</p>
+{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{% url 'quotations:list' %}" class="btn btn-ghost" data-smooth>{% trans "Cancel" %}</a>
+{% endblock %}
+
 {% block content %}
-<form method="post">{% csrf_token %}
-  <div class="card-soft card-pad mb-3"><h3>{% trans "Quotation details" %}</h3>{{ form.non_field_errors }}{{ form.as_p }}</div>
-  <div class="card-soft card-pad mb-3"><h3>{% trans "Items" %}</h3>{{ formset.non_form_errors }}{{ formset.management_form }}
-    <div class="table-wrap"><table class="table-erp"><thead><tr><th>{% trans "Product" %}</th><th>{% trans "Quantity" %}</th><th>{% trans "Unit price" %}</th><th>{% trans "Discount" %}</th><th>{% trans "Tax" %}</th><th>{% trans "Delete" %}</th></tr></thead><tbody>
-    {% for item_form in formset %}<tr>{% for hidden in item_form.hidden_fields %}{{ hidden }}{% endfor %}<td>{{ item_form.product.errors }}{{ item_form.product }}</td><td>{{ item_form.quantity.errors }}{{ item_form.quantity }}</td><td>{{ item_form.unit_price.errors }}{{ item_form.unit_price }}</td><td>{{ item_form.discount_amount.errors }}{{ item_form.discount_amount }}</td><td>{{ item_form.tax_amount.errors }}{{ item_form.tax_amount }}</td><td>{{ item_form.DELETE }}</td></tr>{% endfor %}
-    </tbody></table></div>
+{# nav_active = 'quotations' — signed requirements module 8 #}
+
+<form method="post" id="quotationForm">
+  {% csrf_token %}
+
+  {% if form.errors or formset.errors or formset.non_form_errors %}
+    <div class="card-soft card-pad mb-3" style="border-inline-start:4px solid var(--danger)">
+      <div class="fw-bold mb-2" style="color:var(--danger)">
+        <i class="bi bi-exclamation-triangle me-1"></i>{% trans "The quotation was not saved" %}
+      </div>
+      <ul class="mb-0 small">
+        {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+        {% for field in form %}
+          {% for error in field.errors %}
+            <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+          {% endfor %}
+        {% endfor %}
+        {% for error in formset.non_form_errors %}<li>{{ error }}</li>{% endfor %}
+        {% for item_form in formset %}
+          {% for field in item_form %}
+            {% for error in field.errors %}
+              <li><strong>{% trans "Items" %} · {{ field.label }}:</strong> {{ error }}</li>
+            {% endfor %}
+          {% endfor %}
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  <div class="card-soft card-pad mb-3">
+    <div class="form-section-title">{% trans "Quotation details" %}</div>
+    {% include "core/_form_fields.html" with form=form %}
+
+    <p class="field-hint mb-0">
+      <i class="bi bi-info-circle me-1"></i>
+      {% trans "Tax is calculated from each item's tax rate. The discount here applies to the whole quotation." %}
+    </p>
   </div>
-  <button class="btn btn-primary" type="submit">{% trans "Create quotation" %}</button> <a class="btn btn-ghost" href="{% url 'quotations:list' %}">{% trans "Cancel" %}</a>
+
+  <div class="card-soft mb-3" id="quotationGrid">
+    <div class="card-head">
+      <h3 class="mb-0">{% trans "Items" %}</h3>
+      <div class="spacer"></div>
+      <button type="button" class="btn btn-soft btn-sm" data-add-row>
+        <i class="bi bi-plus-lg me-1"></i>{% trans "Add line" %}
+      </button>
+    </div>
+
+    <div class="card-pad">
+      {{ formset.management_form }}
+
+      <div data-formset-rows>
+        {% for item_form in formset %}
+          <div class="p-3 mb-2 rounded-3 bg-lavender position-relative" data-formset-row>
+            {{ item_form.id }}
+            <div class="d-none">{{ item_form.DELETE }}</div>
+
+            <button type="button" class="btn-icon danger position-absolute"
+                    style="inset-inline-end:.75rem; top:.75rem"
+                    data-del-row aria-label="{% trans "Remove line" %}">
+              <i class="bi bi-trash3"></i>
+            </button>
+
+            <div class="row g-3">
+              <div class="col-12 col-md-4">
+                <label class="form-label" for="{{ item_form.product.id_for_label }}">
+                  {% trans "Product" %}<span class="req">*</span>
+                </label>
+                {{ item_form.product }}
+                {% if item_form.product.errors %}<div class="form-error">{{ item_form.product.errors|striptags }}</div>{% endif %}
+              </div>
+
+              <div class="col-6 col-md-2">
+                <label class="form-label" for="{{ item_form.quantity.id_for_label }}">
+                  {% trans "Quantity" %}<span class="req">*</span>
+                </label>
+                {{ item_form.quantity }}
+                {% if item_form.quantity.errors %}<div class="form-error">{{ item_form.quantity.errors|striptags }}</div>{% endif %}
+              </div>
+
+              <div class="col-6 col-md-2">
+                <label class="form-label" for="{{ item_form.unit_price.id_for_label }}">
+                  {% trans "Unit price" %}<span class="req">*</span>
+                </label>
+                {{ item_form.unit_price }}
+                {% if item_form.unit_price.errors %}<div class="form-error">{{ item_form.unit_price.errors|striptags }}</div>{% endif %}
+              </div>
+
+              <div class="col-6 col-md-2">
+                <label class="form-label" for="{{ item_form.discount_amount.id_for_label }}">
+                  {% trans "Discount" %}
+                </label>
+                {{ item_form.discount_amount }}
+              </div>
+
+              <div class="col-6 col-md-2">
+                <label class="form-label">{% trans "Tax" %}</label>
+                <div class="form-control-plaintext tnum" data-line-tax>0.000</div>
+                <div class="field-hint">{% trans "From the item's tax rate" %}</div>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="card-soft card-pad">
+    <div class="total-line">
+      <span>{% trans "Subtotal" %}</span>
+      <span class="v tnum" data-out="subtotal">0.000</span>
+    </div>
+    <div class="total-line">
+      <span>{% trans "Discount" %}</span>
+      <span class="v tnum" data-out="discount">0.000</span>
+    </div>
+    <div class="total-line">
+      <span>{% trans "Tax" %}</span>
+      <span class="v tnum" data-out="tax">0.000</span>
+    </div>
+    <div class="total-line grand">
+      <span>{% trans "Total" %}</span>
+      <span class="v"><span class="tnum" data-out="total">0.000</span>
+        <small class="text-muted fs-6 fw-normal">{{ currency }}</small></span>
+    </div>
+
+    <div class="p-2 rounded-3 small mt-2" data-negative-note hidden
+         style="background:var(--danger-bg); color:var(--danger)">
+      <i class="bi bi-exclamation-triangle me-1"></i>
+      {% trans "The discount is larger than the quotation value." %}
+    </div>
+
+    <div class="d-flex gap-2 mt-3">
+      <button class="btn btn-primary" type="submit">
+        <i class="bi bi-check2 me-1"></i>{% trans "Create quotation" %}
+      </button>
+      <a class="btn btn-ghost" href="{% url 'quotations:list' %}">{% trans "Cancel" %}</a>
+    </div>
+  </div>
 </form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    var grid = document.getElementById('quotationGrid');
+    if (!grid) return;
+
+    var rows = grid.querySelector('[data-formset-rows]');
+    var totalForms = document.getElementById('id_items-TOTAL_FORMS');
+    var TAX_RATES = {{ tax_rates_json|default:"{}"|safe }};
+
+    function num(el) { return el ? (parseFloat(el.value) || 0) : 0; }
+
+    function reindex() {
+      var visible = rows.querySelectorAll('[data-formset-row]:not([hidden])');
+      visible.forEach(function (row, i) {
+        row.querySelectorAll('input, select, textarea, label').forEach(function (el) {
+          ['name', 'id', 'for'].forEach(function (attr) {
+            var v = el.getAttribute(attr);
+            if (v) el.setAttribute(attr, v.replace(/items-(\d+|__prefix__)-/, 'items-' + i + '-'));
+          });
+        });
+      });
+      totalForms.value = visible.length;
+    }
+
+    // Mirrors TaxRate.tax_for(): discount comes off before tax, half up to 3dp.
+    function recalc() {
+      var subtotal = 0, discount = 0, tax = 0;
+
+      rows.querySelectorAll('[data-formset-row]:not([hidden])').forEach(function (row) {
+        var qty   = num(row.querySelector('input[name$="-quantity"]'));
+        var price = num(row.querySelector('input[name$="-unit_price"]'));
+        var disc  = num(row.querySelector('input[name$="-discount_amount"]'));
+        var sel   = row.querySelector('select[name$="-product"]');
+        var rate  = (sel && TAX_RATES[sel.value]) || 0;
+
+        var lineTax = Math.round((qty * price - disc) * rate * 10) / 1000;
+        if (lineTax < 0) lineTax = 0;
+
+        var cell = row.querySelector('[data-line-tax]');
+        if (cell) cell.textContent = lineTax.toFixed(3);
+
+        subtotal += qty * price;
+        discount += disc;
+        tax      += lineTax;
+      });
+
+      discount += num(document.getElementById('id_discount_amount'));
+      var total = subtotal - discount + tax;
+
+      var out = {subtotal: subtotal, discount: discount, tax: tax, total: total};
+      Object.keys(out).forEach(function (k) {
+        var el = document.querySelector('[data-out="' + k + '"]');
+        if (el) el.textContent = out[k].toFixed(3);
+      });
+
+      var note = document.querySelector('[data-negative-note]');
+      if (note) note.hidden = total >= 0;
+    }
+
+    grid.querySelector('[data-add-row]').addEventListener('click', function () {
+      var clone = rows.querySelector('[data-formset-row]').cloneNode(true);
+      clone.removeAttribute('hidden');
+      clone.querySelectorAll('input, select, textarea').forEach(function (el) {
+        if (el.type === 'checkbox') el.checked = false;
+        else el.value = '';
+      });
+      var idField = clone.querySelector('input[name$="-id"]');
+      if (idField) idField.value = '';
+      clone.querySelectorAll('.form-error').forEach(function (e) { e.remove(); });
+      rows.appendChild(clone);
+      reindex();
+      recalc();
+    });
+
+    rows.addEventListener('click', function (event) {
+      var button = event.target.closest('[data-del-row]');
+      if (!button) return;
+
+      var row = button.closest('[data-formset-row]');
+      var idField = row.querySelector('input[name$="-id"]');
+      var deleteBox = row.querySelector('input[name$="-DELETE"]');
+
+      if (idField && idField.value) {
+        if (deleteBox) deleteBox.checked = true;
+        row.hidden = true;
+      } else if (rows.querySelectorAll('[data-formset-row]:not([hidden])').length > 1) {
+        row.remove();
+      } else {
+        row.querySelectorAll('input, select').forEach(function (el) {
+          if (el.type !== 'checkbox' && !el.name.endsWith('-id')) el.value = '';
+        });
+      }
+      reindex();
+      recalc();
+    });
+
+    var formEl = document.getElementById('quotationForm');
+    formEl.addEventListener('input', recalc);
+    formEl.addEventListener('change', recalc);
+    recalc();
+  })();
+</script>
 {% endblock %}

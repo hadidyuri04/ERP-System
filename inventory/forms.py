@@ -18,6 +18,130 @@ from .models import (
 )
 
 
+class BatchSelect(forms.Select):
+    """
+    Batch dropdown that carries the warehouse on each option.
+
+    The batch list is global, so a transfer out of the Main warehouse would
+    offer batches sitting in the Branch store. The service refuses those, but
+    the form should not offer them in the first place. The warehouse is only
+    known once the user picks it, so the filtering happens in the browser using
+    this attribute.
+    """
+
+    def create_option(self, name, value, label, selected, index,
+                      subindex=None, attrs=None):
+        option = super().create_option(
+            name, value, label, selected, index, subindex=subindex, attrs=attrs
+        )
+        instance = getattr(value, "instance", None)
+        if instance is not None:
+            option["attrs"]["data-warehouse"] = instance.warehouse_id
+        return option
+
+
+class StockedProductSelect(forms.Select):
+    """
+    Product dropdown that lists which warehouses hold each product.
+
+    A transfer out of Main was offering products that only exist in the Branch
+    store. The service refuses them, but the user should not be able to pick
+    one. A product can sit in several warehouses, so the option carries a
+    comma-separated list rather than a single id.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._stock_map = None
+
+    def stock_map(self):
+        from .models import StockBalance
+
+        if self._stock_map is None:
+            self._stock_map = {}
+            rows = StockBalance.objects.filter(quantity__gt=0).values_list(
+                "product_id", "warehouse_id"
+            )
+            for product_id, warehouse_id in rows:
+                self._stock_map.setdefault(product_id, set()).add(warehouse_id)
+        return self._stock_map
+
+    def create_option(self, name, value, label, selected, index,
+                      subindex=None, attrs=None):
+        option = super().create_option(
+            name, value, label, selected, index, subindex=subindex, attrs=attrs
+        )
+        instance = getattr(value, "instance", None)
+        if instance is not None:
+            warehouses = self.stock_map().get(instance.pk, set())
+            option["attrs"]["data-warehouses"] = ",".join(
+                str(w) for w in sorted(warehouses)
+            )
+        return option
+
+
+class BatchChoiceField(forms.ModelChoiceField):
+    """
+    Batch dropdown label that actually says what the batch is.
+
+    The default label was "Batch 3 - Ice Tea (18.000 left)", which gave no
+    warehouse and no expiry date. Two different batches in two warehouses
+    looked identical, and an expired batch looked perfectly fine.
+    """
+
+    widget = BatchSelect
+
+    def label_from_instance(self, batch):
+        from django.utils import timezone
+
+        parts = [batch.batch_number, batch.product.name, batch.warehouse.name]
+
+        if batch.expiration_date:
+            if batch.expiration_date < timezone.now().date():
+                parts.append(
+                    _("expired %(date)s") % {"date": batch.expiration_date}
+                )
+            else:
+                parts.append(
+                    _("expires %(date)s") % {"date": batch.expiration_date}
+                )
+
+        parts.append(
+            _("%(qty)s left") % {"qty": f"{batch.quantity_remaining:.3f}"}
+        )
+        return " · ".join(str(p) for p in parts)
+
+
+def sellable_batches(include_expired=True):
+    """
+    Batches that still hold stock, nearest expiry first.
+
+    `include_expired` is False for transfers: moving expired stock between
+    warehouses is not a thing. Waste and stock counts need them, because
+    writing them off and counting them are exactly what they are for.
+    """
+    from django.db.models import Q
+    from django.utils import timezone
+
+    from .models import StockBatch
+
+    queryset = (
+        StockBatch.objects
+        .select_related("warehouse", "product")
+        .filter(quantity_remaining__gt=0)
+        .exclude(status=StockBatch.BatchStatus.DEPLETED)
+        .order_by("expiration_date", "batch_number")
+    )
+
+    if not include_expired:
+        today = timezone.now().date()
+        queryset = queryset.filter(
+            Q(expiration_date__isnull=True) | Q(expiration_date__gte=today)
+        )
+
+    return queryset
+
+
 class CategoryForm(forms.ModelForm):
     class Meta:
         model = Category
@@ -84,6 +208,15 @@ class WasteLossItemForm(forms.ModelForm):
         self.fields["product"].queryset = Product.objects.filter(
             is_active=True
         ).order_by("code")
+        self.fields["product"].widget = StockedProductSelect(
+            choices=self.fields["product"].widget.choices
+        )
+        # Expired batches belong here: writing them off is the point.
+        self.fields["batch"] = BatchChoiceField(
+            queryset=sellable_batches(include_expired=True),
+            required=self.fields["batch"].required,
+            label=self.fields["batch"].label,
+        )
 
 
 class WarehouseTransferForm(forms.ModelForm):
@@ -125,6 +258,15 @@ class WarehouseTransferItemForm(forms.ModelForm):
         self.fields["product"].queryset = Product.objects.filter(
             is_active=True
         ).order_by("code")
+        self.fields["product"].widget = StockedProductSelect(
+            choices=self.fields["product"].widget.choices
+        )
+        # Moving expired stock between warehouses is not a valid operation.
+        self.fields["batch"] = BatchChoiceField(
+            queryset=sellable_batches(include_expired=False),
+            required=self.fields["batch"].required,
+            label=self.fields["batch"].label,
+        )
 
     def clean_quantity(self):
         quantity = self.cleaned_data["quantity"]
@@ -166,6 +308,15 @@ class StockAdjustmentItemForm(forms.ModelForm):
         self.fields["product"].queryset = Product.objects.filter(
             is_active=True
         ).order_by("code")
+        self.fields["product"].widget = StockedProductSelect(
+            choices=self.fields["product"].widget.choices
+        )
+        # Expired batches belong here: writing them off is the point.
+        self.fields["batch"] = BatchChoiceField(
+            queryset=sellable_batches(include_expired=True),
+            required=self.fields["batch"].required,
+            label=self.fields["batch"].label,
+        )
 
     def clean_counted_quantity(self):
         counted = self.cleaned_data["counted_quantity"]

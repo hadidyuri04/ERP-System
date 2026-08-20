@@ -108,6 +108,7 @@
         <div class="nav-group-links">
           <a href="{% url 'inventory:transfer_list' %}" data-smooth class="nav-icon {% if 'transfer' in request.resolver_match.url_name %}active{% endif %}"><i class="bi bi-arrow-left-right"></i><span class="nav-label">{% trans "Warehouse transfers" %}</span></a>
           <a href="{% url 'inventory:adjustment_list' %}" data-smooth class="nav-icon {% if 'adjustment' in request.resolver_match.url_name %}active{% endif %}"><i class="bi bi-clipboard-check-fill"></i><span class="nav-label">{% trans "Stock Adjustments" %}</span></a>
+          <a href="{% url 'inventory:batch_list' %}" data-smooth class="nav-icon {% if 'batch' in request.resolver_match.url_name %}active{% endif %}"><i class="bi bi-layers"></i><span class="nav-label">{% trans "Stock Batches" %}</span></a>
           <a href="{% url 'inventory:expiry_watchlist' %}" data-smooth class="nav-icon {% if 'expiry' in request.resolver_match.url_name %}active{% endif %}"><i class="bi bi-hourglass-split"></i><span class="nav-label">{% trans "Expiry watchlist" %}</span></a>
           <a href="{% url 'inventory:waste_list' %}" data-smooth class="nav-icon {% if request.resolver_match.namespace == 'inventory' and 'waste' in request.resolver_match.url_name %}active{% endif %}"><i class="bi bi-trash3-fill"></i><span class="nav-label">{% trans "Waste & Loss" %}</span></a>
         </div>

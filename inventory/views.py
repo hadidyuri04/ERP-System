@@ -359,6 +359,59 @@ def adjustment_confirm_view(request, pk):
 
 @login_required
 @accountant_required
+def batch_list_view(request):
+    """
+    Every stock batch, with what it cost and when it expires.
+
+    Batches were only visible inside dropdowns and the Django admin, so there
+    was no way to answer "what exactly is sitting in this warehouse".
+    """
+    from .models import StockBatch
+
+    today = timezone.now().date()
+    batches = (
+        StockBatch.objects
+        .select_related("product", "warehouse", "supplier")
+        .order_by("expiration_date", "product__code")
+    )
+
+    warehouse_id = request.GET.get("warehouse")
+    if warehouse_id:
+        batches = batches.filter(warehouse_id=warehouse_id)
+
+    status = request.GET.get("status", "available")
+    if status == "available":
+        batches = batches.filter(quantity_remaining__gt=0)
+    elif status == "expired":
+        batches = batches.filter(
+            expiration_date__isnull=False,
+            expiration_date__lt=today,
+            quantity_remaining__gt=0,
+        )
+    elif status == "depleted":
+        batches = batches.filter(quantity_remaining__lte=0)
+
+    query = request.GET.get("q", "").strip()
+    if query:
+        batches = batches.filter(
+            Q(batch_number__icontains=query)
+            | Q(product__code__icontains=query)
+            | Q(product__name_en__icontains=query)
+            | Q(product__name_ar__icontains=query)
+        )
+
+    return render(request, "inventory/batch_list.html", {
+        "batches": batches[:300],
+        "warehouses": Warehouse.objects.filter(is_active=True).order_by("name"),
+        "selected_warehouse": warehouse_id,
+        "status": status,
+        "query": query,
+        "today": today,
+    })
+
+
+@login_required
+@accountant_required
 def expiry_watchlist_view(request):
     """
     Expired stock and stock nearing expiry (spec 5.6, signed module 17).

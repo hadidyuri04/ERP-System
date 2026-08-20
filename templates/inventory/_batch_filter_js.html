@@ -1,0 +1,65 @@
+{% comment %}
+Hides product and batch options that do not belong to the chosen warehouse.
+
+Batch options carry data-warehouse and product options carry data-warehouses
+(a product can sit in several), both set by the widgets in inventory/forms.py.
+The warehouse is only known once the user picks it, so this has to happen in
+the browser rather than in the queryset.
+
+Include it and pass the id of the warehouse select:
+
+  {% include "inventory/_batch_filter_js.html" with warehouse_field="id_warehouse" %}
+{% endcomment %}
+
+<script>
+  (function () {
+    var warehouseSelect = document.getElementById('{{ warehouse_field }}');
+    if (!warehouseSelect) return;
+
+    function filter(select, belongs) {
+      var selectedStillValid = false;
+
+      Array.prototype.forEach.call(select.options, function (option) {
+        if (!option.value) return;             // leave the empty choice alone
+
+        var ok = belongs(option);
+        option.hidden = !ok;
+        option.disabled = !ok;
+        if (option.selected && ok) selectedStillValid = true;
+      });
+
+      // Something chosen for the previous warehouse must not stay selected.
+      if (select.value && !selectedStillValid) {
+        select.value = '';
+        select.dispatchEvent(new Event('change', {bubbles: true}));
+      }
+    }
+
+    function apply() {
+      var chosen = warehouseSelect.value;
+
+      document.querySelectorAll('select[name$="-product"]').forEach(function (select) {
+        filter(select, function (option) {
+          if (!chosen) return true;
+          var list = (option.dataset.warehouses || '').split(',');
+          return list.indexOf(chosen) !== -1;
+        });
+      });
+
+      document.querySelectorAll('select[name$="-batch"]').forEach(function (select) {
+        filter(select, function (option) {
+          return !chosen || option.dataset.warehouse === chosen;
+        });
+      });
+    }
+
+    warehouseSelect.addEventListener('change', apply);
+
+    // Rows added later need filtering too.
+    document.addEventListener('click', function (event) {
+      if (event.target.closest('[data-add-row]')) setTimeout(apply, 0);
+    });
+
+    apply();
+  })();
+</script>

@@ -3973,6 +3973,260 @@ msgstr ""
 "تحتاج إلى جلسة صندوق مفتوحة. التحويل ينشئ فاتورة بيع ويخصم المخزون ويرحّل "
 "القيود."
 
+msgid "Customer details, credit limit and opening balance"
+msgstr "بيانات العميل وحد الائتمان والرصيد الافتتاحي"
+
+msgid "Supplier details and opening balance"
+msgstr "بيانات المورد والرصيد الافتتاحي"
+
+msgid "Record money received from a customer or another party"
+msgstr "تسجيل مبلغ مستلم من عميل أو جهة أخرى"
+
+msgid "Record money paid to a supplier or another party"
+msgstr "تسجيل مبلغ مدفوع لمورد أو جهة أخرى"
+
+msgid ""
+"Posting creates a balanced journal entry and cannot be undone. Continue?"
+msgstr "الترحيل ينشئ قيداً متوازناً ولا يمكن التراجع عنه. هل تريد المتابعة؟"
+
+msgid ""
+"A draft can still be edited. Posting locks the voucher and updates the "
+"accounts."
+msgstr "المسودة قابلة للتعديل. الترحيل يقفل السند ويحدّث الحسابات."
+
+msgid "The quotation was not saved"
+msgstr "لم يتم حفظ عرض السعر"
+
+msgid ""
+"Tax is calculated from each item's tax rate. The discount here applies to "
+"the whole quotation."
+msgstr ""
+"تُحتسب الضريبة من نسبة ضريبة كل صنف. أما الخصم هنا فيُطبّق على عرض السعر "
+"كاملاً."
+
+msgid "Business workspace"
+msgstr "مساحة عمل المنشأة"
+
+msgid "Master data"
+msgstr "البيانات الأساسية"
+
+msgid "Sales & purchasing"
+msgstr "المبيعات والمشتريات"
+
+msgid "Sales invoices"
+msgstr "فواتير المبيعات"
+
+msgid "POS terminal"
+msgstr "شاشة نقطة البيع"
+
+msgid "Registers"
+msgstr "الصناديق"
+
+msgid "POS sales history"
+msgstr "سجل مبيعات نقطة البيع"
+
+msgid "Discount codes"
+msgstr "أكواد الخصم"
+
+msgid "Inventory control"
+msgstr "إدارة المخزون"
+
+msgid "Review checkout transactions, receipts, and POS sale statuses."
+msgstr "مراجعة عمليات الدفع والإيصالات وحالات مبيعات نقطة البيع."
+
+msgid "Convert to sales invoice"
+msgstr "تحويل إلى فاتورة مبيعات"
+
+msgid ""
+"This creates an editable draft invoice. Stock and Finance are updated only "
+"when you confirm it."
+msgstr ""
+"يُنشئ هذا فاتورة مسودة قابلة للتعديل. لا يتحدث المخزون ولا القيود إلا عند "
+"تأكيدها."
+
+msgid "Invoice date"
+msgstr "تاريخ الفاتورة"
+
+msgid "Cash / Bank Account"
+msgstr "حساب النقدية / البنك"
+
+msgid "Create draft invoice"
+msgstr "إنشاء فاتورة مسودة"
+
+msgid "Open sales invoice"
+msgstr "فتح فاتورة المبيعات"
+
+msgid ""
+"Choose a report to review financial performance and outstanding balances."
+msgstr "اختر تقريراً لمراجعة الأداء المالي والأرصدة المستحقة."
+
+msgid "Receivables"
+msgstr "الذمم المدينة"
+
+msgid "Customer balances and collection status"
+msgstr "أرصدة العملاء وحالة التحصيل"
+
+msgid "Invoices, payments and running balances"
+msgstr "الفواتير والدفعات والأرصدة الجارية"
+
+msgid "Outstanding customer balances by age"
+msgstr "أرصدة العملاء المستحقة حسب أعمار الديون"
+
+msgid "Payables"
+msgstr "الذمم الدائنة"
+
+msgid "Supplier balances and payment status"
+msgstr "أرصدة الموردين وحالة السداد"
+
+msgid "Purchases, payments and running balances"
+msgstr "المشتريات والدفعات والأرصدة الجارية"
+
+msgid "Outstanding supplier balances by age"
+msgstr "أرصدة الموردين المستحقة حسب أعمار الديون"
+
+msgid "Financial statements"
+msgstr "القوائم المالية"
+
+msgid "Ledger activity, performance, position and cash movement"
+msgstr "حركة الأستاذ والأداء والمركز المالي والتدفق النقدي"
+
+msgid "Account activity and running balance"
+msgstr "حركة الحساب والرصيد الجاري"
+
+msgid "Debit and credit balances"
+msgstr "الأرصدة المدينة والدائنة"
+
+msgid "Revenue, expenses and profit"
+msgstr "الإيرادات والمصروفات والأرباح"
+
+msgid "Assets, liabilities and equity"
+msgstr "الأصول والالتزامات وحقوق الملكية"
+
+msgid "Operating, investing and financing cash"
+msgstr "التدفقات التشغيلية والاستثمارية والتمويلية"
+
+msgid "Full credit note"
+msgstr "إشعار دائن كامل"
+
+msgid ""
+"This reverses the complete invoice, restores its stock, and posts a "
+"reversing journal. It is only available before any payment is allocated."
+msgstr ""
+"يعكس هذا الفاتورة بالكامل ويعيد مخزونها ويرحّل قيداً عكسياً. متاح فقط قبل "
+"تخصيص أي دفعة."
+
+msgid "Post full credit note"
+msgstr "ترحيل الإشعار الدائن الكامل"
+
+msgid "Confirm invoice"
+msgstr "تأكيد الفاتورة"
+
+msgid "Paid"
+msgstr "مدفوعة"
+
+msgid "Outstanding"
+msgstr "المتبقي"
+
+msgid "Record payment"
+msgstr "تسجيل دفعة"
+
+msgid "Issue full credit note"
+msgstr "إصدار إشعار دائن كامل"
+
+msgid "Journal"
+msgstr "القيد"
+
+msgid "Recorded by"
+msgstr "سجّلها"
+
+msgid "Cancellation reason"
+msgstr "سبب الإلغاء"
+
+msgid "Cancel draft"
+msgstr "إلغاء المسودة"
+
+msgid "Edit sales invoice"
+msgstr "تعديل فاتورة مبيعات"
+
+msgid "New sales invoice"
+msgstr "فاتورة مبيعات جديدة"
+
+msgid "Save a draft first; confirming updates stock and Finance."
+msgstr "احفظ مسودة أولاً، فالتأكيد يحدّث المخزون والقيود."
+
+msgid "Invoice customers, collect payments, and track receivables"
+msgstr "إصدار فواتير العملاء وتحصيل الدفعات ومتابعة الذمم"
+
+msgid "Payment"
+msgstr "الدفع"
+
+msgid "Unpaid"
+msgstr "غير مدفوعة"
+
+msgid "Partially paid"
+msgstr "مدفوعة جزئياً"
+
+msgid "Overdue"
+msgstr "متأخرة"
+
+msgid "Invoice"
+msgstr "فاتورة"
+
+msgid "Due"
+msgstr "الاستحقاق"
+
+msgid "Payment status"
+msgstr "حالة السداد"
+
+msgid "No sales invoices found."
+msgstr "لا توجد فواتير مبيعات."
+
+msgid "Record customer payment"
+msgstr "تسجيل دفعة من العميل"
+
+msgid "Post payment"
+msgstr "ترحيل الدفعة"
+
+msgid "Close menu"
+msgstr "إغلاق القائمة"
+
+msgid "Confirm this invoice? Stock will be issued and Finance will be posted."
+msgstr "تأكيد هذه الفاتورة؟ سيتم إخراج المخزون وترحيل القيود المحاسبية."
+
+msgid "Invoice number or customer"
+msgstr "رقم الفاتورة أو العميل"
+
+msgid "What is physically in each warehouse, with cost and expiry"
+msgstr "ما هو موجود فعلياً في كل مستودع، مع التكلفة وتاريخ الانتهاء"
+
+msgid "Batch number or product"
+msgstr "رقم الدفعة أو الصنف"
+
+msgid "All warehouses"
+msgstr "كل المستودعات"
+
+msgid "Still in stock"
+msgstr "ما زال في المخزون"
+
+msgid "No batches match this filter."
+msgstr "لا توجد دفعات مطابقة لهذا الفلتر."
+
+msgid ""
+"Batches are created by purchases and adjustments. Sales draw from the batch "
+"expiring soonest."
+msgstr ""
+"تُنشأ الدفعات من المشتريات والتسويات. والمبيعات تُخصم من الدفعة الأقرب "
+"لانتهاء الصلاحية."
+
+msgid "expired %(date)s"
+msgstr "منتهية %(date)s"
+
+msgid "expires %(date)s"
+msgstr "تنتهي %(date)s"
+
+msgid "%(qty)s left"
+msgstr "متبقي %(qty)s"
+
 #~ msgid "Adjustment confirmed. Stock now matches the count."
 #~ msgstr "تم تأكيد التسوية، وأصبح المخزون مطابقاً للجرد."
 

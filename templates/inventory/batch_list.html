@@ -1,0 +1,105 @@
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Stock Batches" %}{% endblock %}
+
+{% block page_header %}
+  <h1>{% trans "Stock Batches" %}</h1>
+  <p>{% trans "What is physically in each warehouse, with cost and expiry" %}</p>
+{% endblock %}
+
+{% block content %}
+{# nav_active = 'batches' — spec 5.1 #}
+
+<div class="card-soft" data-table-card>
+  <form class="filter-bar" method="get">
+    <input class="form-control form-control-sm" name="q" value="{{ query }}"
+           style="max-width:260px" placeholder="{% trans 'Batch number or product' %}"
+           aria-label="{% trans 'Search' %}">
+
+    <select class="form-select form-select-sm" name="warehouse"
+            style="max-width:220px" aria-label="{% trans "Warehouse" %}">
+      <option value="">{% trans "All warehouses" %}</option>
+      {% for warehouse in warehouses %}
+        <option value="{{ warehouse.pk }}"
+          {% if selected_warehouse == warehouse.pk|stringformat:'s' %}selected{% endif %}>
+          {{ warehouse.name }}
+        </option>
+      {% endfor %}
+    </select>
+
+    <select class="form-select form-select-sm" name="status"
+            style="max-width:200px" aria-label="{% trans "Status" %}">
+      <option value="available" {% if status == 'available' %}selected{% endif %}>{% trans "Still in stock" %}</option>
+      <option value="expired"   {% if status == 'expired' %}selected{% endif %}>{% trans "Expired" %}</option>
+      <option value="depleted"  {% if status == 'depleted' %}selected{% endif %}>{% trans "Depleted" %}</option>
+      <option value="all"       {% if status == 'all' %}selected{% endif %}>{% trans "All" %}</option>
+    </select>
+
+    <button class="btn btn-primary btn-sm" type="submit">
+      <i class="bi bi-funnel me-1"></i>{% trans "Apply" %}
+    </button>
+  </form>
+
+  <div class="table-wrap">
+    <table class="table-erp">
+      <thead>
+        <tr>
+          <th style="width:16%">{% trans "Batch Number" %}</th>
+          <th>{% trans "Product" %}</th>
+          <th style="width:13%">{% trans "Warehouse" %}</th>
+          <th style="width:12%">{% trans "Expiration Date" %}</th>
+          <th class="num" style="width:11%">{% trans "Quantity Received" %}</th>
+          <th class="num" style="width:11%">{% trans "Quantity Remaining" %}</th>
+          <th class="num" style="width:10%">{% trans "Unit Cost" %}</th>
+          <th style="width:11%">{% trans "Status" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for batch in batches %}
+          <tr data-row>
+            <td class="cell-strong">{{ batch.batch_number }}</td>
+            <td>{{ batch.product.name }}</td>
+            <td>{{ batch.warehouse.name }}</td>
+            <td class="cell-muted">
+              {% if batch.expiration_date %}
+                {{ batch.expiration_date|date:"Y-m-d" }}
+              {% else %}
+                <span class="cell-muted">{% trans "No expiry" %}</span>
+              {% endif %}
+            </td>
+            <td class="num">{{ batch.quantity_received|floatformat:3 }}</td>
+            <td class="num cell-strong">{{ batch.quantity_remaining|floatformat:3 }}</td>
+            <td class="num">{{ batch.unit_cost|floatformat:3 }}</td>
+            <td>
+              {% if batch.expiration_date and batch.expiration_date < today %}
+                <span class="badge-soft badge-danger">{% trans "Expired" %}</span>
+              {% elif batch.status == 'DEPLETED' %}
+                <span class="badge-soft badge-neutral">{% trans "Depleted" %}</span>
+              {% elif batch.status == 'BLOCKED' %}
+                <span class="badge-soft badge-warning">{% trans "Blocked" %}</span>
+              {% else %}
+                <span class="badge-soft badge-success">{% trans "Active" %}</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="8">
+              <div class="empty-state">
+                <i class="bi bi-layers"></i>
+                <p>{% trans "No batches match this filter." %}</p>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<p class="field-hint mt-3">
+  <i class="bi bi-info-circle me-1"></i>
+  {% trans "Batches are created by purchases and adjustments. Sales draw from the batch expiring soonest." %}
+</p>
+{% endblock %}

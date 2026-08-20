@@ -24,6 +24,8 @@ urlpatterns = [
     path("adjustments/<int:pk>/", views.adjustment_detail_view, name="adjustment_detail"),
     path("adjustments/<int:pk>/confirm/", views.adjustment_confirm_view, name="adjustment_confirm"),
 
+    path("batches/", views.batch_list_view, name="batch_list"),
+
     path("expiry/", views.expiry_watchlist_view, name="expiry_watchlist"),
 
     path("transfers/", views.transfer_list_view, name="transfer_list"),
