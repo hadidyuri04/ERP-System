@@ -22,7 +22,9 @@ from .services import (
 )
 
 
-class SalesInvoiceWorkflowTests(TestCase):
+class SalesTestBase(TestCase):
+    """Shared fixture: accounts, fiscal year, customer, warehouse, stock."""
+
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="sales-accountant", password="test-password", role="accountant"
@@ -76,6 +78,7 @@ class SalesInvoiceWorkflowTests(TestCase):
         )
         return invoice
 
+class SalesInvoiceWorkflowTests(SalesTestBase):
     def test_draft_has_no_effect_and_blocks_period_close(self):
         invoice = self.make_invoice()
         self.assertEqual(JournalEntry.objects.filter(source_id=invoice.id).count(), 0)
@@ -191,3 +194,243 @@ class SalesInvoiceWorkflowTests(TestCase):
         detail_url = reverse("sales:invoice_detail", args=[invoice.id])
         self.assertEqual(self.client.get(detail_url).status_code, 200)
         self.assertEqual(self.client.get(detail_url + "?export=xlsx").status_code, 200)
+
+
+class SalesInvoiceGuardTests(SalesTestBase):
+    """
+    The failure paths. His tests cover the happy ones; every bug found today
+    lived in what happens when something is wrong.
+    """
+
+    def stock(self):
+        return StockBalance.objects.get(
+            product=self.product, warehouse=self.warehouse
+        ).quantity
+
+    # ---- confirming ----
+
+    def test_confirming_twice_is_refused(self):
+        invoice = self.make_invoice()
+        confirm_sales_invoice(invoice.id, self.user)
+
+        with self.assertRaises(ValidationError):
+            confirm_sales_invoice(invoice.id, self.user)
+
+    def test_confirming_twice_does_not_take_stock_twice(self):
+        invoice = self.make_invoice()
+        confirm_sales_invoice(invoice.id, self.user)
+        after_first = self.stock()
+
+        with self.assertRaises(ValidationError):
+            confirm_sales_invoice(invoice.id, self.user)
+
+        self.assertEqual(self.stock(), after_first)
+
+    def test_an_invoice_with_no_items_is_refused(self):
+        invoice = self.make_invoice()
+        invoice.items.all().delete()
+
+        with self.assertRaises(ValidationError):
+            confirm_sales_invoice(invoice.id, self.user)
+
+    def test_a_non_sellable_product_is_refused(self):
+        invoice = self.make_invoice()
+        self.product.is_sellable = False
+        self.product.save(update_fields=["is_sellable"])
+
+        with self.assertRaises(ValidationError):
+            confirm_sales_invoice(invoice.id, self.user)
+
+    def test_more_than_available_is_refused_and_stock_is_untouched(self):
+        invoice = self.make_invoice()
+        item = invoice.items.first()
+        item.quantity = Decimal("999")
+        item.save(update_fields=["quantity"])
+        before = self.stock()
+
+        with self.assertRaises(ValidationError):
+            confirm_sales_invoice(invoice.id, self.user)
+
+        self.assertEqual(self.stock(), before)
+
+    def test_a_cash_invoice_without_an_account_is_refused(self):
+        invoice = self.make_invoice(payment_type=SalesInvoice.PaymentType.CASH)
+        invoice.payment_account = None
+        invoice.save(update_fields=["payment_account"])
+
+        with self.assertRaises(ValidationError):
+            confirm_sales_invoice(invoice.id, self.user)
+
+    def test_an_expired_batch_is_not_sold(self):
+        """Spec 5.6: FEFO must skip expired stock."""
+        StockBatch.objects.all().update(
+            expiration_date=self.today - timedelta(days=1)
+        )
+        invoice = self.make_invoice()
+
+        with self.assertRaises(ValidationError):
+            confirm_sales_invoice(invoice.id, self.user)
+
+    def test_the_sale_draws_from_the_batch_expiring_soonest(self):
+        self.batch.expiration_date = self.today + timedelta(days=90)
+        self.batch.save(update_fields=["expiration_date"])
+        soonest = StockBatch.objects.create(
+            product=self.product, warehouse=self.warehouse, batch_number="B-SOON",
+            received_date=self.today, expiration_date=self.today + timedelta(days=5),
+            unit_cost=Decimal("6"), quantity_received=Decimal("10"),
+            quantity_remaining=Decimal("10"),
+        )
+        balance = StockBalance.objects.get(
+            product=self.product, warehouse=self.warehouse
+        )
+        balance.quantity += Decimal("10")
+        balance.save(update_fields=["quantity"])
+
+        confirm_sales_invoice(self.make_invoice().id, self.user)
+
+        soonest.refresh_from_db()
+        self.batch.refresh_from_db()
+        self.assertEqual(soonest.quantity_remaining, Decimal("8"))
+        self.assertEqual(self.batch.quantity_remaining, Decimal("20"))
+
+    # ---- payments ----
+
+    def test_a_payment_on_a_draft_is_refused(self):
+        invoice = self.make_invoice()
+
+        with self.assertRaises(ValidationError):
+            record_invoice_payment(
+                invoice.id, self.user, payment_date=self.today,
+                account=self.accounts["1100"], amount=Decimal("5"),
+                payment_method="cash",
+            )
+
+    def test_a_payment_larger_than_the_balance_is_refused(self):
+        invoice = self.make_invoice()
+        confirm_sales_invoice(invoice.id, self.user)
+
+        with self.assertRaises(ValidationError):
+            record_invoice_payment(
+                invoice.id, self.user, payment_date=self.today,
+                account=self.accounts["1100"], amount=Decimal("9999"),
+                payment_method="cash",
+            )
+
+    def test_a_zero_payment_is_refused(self):
+        invoice = self.make_invoice()
+        confirm_sales_invoice(invoice.id, self.user)
+
+        with self.assertRaises(ValidationError):
+            record_invoice_payment(
+                invoice.id, self.user, payment_date=self.today,
+                account=self.accounts["1100"], amount=Decimal("0"),
+                payment_method="cash",
+            )
+
+    def test_a_payment_dated_before_the_invoice_is_refused(self):
+        invoice = self.make_invoice()
+        confirm_sales_invoice(invoice.id, self.user)
+
+        with self.assertRaises(ValidationError):
+            record_invoice_payment(
+                invoice.id, self.user,
+                payment_date=self.today - timedelta(days=1),
+                account=self.accounts["1100"], amount=Decimal("5"),
+                payment_method="cash",
+            )
+
+    def test_a_payment_to_a_revenue_account_is_refused(self):
+        """Money can only land in a cash or bank account."""
+        invoice = self.make_invoice()
+        confirm_sales_invoice(invoice.id, self.user)
+
+        with self.assertRaises(ValidationError):
+            record_invoice_payment(
+                invoice.id, self.user, payment_date=self.today,
+                account=self.accounts["4100"], amount=Decimal("5"),
+                payment_method="cash",
+            )
+
+    # ---- cancelling ----
+
+    def test_a_draft_can_be_cancelled_without_touching_stock(self):
+        from .services import cancel_draft_invoice
+
+        invoice = self.make_invoice()
+        before = self.stock()
+        cancel_draft_invoice(invoice.id, self.user, "Customer changed their mind")
+        invoice.refresh_from_db()
+
+        self.assertEqual(invoice.status, SalesInvoice.Status.CANCELLED)
+        self.assertEqual(self.stock(), before)
+
+    def test_cancelling_without_a_reason_is_refused(self):
+        from .services import cancel_draft_invoice
+
+        invoice = self.make_invoice()
+
+        with self.assertRaises(ValidationError):
+            cancel_draft_invoice(invoice.id, self.user, "   ")
+
+    def test_a_posted_invoice_cannot_be_cancelled_directly(self):
+        from .services import cancel_draft_invoice
+
+        invoice = self.make_invoice()
+        confirm_sales_invoice(invoice.id, self.user)
+
+        with self.assertRaises(ValidationError):
+            cancel_draft_invoice(invoice.id, self.user, "Mistake")
+
+    # ---- credit notes ----
+
+    def test_a_draft_cannot_be_credited(self):
+        invoice = self.make_invoice()
+
+        with self.assertRaises(ValidationError):
+            create_and_post_full_credit_note(
+                invoice.id, self.user, note_date=self.today, reason="Returned"
+            )
+
+    def test_a_credit_note_without_a_reason_is_refused(self):
+        invoice = self.make_invoice()
+        confirm_sales_invoice(invoice.id, self.user)
+
+        with self.assertRaises(ValidationError):
+            create_and_post_full_credit_note(
+                invoice.id, self.user, note_date=self.today, reason="  "
+            )
+
+    def test_an_invoice_cannot_be_credited_twice(self):
+        invoice = self.make_invoice()
+        confirm_sales_invoice(invoice.id, self.user)
+        create_and_post_full_credit_note(
+            invoice.id, self.user, note_date=self.today, reason="Returned"
+        )
+
+        with self.assertRaises(ValidationError):
+            create_and_post_full_credit_note(
+                invoice.id, self.user, note_date=self.today, reason="Again"
+            )
+
+    def test_crediting_twice_does_not_restore_stock_twice(self):
+        invoice = self.make_invoice()
+        confirm_sales_invoice(invoice.id, self.user)
+        create_and_post_full_credit_note(
+            invoice.id, self.user, note_date=self.today, reason="Returned"
+        )
+        after_credit = self.stock()
+
+        with self.assertRaises(ValidationError):
+            create_and_post_full_credit_note(
+                invoice.id, self.user, note_date=self.today, reason="Again"
+            )
+
+        self.assertEqual(self.stock(), after_credit)
+
+    # ---- numbering ----
+
+    def test_invoice_numbers_do_not_collide(self):
+        from .services import generate_invoice_number
+
+        numbers = {generate_invoice_number() for _ in range(5)}
+        self.assertEqual(len(numbers), 5)
