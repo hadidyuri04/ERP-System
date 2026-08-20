@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ERP System\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-19 15:10+0300\n"
+"POT-Creation-Date: 2026-08-20 10:20+0300\n"
 "PO-Revision-Date: 2026-08-13 13:30+0300\n"
 "Last-Translator: ERP Team\n"
 "Language-Team: Arabic\n"
@@ -15,7 +15,8 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
+"&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
 
 msgid "Administrator"
 msgstr "مدير النظام"
@@ -113,8 +114,11 @@ msgstr "تم التعديل على العميل بنجاح"
 msgid "Edit customer"
 msgstr "تعديل العميل"
 
-msgid "PDF export is unavailable. Install the Playwright Chromium runtime and try again."
-msgstr "تصدير PDF غير متاح. ثبّت بيئة Chromium الخاصة بـ Playwright ثم حاول مرة أخرى."
+msgid ""
+"PDF export is unavailable. Install the Playwright Chromium runtime and try "
+"again."
+msgstr ""
+"تصدير PDF غير متاح. ثبّت بيئة Chromium الخاصة بـ Playwright ثم حاول مرة أخرى."
 
 msgid "Start date"
 msgstr "تاريخ البداية"
@@ -326,6 +330,48 @@ msgstr "القيمة الأصلية"
 msgid "Remaining"
 msgstr "المتبقي"
 
+msgid "System"
+msgstr "النظام"
+
+msgid "Finance audit log"
+msgstr "سجل التدقيق المالي"
+
+msgid "Records"
+msgstr "السجلات"
+
+msgid "Search"
+msgstr "بحث"
+
+msgid "All"
+msgstr "الكل"
+
+msgid "Action"
+msgstr "الإجراء"
+
+msgid "All actions"
+msgstr "جميع الإجراءات"
+
+msgid "Record type"
+msgstr "نوع السجل"
+
+msgid "All record types"
+msgstr "جميع أنواع السجلات"
+
+msgid "Date and time"
+msgstr "التاريخ والوقت"
+
+msgid "Record ID"
+msgstr "معرّف السجل"
+
+msgid "Record"
+msgstr "السجل"
+
+msgid "Performed by"
+msgstr "نُفّذ بواسطة"
+
+msgid "Before and after changes"
+msgstr "التغييرات قبل وبعد"
+
 msgid "The start date cannot be later than the end date."
 msgstr "لا يمكن أن يكون تاريخ البداية بعد تاريخ النهاية."
 
@@ -351,10 +397,13 @@ msgstr "قيد اليومية غير متوازن. المدين: %(debit)s، ا�
 msgid "Enter a year between 2000 and 2100."
 msgstr "أدخل سنة بين 2000 و2100."
 
-msgid "Leave blank for a top-level account. Parent accounts must be non-posting."
-msgstr "اتركه فارغًا للحساب الرئيسي. يجب أن تكون الحسابات الأب غير قابلة للترحيل."
+msgid ""
+"Leave blank for a top-level account. Parent accounts must be non-posting."
+msgstr ""
+"اتركه فارغًا للحساب الرئيسي. يجب أن تكون الحسابات الأب غير قابلة للترحيل."
 
-msgid "Enable only for leaf accounts that can receive journal debits and credits."
+msgid ""
+"Enable only for leaf accounts that can receive journal debits and credits."
 msgstr "فعّله فقط للحسابات الفرعية التي تقبل الحركات المدينة والدائنة."
 
 msgid "Change the child accounts to this type before changing the parent."
@@ -453,9 +502,6 @@ msgstr "الفترة المالية"
 msgid "Empty for an action on the complete fiscal year."
 msgstr "يُترك فارغًا إذا كان الإجراء على السنة المالية كاملة."
 
-msgid "Action"
-msgstr "الإجراء"
-
 msgid "Performed By"
 msgstr "نفّذه"
 
@@ -489,23 +535,11 @@ msgstr "أُعيد الفتح"
 msgid "User snapshot"
 msgstr "لقطة اسم المستخدم"
 
-msgid "Record type"
-msgstr "نوع السجل"
-
 msgid "Record type label"
 msgstr "مسمى نوع السجل"
 
-msgid "Record ID"
-msgstr "معرّف السجل"
-
-msgid "Record"
-msgstr "السجل"
-
 msgid "Changes"
 msgstr "التغييرات"
-
-msgid "Date and time"
-msgstr "التاريخ والوقت"
 
 msgid "Finance Audit Log"
 msgstr "سجل التدقيق المالي"
@@ -552,6 +586,9 @@ msgstr "شراء"
 msgid "POS Sale"
 msgstr "مبيعات نقطة البيع"
 
+msgid "POS Register Session"
+msgstr "جلسة صندوق نقطة البيع"
+
 msgid "Receipt Voucher"
 msgstr "سند قبض"
 
@@ -560,6 +597,9 @@ msgstr "سند صرف"
 
 msgid "Waste & Loss"
 msgstr "الهالك والفاقد"
+
+msgid "Stock Adjustment"
+msgstr "تسوية المخزون"
 
 msgid "Sales Return"
 msgstr "استرجاع المبيعات"
@@ -718,8 +758,12 @@ msgid "Accounting account %(code)s does not allow posting."
 msgstr "الحساب المحاسبي %(code)s لا يسمح بالترحيل."
 
 #, python-format
-msgid "Accounting account %(code)s has the wrong type. Expected %(expected)s but found %(actual)s."
-msgstr "نوع الحساب المحاسبي %(code)s غير صحيح. النوع المتوقع: %(expected)s، والنوع الموجود: %(actual)s."
+msgid ""
+"Accounting account %(code)s has the wrong type. Expected %(expected)s but "
+"found %(actual)s."
+msgstr ""
+"نوع الحساب المحاسبي %(code)s غير صحيح. النوع المتوقع: %(expected)s، والنوع "
+"الموجود: %(actual)s."
 
 msgid "The selected cash or bank account must be an asset account."
 msgstr "يجب أن يكون حساب الصندوق أو البنك المحدد من نوع الأصول."
@@ -733,6 +777,12 @@ msgstr "حساب الصندوق أو البنك المحدد لا يسمح با�
 msgid "The selected account is not marked as cash or a cash equivalent."
 msgstr "الحساب المحدد غير مصنّف ضمن النقد وما في حكمه."
 
+msgid "An automatic cash journal requires a valid cash-flow activity."
+msgstr "يتطلب القيد النقدي التلقائي تصنيفًا صحيحًا لنشاط التدفقات النقدية."
+
+msgid "Select a cash-flow activity before posting a journal that changes cash."
+msgstr "اختر نشاط التدفق النقدي قبل ترحيل قيد يؤثر في النقد."
+
 msgid "Only draft journal entries can be posted."
 msgstr "يمكن ترحيل قيود اليومية المسودة فقط."
 
@@ -743,9 +793,6 @@ msgstr "الحساب %(code)s غير نشط."
 #, python-format
 msgid "Account %(code)s does not allow posting."
 msgstr "الحساب %(code)s لا يسمح بالترحيل."
-
-msgid "Select a cash-flow activity before posting a journal that changes cash."
-msgstr "اختر نشاط التدفق النقدي قبل ترحيل قيد يؤثر في النقد."
 
 #, python-format
 msgid "Journal entry is not balanced. Debit = %(debit)s, Credit = %(credit)s."
@@ -773,8 +820,12 @@ msgid "Purchase accounting total must be greater than zero."
 msgstr "يجب أن يكون الإجمالي المحاسبي للمشتريات أكبر من صفر."
 
 #, python-format
-msgid "Purchase accounting total does not match invoice total. Calculated: %(calculated)s, Invoice total: %(invoice_total)s"
-msgstr "الإجمالي المحاسبي للمشتريات لا يطابق إجمالي الفاتورة. المحسوب: %(calculated)s، إجمالي الفاتورة: %(invoice_total)s"
+msgid ""
+"Purchase accounting total does not match invoice total. Calculated: "
+"%(calculated)s, Invoice total: %(invoice_total)s"
+msgstr ""
+"الإجمالي المحاسبي للمشتريات لا يطابق إجمالي الفاتورة. المحسوب: "
+"%(calculated)s، إجمالي الفاتورة: %(invoice_total)s"
 
 #, python-format
 msgid "Purchase Invoice %(invoice_number)s from %(supplier_name)s"
@@ -800,11 +851,19 @@ msgid "Paid amount cannot be negative."
 msgstr "لا يمكن أن يكون المبلغ المدفوع سالبًا."
 
 #, python-format
-msgid "A cash invoice must be paid in full before it can be confirmed. Paid: %(paid)s, required: %(total)s."
-msgstr "يجب سداد الفاتورة النقدية بالكامل قبل تأكيدها. المدفوع: %(paid)s، المطلوب: %(total)s."
+msgid ""
+"A cash invoice must be paid in full before it can be confirmed. Paid: "
+"%(paid)s, required: %(total)s."
+msgstr ""
+"يجب سداد الفاتورة النقدية بالكامل قبل تأكيدها. المدفوع: %(paid)s، المطلوب: "
+"%(total)s."
 
-msgid "A credit invoice cannot carry a paid amount. Confirm it with zero paid, then settle it using a payment voucher."
-msgstr "لا يمكن أن تحمل الفاتورة الآجلة مبلغاً مدفوعاً. أكّدها بمبلغ صفر ثم سدّدها بسند صرف."
+msgid ""
+"A credit invoice cannot carry a paid amount. Confirm it with zero paid, then "
+"settle it using a payment voucher."
+msgstr ""
+"لا يمكن أن تحمل الفاتورة الآجلة مبلغاً مدفوعاً. أكّدها بمبلغ صفر ثم سدّدها بسند "
+"صرف."
 
 #, python-format
 msgid "Purchase invoice %(invoice_number)s paid"
@@ -814,8 +873,8 @@ msgstr "دفعة على فاتورة الشراء %(invoice_number)s"
 msgid "Purchase invoice %(invoice_number)s outstanding balance"
 msgstr "الرصيد المتبقي على فاتورة الشراء %(invoice_number)s"
 
-msgid "Only completed POS sales can be posted."
-msgstr "فقط مبيعات نقاط البيع المكتملة يمكن ترحيلها."
+msgid "Only closed POS register sessions can be posted."
+msgstr "يمكن ترحيل جلسات صندوق نقطة البيع المغلقة فقط."
 
 msgid "A completed POS sale must contain at least one payment."
 msgstr "يجب أن تتضمن عملية البيع المكتملة في نقطة البيع دفعة واحدة على الأقل."
@@ -823,9 +882,8 @@ msgstr "يجب أن تتضمن عملية البيع المكتملة في نق�
 msgid "POS sale tax cannot exceed the sale total."
 msgstr "لا يمكن أن تتجاوز ضريبة عملية نقطة البيع إجمالي عملية البيع."
 
-#, python-format
-msgid "POS Sale %(sale_number)s"
-msgstr "بيع نقطة بيع %(sale_number)s"
+msgid "POS payment amounts must be greater than zero."
+msgstr "يجب أن تكون مبالغ دفعات نقطة البيع أكبر من صفر."
 
 msgid "Credit sales require a customer."
 msgstr "تتطلب المبيعات الآجلة تحديد عميل."
@@ -834,16 +892,58 @@ msgstr "تتطلب المبيعات الآجلة تحديد عميل."
 msgid "Unsupported payment method: %(method)s"
 msgstr "طريقة دفع غير مدعومة: %(method)s"
 
-#, python-format
-msgid "%(method)s payment for POS sale %(sale)s"
-msgstr "دفعة بطريقة %(method)s لعملية نقطة البيع %(sale)s"
-
 msgid "Sale change exceeds the available cash payment."
 msgstr "مبلغ الباقي يتجاوز مبلغ الدفع النقدي المتاح."
 
 #, python-format
-msgid "POS payment total does not match sale total. Payments: %(payments)s, Sale total: %(total)s"
-msgstr "إجمالي دفعات نقطة البيع لا يطابق إجمالي عملية البيع. الدفعات: %(payments)s، إجمالي البيع: %(total)s"
+msgid ""
+"POS payment total does not match sale total. Payments: %(payments)s, Sale "
+"total: %(total)s"
+msgstr ""
+"إجمالي دفعات نقطة البيع لا يطابق إجمالي عملية البيع. الدفعات: %(payments)s، "
+"إجمالي البيع: %(total)s"
+
+#, python-format
+msgid "POS register session %(session)s"
+msgstr "جلسة صندوق نقطة البيع %(session)s"
+
+msgid "Bank Transfer"
+msgstr "تحويل بنكي"
+
+#, python-format
+msgid "%(method)s payments for register %(session)s"
+msgstr "دفعات %(method)s للصندوق %(session)s"
+
+#, python-format
+msgid "Credit sale %(sale)s"
+msgstr "بيع آجل %(sale)s"
+
+#, python-format
+msgid "Sales revenue for register %(session)s"
+msgstr "إيرادات المبيعات للصندوق %(session)s"
+
+#, python-format
+msgid "Sales tax for register %(session)s"
+msgstr "ضريبة المبيعات للصندوق %(session)s"
+
+#, python-format
+msgid "COGS for register %(session)s"
+msgstr "تكلفة البضاعة المباعة للصندوق %(session)s"
+
+#, python-format
+msgid "Inventory reduction for register %(session)s"
+msgstr "تخفيض المخزون للصندوق %(session)s"
+
+msgid "Only completed POS sales can be posted."
+msgstr "فقط مبيعات نقاط البيع المكتملة يمكن ترحيلها."
+
+#, python-format
+msgid "POS Sale %(sale_number)s"
+msgstr "بيع نقطة بيع %(sale_number)s"
+
+#, python-format
+msgid "%(method)s payment for POS sale %(sale)s"
+msgstr "دفعة بطريقة %(method)s لعملية نقطة البيع %(sale)s"
 
 #, python-format
 msgid "Sales revenue for %(sale)s"
@@ -879,6 +979,29 @@ msgstr "شطب الهالك للمستند %(document_number)s"
 msgid "Inventory reduction due to waste %(document_number)s"
 msgstr "تخفيض المخزون بسبب الهالك %(document_number)s"
 
+msgid "Only confirmed stock adjustments can be posted to accounting."
+msgstr "لا يمكن ترحيل سوى تسويات المخزون المؤكدة إلى الحسابات."
+
+#, python-format
+msgid "Stock count adjustment %(number)s"
+msgstr "قيد تسوية جرد المخزون %(number)s"
+
+#, python-format
+msgid "Inventory shortage for stock count %(number)s"
+msgstr "عجز المخزون في الجرد %(number)s"
+
+#, python-format
+msgid "Inventory decrease for stock count %(number)s"
+msgstr "انخفاض المخزون الناتج عن الجرد %(number)s"
+
+#, python-format
+msgid "Inventory increase for stock count %(number)s"
+msgstr "زيادة المخزون الناتجة عن الجرد %(number)s"
+
+#, python-format
+msgid "Inventory gain for stock count %(number)s"
+msgstr "فائض المخزون في الجرد %(number)s"
+
 msgid "This journal entry has already been reversed."
 msgstr "تم عكس قيد اليومية هذا مسبقًا."
 
@@ -888,8 +1011,11 @@ msgstr "يمكن عكس قيود اليومية المُرحّلة فقط."
 msgid "A reversal journal entry cannot be reversed."
 msgstr "لا يمكن عكس قيد يومية عكسي."
 
-msgid "This document has settlements applied to it. Reverse those receipts or payments first."
-msgstr "توجد تسويات مرتبطة بهذا المستند. اعكس سندات القبض أو الصرف المرتبطة أولًا."
+msgid ""
+"This document has settlements applied to it. Reverse those receipts or "
+"payments first."
+msgstr ""
+"توجد تسويات مرتبطة بهذا المستند. اعكس سندات القبض أو الصرف المرتبطة أولًا."
 
 msgid "A reversal reason is required."
 msgstr "سبب العكس مطلوب."
@@ -988,6 +1114,18 @@ msgstr "تم ترحيل سند الصرف بنجاح."
 
 msgid "Journal entry saved as draft."
 msgstr "تم حفظ قيد اليومية كمسودة."
+
+msgid "New journal entry"
+msgstr "قيد يومية جديد"
+
+msgid "Only draft manual journal entries can be edited."
+msgstr "لا يمكن تعديل سوى قيود اليومية اليدوية بحالة مسودة."
+
+msgid "Journal entry updated successfully."
+msgstr "تم تحديث قيد اليومية بنجاح."
+
+msgid "Edit journal entry"
+msgstr "تحرير قيد اليومية"
 
 msgid "Journal entry reversed successfully."
 msgstr "تم عكس قيد اليومية بنجاح."
@@ -1274,9 +1412,6 @@ msgstr "رقم التسوية"
 msgid "Reason / Notes"
 msgstr "السبب / ملاحظات"
 
-msgid "Stock Adjustment"
-msgstr "تسوية المخزون"
-
 msgid "Stock Adjustments"
 msgstr "تسويات المخزون"
 
@@ -1299,8 +1434,10 @@ msgid "Stock Adjustment Items"
 msgstr "بنود تسوية المخزون"
 
 #, python-format
-msgid "Insufficient unexpired stock for product %(product)s. Short by %(short)s."
-msgstr "المخزون غير منتهي الصلاحية غير كافٍ للصنف %(product)s. مقدار العجز: %(short)s."
+msgid ""
+"Insufficient unexpired stock for product %(product)s. Short by %(short)s."
+msgstr ""
+"المخزون غير منتهي الصلاحية غير كافٍ للصنف %(product)s. مقدار العجز: %(short)s."
 
 msgid "Stock addition quantity must be greater than zero."
 msgstr "يجب أن تكون كمية الإضافة للمخزون أكبر من الصفر."
@@ -1309,8 +1446,12 @@ msgid "Stock removal quantity must be greater than zero."
 msgstr "يجب أن تكون كمية إزالة المخزون أكبر من الصفر."
 
 #, python-format
-msgid "Negative stock rule enforced: Cannot remove %(qty)s of %(product)s. Available: %(available)s."
-msgstr "قاعدة منع المخزون السالب مفعلة: لا يمكن إزالة %(qty)s من %(product)s. المتاح: %(available)s."
+msgid ""
+"Negative stock rule enforced: Cannot remove %(qty)s of %(product)s. "
+"Available: %(available)s."
+msgstr ""
+"قاعدة منع المخزون السالب مفعلة: لا يمكن إزالة %(qty)s من %(product)s. "
+"المتاح: %(available)s."
 
 msgid "Only draft adjustments can be confirmed."
 msgstr "يمكن تأكيد التسويات المسودة فقط."
@@ -1320,6 +1461,12 @@ msgstr "يجب أن تحتوي التسوية على صنف واحد على ال
 
 msgid "The selected batch is not stored in this warehouse."
 msgstr "الدفعة المختارة غير موجودة في هذا المستودع."
+
+msgid "The selected batch does not contain the full shortage quantity."
+msgstr "دفعة المخزون المحددة لا تحتوي على كامل كمية العجز."
+
+msgid "Stock batches do not contain the full shortage quantity."
+msgstr "دفعات المخزون لا تحتوي على كامل كمية العجز."
 
 msgid "Only draft transfers can be confirmed."
 msgstr "يمكن تأكيد التحويلات المسودة فقط."
@@ -1335,8 +1482,10 @@ msgid "Batch %(batch)s only has %(available)s remaining."
 msgstr "الدفعة %(batch)s متبقٍ منها %(available)s فقط."
 
 #, python-format
-msgid "Not enough stock of %(product)s in %(warehouse)s. Available: %(available)s."
-msgstr "لا يوجد مخزون كافٍ من %(product)s في %(warehouse)s. المتاح: %(available)s."
+msgid ""
+"Not enough stock of %(product)s in %(warehouse)s. Available: %(available)s."
+msgstr ""
+"لا يوجد مخزون كافٍ من %(product)s في %(warehouse)s. المتاح: %(available)s."
 
 msgid "Only draft waste and loss documents can be confirmed."
 msgstr "فقط مستندات الهالك والخسائر في حالة المسودة يمكن تأكيدها."
@@ -1403,8 +1552,8 @@ msgstr "تم تحديث المخزون. أُنشئت التسوية %(number)s �
 msgid "Adjustment saved as draft."
 msgstr "تم حفظ التسوية كمسودة."
 
-msgid "Adjustment confirmed. Stock now matches the count."
-msgstr "تم تأكيد التسوية، وأصبح المخزون مطابقاً للجرد."
+msgid "Adjustment confirmed. Stock and accounting are updated."
+msgstr "تم تأكيد التسوية وتحديث المخزون والحسابات."
 
 #, python-format
 msgid "%(count)s batch(es) have just been marked as expired."
@@ -1430,9 +1579,6 @@ msgstr "قارب على انتهاء الصلاحية"
 
 msgid "Payment Due"
 msgstr "استحقاق الدفع"
-
-msgid "System"
-msgstr "النظام"
 
 msgid "Notification Type"
 msgstr "نوع الإشعار"
@@ -1463,28 +1609,115 @@ msgid "Low stock: %(product)s"
 msgstr "مخزون منخفض: %(product)s"
 
 #, python-format
-msgid "%(product)s is down to %(on_hand)s, at or below its minimum of %(minimum)s."
-msgstr "وصل رصيد %(product)s إلى %(on_hand)s، وهو عند الحد الأدنى %(minimum)s أو أقل منه."
+msgid ""
+"%(product)s is down to %(on_hand)s, at or below its minimum of %(minimum)s."
+msgstr ""
+"وصل رصيد %(product)s إلى %(on_hand)s، وهو عند الحد الأدنى %(minimum)s أو أقل "
+"منه."
 
 #, python-format
 msgid "Expired: %(product)s"
 msgstr "منتهي الصلاحية: %(product)s"
 
 #, python-format
-msgid "Batch %(batch)s of %(product)s in %(warehouse)s expired on %(date)s. %(qty)s remain and cannot be sold. Write it off with a waste document."
-msgstr "الدفعة %(batch)s من %(product)s في %(warehouse)s انتهت صلاحيتها بتاريخ %(date)s. المتبقي %(qty)s ولا يمكن بيعه. سجّل مستند هدر لإخراجه."
+msgid ""
+"Batch %(batch)s of %(product)s in %(warehouse)s expired on %(date)s. %(qty)s "
+"remain and cannot be sold. Write it off with a waste document."
+msgstr ""
+"الدفعة %(batch)s من %(product)s في %(warehouse)s انتهت صلاحيتها بتاريخ "
+"%(date)s. المتبقي %(qty)s ولا يمكن بيعه. سجّل مستند هدر لإخراجه."
 
 #, python-format
 msgid "Expiring soon: %(product)s"
 msgstr "قاربت على الانتهاء: %(product)s"
 
 #, python-format
-msgid "Batch %(batch)s of %(product)s in %(warehouse)s expires on %(date)s. %(qty)s remain."
-msgstr "الدفعة %(batch)s من %(product)s في %(warehouse)s تنتهي صلاحيتها بتاريخ %(date)s. المتبقي %(qty)s."
+msgid ""
+"Batch %(batch)s of %(product)s in %(warehouse)s expires on %(date)s. %(qty)s "
+"remain."
+msgstr ""
+"الدفعة %(batch)s من %(product)s في %(warehouse)s تنتهي صلاحيتها بتاريخ "
+"%(date)s. المتبقي %(qty)s."
 
 #, python-format
 msgid "%(count)s notification(s) marked as read."
 msgstr "تم وضع علامة على %(count)s تنبيه كمقروء."
+
+msgid "Percentage (%)"
+msgstr ""
+
+#, fuzzy
+#| msgid "Paid Amount"
+msgid "Fixed Amount"
+msgstr "المبلغ المدفوع"
+
+#, fuzzy
+#| msgid "Account Type"
+msgid "Discount Type"
+msgstr "نوع الحساب"
+
+#, fuzzy
+#| msgid "Discount"
+msgid "Discount Value"
+msgstr "الخصم"
+
+#, fuzzy
+#| msgid "Discount Amount"
+msgid "Max Discount Amount"
+msgstr "قيمة الخصم"
+
+msgid "Minimum Order Amount"
+msgstr ""
+
+#, fuzzy
+#| msgid "Credit Limit"
+msgid "Usage Limit"
+msgstr "حد الائتمان"
+
+msgid "Times Used"
+msgstr ""
+
+#, fuzzy
+#| msgid "Received From"
+msgid "Valid From"
+msgstr "مستلم من"
+
+#, fuzzy
+#| msgid "Paid To"
+msgid "Valid To"
+msgstr "مدفوع إلى"
+
+#, fuzzy
+#| msgid "Discount"
+msgid "Discount Code"
+msgstr "الخصم"
+
+#, fuzzy
+#| msgid "Discount"
+msgid "Discount Codes"
+msgstr "الخصم"
+
+#, fuzzy
+#| msgid "This account is inactive."
+msgid "This discount code is inactive."
+msgstr "هذا الحساب غير نشط."
+
+#, fuzzy
+#| msgid "This account is inactive."
+msgid "This discount code is not yet active."
+msgstr "هذا الحساب غير نشط."
+
+#, fuzzy
+#| msgid "This document has been confirmed"
+msgid "This discount code has expired."
+msgstr "تم تأكيد هذا المستند"
+
+msgid "This discount code has reached its maximum usage limit."
+msgstr ""
+
+#, python-format
+msgid "Subtotal must be at least %(min_amt)s to use this code."
+msgstr ""
 
 msgid "Session Number"
 msgstr "رقم الوردية"
@@ -1567,9 +1800,6 @@ msgstr "بند مبيعات نقطة البيع"
 msgid "POS Sale Items"
 msgstr "بنود مبيعات نقطة البيع"
 
-msgid "Bank Transfer"
-msgstr "تحويل بنكي"
-
 msgid "Store Credit"
 msgstr "رصيد دائن للعميل"
 
@@ -1588,6 +1818,15 @@ msgstr "دفعات نقاط البيع"
 msgid "Cannot complete a sale with an empty cart."
 msgstr "لا يمكن إتمام عملية بيع باستخدام عربة تسوق فارغة."
 
+msgid "A sale requires an open register session."
+msgstr "تتطلب عملية البيع جلسة صندوق مفتوحة."
+
+msgid "The sale must use the cashier's open register session."
+msgstr "يجب تسجيل البيع ضمن جلسة الصندوق المفتوحة الخاصة بأمين الصندوق."
+
+msgid "The sale warehouse must match the register warehouse."
+msgstr "يجب أن يطابق مستودع البيع مستودع الصندوق."
+
 #, python-format
 msgid "%(product_name)s is not available for sale."
 msgstr "الصنف %(product_name)s غير متاح للبيع."
@@ -1597,11 +1836,58 @@ msgid "Discount on %(product_name)s exceeds the maximum of %(max)s%%."
 msgstr "الخصم على %(product_name)s يتجاوز الحد الأقصى %(max)s٪."
 
 #, python-format
-msgid "Insufficient stock for product %(product_name)s. Available: %(available)s, Requested: %(quantity)s"
-msgstr "الكمية غير كافية للمنتج %(product_name)s. المتوفر: %(available)s، المطلوبة: %(quantity)s"
+msgid ""
+"Insufficient stock for product %(product_name)s. Available: %(available)s, "
+"Requested: %(quantity)s"
+msgstr ""
+"الكمية غير كافية للمنتج %(product_name)s. المتوفر: %(available)s، المطلوبة: "
+"%(quantity)s"
+
+msgid "The POS sale contains an unsupported payment method."
+msgstr "تحتوي عملية نقطة البيع على طريقة دفع غير مدعومة."
+
+msgid "POS sale discounts cannot exceed pre-tax revenue."
+msgstr "لا يمكن أن تتجاوز خصومات نقطة البيع الإيراد قبل الضريبة."
+
+msgid "POS payment total is less than the sale total."
+msgstr "إجمالي دفعات نقطة البيع أقل من إجمالي البيع."
+
+msgid "Only an open register session can be closed."
+msgstr "يمكن إغلاق جلسة صندوق مفتوحة فقط."
+
+msgid "Only the session cashier or an administrator can close this register."
+msgstr ""
+"يمكن لأمين الصندوق الخاص بالجلسة أو مسؤول النظام فقط إغلاق هذا الصندوق."
+
+msgid "Actual counted cash cannot be negative."
+msgstr "لا يمكن أن يكون النقد الفعلي المعدود سالبًا."
 
 msgid "Cannot hold an empty cart."
 msgstr "لا يمكن تعليق سلة فارغة."
+
+msgid "You do not have permission to access discount code management."
+msgstr ""
+
+#, fuzzy, python-format
+#| msgid "Account %(account)s created successfully."
+msgid "Discount code '%(code)s' created successfully."
+msgstr "تم إنشاء الحساب %(account)s بنجاح."
+
+msgid "Please correct the errors below."
+msgstr ""
+
+msgid "Unauthorized"
+msgstr ""
+
+#, fuzzy
+#| msgid "Please try again."
+msgid "Please enter a discount code."
+msgstr "يرجى المحاولة مرة أخرى."
+
+#, fuzzy
+#| msgid "Invalid transaction amount or type."
+msgid "Invalid discount code."
+msgstr "قيمة الحركة أو نوعها غير صالح."
 
 msgid "Search query and warehouse ID are required."
 msgstr "مطلوب إدخال كلمة البحث وتحديد المستودع."
@@ -1620,6 +1906,9 @@ msgstr "يرجى اختيار مستودع."
 
 msgid "You already have an active register session."
 msgstr "لديك وردية صندوق نشطة بالفعل."
+
+msgid "Register closed successfully."
+msgstr "تم إغلاق الصندوق بنجاح."
 
 msgid "Invalid transaction amount or type."
 msgstr "قيمة الحركة أو نوعها غير صالح."
@@ -1808,7 +2097,8 @@ msgstr "نظام سفيريكا"
 msgid "One clear view of your operation."
 msgstr "رؤية موحدة وواضحة لعملياتك."
 
-msgid "Manage sales, stock, purchases, and finance from one connected workspace."
+msgid ""
+"Manage sales, stock, purchases, and finance from one connected workspace."
 msgstr "أدر المبيعات والمخزون والمشتريات والمالية من مساحة عمل مترابطة واحدة."
 
 msgid "Active customers"
@@ -2090,8 +2380,12 @@ msgid "Batches expiring soon"
 msgstr "دفعات قاربت على انتهاء الصلاحية"
 
 #, python-format
-msgid "Items reaching their expiration date within %(days)s days. Expired stock is blocked from sale and must be written off through Waste &amp; Loss."
-msgstr "أصناف تنتهي صلاحيتها خلال %(days)s أيام. المخزون منتهي الصلاحية ممنوع من البيع ويجب إخراجه عبر الهالك والخسائر."
+msgid ""
+"Items reaching their expiration date within %(days)s days. Expired stock is "
+"blocked from sale and must be written off through Waste &amp; Loss."
+msgstr ""
+"أصناف تنتهي صلاحيتها خلال %(days)s أيام. المخزون منتهي الصلاحية ممنوع من "
+"البيع ويجب إخراجه عبر الهالك والخسائر."
 
 msgid "Review batches"
 msgstr "مراجعة الدفعات"
@@ -2141,9 +2435,6 @@ msgstr "تشغيل النسخ الاحتياطي لقاعدة البيانات"
 msgid "Save"
 msgstr "حفظ"
 
-msgid "Search"
-msgstr "بحث"
-
 msgid "Credit limit"
 msgstr "سقف الائتمان"
 
@@ -2168,8 +2459,12 @@ msgstr "حفظ الحساب"
 msgid "Account hierarchy"
 msgstr "التسلسل الهرمي للحسابات"
 
-msgid "Summary accounts organize the chart. Posting accounts receive journal debits and credits."
-msgstr "تُنظّم الحسابات التجميعية دليل الحسابات، بينما تستقبل حسابات الترحيل الحركات المدينة والدائنة."
+msgid ""
+"Summary accounts organize the chart. Posting accounts receive journal debits "
+"and credits."
+msgstr ""
+"تُنظّم الحسابات التجميعية دليل الحسابات، بينما تستقبل حسابات الترحيل الحركات "
+"المدينة والدائنة."
 
 msgid "Leave Parent account blank for a top-level account."
 msgstr "اترك الحساب الأب فارغًا لإنشاء حساب رئيسي."
@@ -2184,7 +2479,8 @@ msgid "Chart of accounts"
 msgstr "دليل الحسابات"
 
 msgid "Manage summary and posting accounts in a parent-child hierarchy."
-msgstr "إدارة الحسابات التجميعية وحسابات الترحيل ضمن تسلسل هرمي من الأب والفروع."
+msgstr ""
+"إدارة الحسابات التجميعية وحسابات الترحيل ضمن تسلسل هرمي من الأب والفروع."
 
 msgid "New account"
 msgstr "حساب جديد"
@@ -2210,23 +2506,16 @@ msgstr "نقد وما في حكمه"
 msgid "No accounts have been created."
 msgstr "لم تُنشأ أي حسابات بعد."
 
-msgid "Finance audit log"
-msgstr "سجل التدقيق المالي"
-
 msgid "Finance controls"
 msgstr "الضوابط المالية"
 
-msgid "A permanent record of financial changes, posting, reversal and period controls."
+msgid ""
+"A permanent record of financial changes, posting, reversal and period "
+"controls."
 msgstr "سجل دائم للتغييرات المالية والترحيل والعكس وضوابط الفترات."
 
 msgid "User, record or ID"
 msgstr "المستخدم أو السجل أو المعرّف"
-
-msgid "All actions"
-msgstr "جميع الإجراءات"
-
-msgid "All record types"
-msgstr "جميع أنواع السجلات"
 
 msgid "Filter"
 msgstr "تصفية"
@@ -2237,81 +2526,9 @@ msgstr "إعادة تعيين"
 msgid "Refresh"
 msgstr "تحديث"
 
-msgid "Edit journal entry"
-msgstr "تحرير قيد اليومية"
-
-msgid "Only draft manual journal entries can be edited."
-msgstr "لا يمكن تعديل سوى قيود اليومية اليدوية بحالة مسودة."
-
-msgid "Journal entry updated successfully."
-msgstr "تم تحديث قيد اليومية بنجاح."
-
-msgid "This journal is not ready to post"
-msgstr "هذا القيد غير جاهز للترحيل"
-
-msgid "Edit draft"
-msgstr "تعديل المسودة"
-
-msgid "Add at least two debit or credit lines before saving."
-msgstr "أضف سطرين على الأقل يحتويان على مبلغ مدين أو دائن قبل الحفظ."
-
-msgid "Debit and credit totals must match before saving."
-msgstr "يجب أن يتساوى إجمالي المدين مع إجمالي الدائن قبل الحفظ."
-
-msgid "Save changes"
-msgstr "حفظ التغييرات"
-
-msgid "Records"
-msgstr "السجلات"
-
-msgid "Before and after changes"
-msgstr "التغييرات قبل وبعد"
-
-msgid "Only confirmed stock adjustments can be posted to accounting."
-msgstr "لا يمكن ترحيل سوى تسويات المخزون المؤكدة إلى الحسابات."
-
-#, python-format
-msgid "Stock count adjustment %(number)s"
-msgstr "قيد تسوية جرد المخزون %(number)s"
-
-#, python-format
-msgid "Inventory shortage for stock count %(number)s"
-msgstr "عجز المخزون في الجرد %(number)s"
-
-#, python-format
-msgid "Inventory decrease for stock count %(number)s"
-msgstr "انخفاض المخزون الناتج عن الجرد %(number)s"
-
-#, python-format
-msgid "Inventory increase for stock count %(number)s"
-msgstr "زيادة المخزون الناتجة عن الجرد %(number)s"
-
-#, python-format
-msgid "Inventory gain for stock count %(number)s"
-msgstr "فائض المخزون في الجرد %(number)s"
-
-msgid "The selected batch does not contain the full shortage quantity."
-msgstr "دفعة المخزون المحددة لا تحتوي على كامل كمية العجز."
-
-msgid "Stock batches do not contain the full shortage quantity."
-msgstr "دفعات المخزون لا تحتوي على كامل كمية العجز."
-
-msgid "Adjustment confirmed. Stock and accounting are updated."
-msgstr "تم تأكيد التسوية وتحديث المخزون والحسابات."
-
-msgid "Confirming changes stock and posts the financial gain or loss. This cannot be undone. Continue?"
-msgstr "يؤدي التأكيد إلى تغيير المخزون وترحيل الربح أو الخسارة المالية، ولا يمكن التراجع عنه. هل تريد المتابعة؟"
-
-msgid "The system re-reads current quantities, values the variance, updates stock, and posts the inventory gain or loss automatically."
-msgstr "يعيد النظام قراءة الكميات الحالية ويقيّم الفرق ويحدّث المخزون ويرحّل ربح أو خسارة المخزون تلقائياً."
-
-msgid "View finance journal"
-msgstr "عرض القيد المالي"
-
-msgid "No journal was required because the count had no financial variance."
-msgstr "لم يلزم إنشاء قيد لأن الجرد لم ينتج عنه فرق مالي."
-
-msgid "Review unfinished work, balances and the audit history before closing a period."
+msgid ""
+"Review unfinished work, balances and the audit history before closing a "
+"period."
 msgstr "راجع الأعمال غير المكتملة والأرصدة وسجل التدقيق قبل إغلاق الفترة."
 
 msgid "Create fiscal year"
@@ -2326,8 +2543,10 @@ msgstr "سبب الإغلاق"
 msgid "e.g. Year-end review completed"
 msgstr "مثال: اكتملت مراجعة نهاية السنة"
 
-msgid "Closing the year closes all twelve months and prevents posting. Continue?"
-msgstr "سيؤدي إغلاق السنة إلى إغلاق الأشهر الاثني عشر ومنع الترحيل. هل تريد المتابعة؟"
+msgid ""
+"Closing the year closes all twelve months and prevents posting. Continue?"
+msgstr ""
+"سيؤدي إغلاق السنة إلى إغلاق الأشهر الاثني عشر ومنع الترحيل. هل تريد المتابعة؟"
 
 msgid "Close year"
 msgstr "إغلاق السنة"
@@ -2389,8 +2608,11 @@ msgstr "لم تُنشأ أي سنوات مالية بعد."
 msgid "Back"
 msgstr "رجوع"
 
-msgid "Creating a fiscal year also creates its twelve monthly accounting periods."
-msgstr "يؤدي إنشاء السنة المالية أيضًا إلى إنشاء فتراتها المحاسبية الشهرية الاثنتي عشرة."
+msgid ""
+"Creating a fiscal year also creates its twelve monthly accounting periods."
+msgstr ""
+"يؤدي إنشاء السنة المالية أيضًا إلى إنشاء فتراتها المحاسبية الشهرية الاثنتي "
+"عشرة."
 
 #, python-format
 msgid "Fiscal year %(year)s status-change audit trail."
@@ -2430,17 +2652,26 @@ msgstr "سبب العكس"
 msgid "View reversal entry"
 msgstr "عرض قيد العكس"
 
+msgid "This journal is not ready to post"
+msgstr "هذا القيد غير جاهز للترحيل"
+
+msgid "Edit draft"
+msgstr "تعديل المسودة"
+
 msgid "Post entry"
 msgstr "ترحيل القيد"
 
 msgid "Reverse entry"
 msgstr "عكس القيد"
 
-msgid "New journal entry"
-msgstr "قيد يومية جديد"
-
 msgid "Enter at least two lines with equal debit and credit totals."
 msgstr "أدخل سطرين على الأقل مع تساوي إجمالي المدين والدائن."
+
+msgid "Add at least two debit or credit lines before saving."
+msgstr "أضف سطرين على الأقل يحتويان على مبلغ مدين أو دائن قبل الحفظ."
+
+msgid "Debit and credit totals must match before saving."
+msgstr "يجب أن يتساوى إجمالي المدين مع إجمالي الدائن قبل الحفظ."
 
 msgid "Journal details"
 msgstr "تفاصيل قيد اليومية"
@@ -2459,6 +2690,9 @@ msgstr "حذف البند"
 
 msgid "Totals"
 msgstr "الإجماليات"
+
+msgid "Save changes"
+msgstr "حفظ التغييرات"
 
 msgid "Save draft"
 msgstr "حفظ كمسودة"
@@ -2503,9 +2737,6 @@ msgstr[5] "%(counter)s حدث تدقيق"
 msgid "Audit records are read-only."
 msgstr "سجلات التدقيق للقراءة فقط."
 
-msgid "Performed by"
-msgstr "نُفّذ بواسطة"
-
 #, python-format
 msgid "View %(counter)s change"
 msgid_plural "View %(counter)s changes"
@@ -2543,20 +2774,36 @@ msgstr "طباعة"
 msgid "This adjustment has no items."
 msgstr "لا توجد أصناف في هذه التسوية."
 
-msgid "Confirming changes the stock on hand and cannot be undone. Continue?"
-msgstr "التأكيد يغيّر الرصيد الفعلي ولا يمكن التراجع عنه. هل تريد المتابعة؟"
+msgid ""
+"Confirming changes stock and posts the financial gain or loss. This cannot "
+"be undone. Continue?"
+msgstr ""
+"يؤدي التأكيد إلى تغيير المخزون وترحيل الربح أو الخسارة المالية، ولا يمكن "
+"التراجع عنه. هل تريد المتابعة؟"
 
-msgid "Confirm adjustment"
-msgstr "تأكيد التسوية"
+msgid "Confirm and post"
+msgstr "تأكيد وترحيل"
 
-msgid "The system re-reads the current quantity when you confirm, so a shortage records ADJUSTMENT_OUT and a surplus records ADJUSTMENT_IN against today's real balance."
-msgstr "يقرأ النظام الرصيد الحالي من جديد عند التأكيد، فيسجل حركة إخراج عند النقص وحركة إدخال عند الزيادة مقابل الرصيد الفعلي اليوم."
+msgid ""
+"The system re-reads current quantities, values the variance, updates stock, "
+"and posts the inventory gain or loss automatically."
+msgstr ""
+"يعيد النظام قراءة الكميات الحالية ويقيّم الفرق ويحدّث المخزون ويرحّل ربح أو "
+"خسارة المخزون تلقائياً."
 
 msgid "This adjustment has been confirmed"
 msgstr "تم تأكيد هذه التسوية"
 
-msgid "Confirmed documents are locked. Create another adjustment to correct the stock again."
+msgid ""
+"Confirmed documents are locked. Create another adjustment to correct the "
+"stock again."
 msgstr "المستندات المؤكدة مقفلة. أنشئ تسوية أخرى لتصحيح المخزون مرة ثانية."
+
+msgid "View finance journal"
+msgstr "عرض القيد المالي"
+
+msgid "No journal was required because the count had no financial variance."
+msgstr "لم يلزم إنشاء قيد لأن الجرد لم ينتج عنه فرق مالي."
 
 msgid "New adjustment"
 msgstr "تسوية جديدة"
@@ -2567,10 +2814,13 @@ msgstr "تصحيح كمية النظام لتطابق الجرد الفعلي"
 msgid "Adjustment details"
 msgstr "بيانات التسوية"
 
-msgid "Enter the quantity you actually counted. The system works out the difference by itself."
+msgid ""
+"Enter the quantity you actually counted. The system works out the difference "
+"by itself."
 msgstr "أدخل الكمية التي جردتها فعلياً، والنظام بيحسب الفرق لحاله."
 
-msgid "Saving creates a draft. Stock only changes once you confirm the adjustment."
+msgid ""
+"Saving creates a draft. Stock only changes once you confirm the adjustment."
 msgstr "الحفظ ينشئ مسودة. لا يتغير المخزون إلا بعد تأكيد التسوية."
 
 msgid "View"
@@ -2598,8 +2848,11 @@ msgid "Leave the parent empty for a top-level category."
 msgstr "اترك التصنيف الأصل فارغًا لإنشاء تصنيف رئيسي."
 
 #, python-format
-msgid "Batches already expired, plus anything expiring within %(warning_days)s days"
-msgstr "دفعات منتهية الصلاحية، بالإضافة إلى ما ستنتهي صلاحيته خلال %(warning_days)s يوماً"
+msgid ""
+"Batches already expired, plus anything expiring within %(warning_days)s days"
+msgstr ""
+"دفعات منتهية الصلاحية، بالإضافة إلى ما ستنتهي صلاحيته خلال %(warning_days)s "
+"يوماً"
 
 msgid "New waste document"
 msgstr "مستند هالك وفاقد جديد"
@@ -2614,8 +2867,11 @@ msgstr[3] "انتهت صلاحية %(counter)s دفعات"
 msgstr[4] "انتهت صلاحية %(counter)s دفعة"
 msgstr[5] "انتهت صلاحية %(counter)s دفعة"
 
-msgid "Expired stock cannot be sold. Write it off with a waste document to remove it from inventory and record the loss."
-msgstr "لا يمكن بيع المخزون المنتهي. سجّل مستند هدر لإخراجه من المخزون وقيد الخسارة."
+msgid ""
+"Expired stock cannot be sold. Write it off with a waste document to remove "
+"it from inventory and record the loss."
+msgstr ""
+"لا يمكن بيع المخزون المنتهي. سجّل مستند هدر لإخراجه من المخزون وقيد الخسارة."
 
 msgid "Expiring soon"
 msgstr "قاربت على الانتهاء"
@@ -2623,8 +2879,11 @@ msgstr "قاربت على الانتهاء"
 msgid "Nothing is expired or close to expiring."
 msgstr "لا يوجد مخزون منتهٍ أو قارب على الانتهاء."
 
-msgid "The warning window is set by Expiration Warning Days in company settings."
-msgstr "تُضبط فترة التنبيه من خلال \"أيام التنبيه قبل انتهاء الصلاحية\" في إعدادات الشركة."
+msgid ""
+"The warning window is set by Expiration Warning Days in company settings."
+msgstr ""
+"تُضبط فترة التنبيه من خلال \"أيام التنبيه قبل انتهاء الصلاحية\" في إعدادات "
+"الشركة."
 
 msgid "Item details, pricing and stock settings"
 msgstr "بيانات الصنف والأسعار وإعدادات المخزون"
@@ -2680,8 +2939,12 @@ msgstr "ما سبب تعديل المخزون؟"
 msgid "This records a confirmed stock adjustment. Continue?"
 msgstr "سيتم تسجيل تسوية مخزون مؤكدة. هل تريد المتابعة؟"
 
-msgid "This shortcut creates a stock adjustment document and confirms it immediately, so the change is still recorded in the stock movements."
-msgstr "هذا الاختصار ينشئ مستند تسوية مخزون ويؤكده فوراً، فيبقى التعديل مسجلاً ضمن حركات المخزون."
+msgid ""
+"This shortcut creates a stock adjustment document and confirms it "
+"immediately, so the change is still recorded in the stock movements."
+msgstr ""
+"هذا الاختصار ينشئ مستند تسوية مخزون ويؤكده فوراً، فيبقى التعديل مسجلاً ضمن "
+"حركات المخزون."
 
 msgid "Warehouse transfer"
 msgstr "تحويل بين المستودعات"
@@ -2698,8 +2961,12 @@ msgstr "التأكيد ينقل المخزون فعلياً ولا يمكن ال
 msgid "Confirm transfer"
 msgstr "تأكيد التحويل"
 
-msgid "On confirmation the system records a TRANSFER_OUT from the source and a matching TRANSFER_IN at the destination. Total company stock does not change."
-msgstr "عند التأكيد يسجل النظام حركة إخراج من المستودع المصدر وحركة إدخال مقابلة لها في المستودع الوجهة. إجمالي مخزون الشركة لا يتغير."
+msgid ""
+"On confirmation the system records a TRANSFER_OUT from the source and a "
+"matching TRANSFER_IN at the destination. Total company stock does not change."
+msgstr ""
+"عند التأكيد يسجل النظام حركة إخراج من المستودع المصدر وحركة إدخال مقابلة لها "
+"في المستودع الوجهة. إجمالي مخزون الشركة لا يتغير."
 
 msgid "This transfer has been completed"
 msgstr "تم تنفيذ هذا التحويل"
@@ -2716,8 +2983,11 @@ msgstr "نقل المخزون بين المستودعات دون تغيير إج
 msgid "Transfer details"
 msgstr "بيانات التحويل"
 
-msgid "Leave the batch empty to let the system pick the batch expiring soonest (FEFO)."
-msgstr "اترك الدفعة فارغة ليختار النظام الدفعة الأقرب لانتهاء الصلاحية تلقائياً."
+msgid ""
+"Leave the batch empty to let the system pick the batch expiring soonest "
+"(FEFO)."
+msgstr ""
+"اترك الدفعة فارغة ليختار النظام الدفعة الأقرب لانتهاء الصلاحية تلقائياً."
 
 msgid "Saving creates a draft. Stock only moves once you confirm the transfer."
 msgstr "الحفظ ينشئ مسودة. لا ينتقل المخزون إلا بعد تأكيد التحويل."
@@ -2755,14 +3025,18 @@ msgstr "مخزن جديد"
 msgid "This document has no items."
 msgstr "لا توجد أصناف في هذا المستند."
 
-msgid "Confirming removes the stock and posts the loss. This cannot be undone. Continue?"
-msgstr "التأكيد يخصم المخزون ويقيّد الخسارة، ولا يمكن التراجع عنه. هل تريد المتابعة؟"
+msgid ""
+"Confirming removes the stock and posts the loss. This cannot be undone. "
+"Continue?"
+msgstr ""
+"التأكيد يخصم المخزون ويقيّد الخسارة، ولا يمكن التراجع عنه. هل تريد المتابعة؟"
 
-msgid "Confirm and post"
-msgstr "تأكيد وترحيل"
-
-msgid "On confirmation the system records a WASTE stock movement, reduces the batch and balance, and posts the loss against the inventory account."
-msgstr "عند التأكيد يسجل النظام حركة هدر، وينقص الدفعة والرصيد، ويقيّد الخسارة مقابل حساب المخزون."
+msgid ""
+"On confirmation the system records a WASTE stock movement, reduces the batch "
+"and balance, and posts the loss against the inventory account."
+msgstr ""
+"عند التأكيد يسجل النظام حركة هدر، وينقص الدفعة والرصيد، ويقيّد الخسارة مقابل "
+"حساب المخزون."
 
 msgid "This document has been confirmed"
 msgstr "تم تأكيد هذا المستند"
@@ -2779,7 +3053,8 @@ msgstr "بيانات المستند"
 msgid "The line total is calculated as quantity multiplied by unit cost."
 msgstr "يُحتسب إجمالي البند بضرب الكمية في تكلفة الوحدة."
 
-msgid "Saving creates a draft. Stock is only reduced once you confirm the document."
+msgid ""
+"Saving creates a draft. Stock is only reduced once you confirm the document."
 msgstr "الحفظ ينشئ مسودة. لا يُخصم المخزون إلا بعد تأكيد المستند."
 
 msgid "New document"
@@ -2797,14 +3072,87 @@ msgstr "تعليم الكل كمقروء"
 msgid "Unread"
 msgstr "غير مقروء"
 
-msgid "All"
-msgstr "الكل"
-
 msgid "Mark as read"
 msgstr "تعليم كمقروء"
 
-msgid "Alerts clear themselves once the stock is topped up or the expired batch is written off."
+msgid ""
+"Alerts clear themselves once the stock is topped up or the expired batch is "
+"written off."
 msgstr "تختفي التنبيهات تلقائياً بعد تعبئة المخزون أو إخراج الدفعة المنتهية."
+
+msgid "Create and manage promotional discounts for POS checkout"
+msgstr ""
+
+#, fuzzy
+#| msgid "Create account"
+msgid "Create Discount Code"
+msgstr "إنشاء حساب"
+
+msgid "Value"
+msgstr ""
+
+#, fuzzy
+#| msgid "Held Orders"
+msgid "Min Order"
+msgstr "الطلبات المعلّقة"
+
+#, fuzzy
+#| msgid "Maximum Discount"
+msgid "Max Discount"
+msgstr "أقصى خصم"
+
+#, fuzzy
+#| msgid "Message"
+msgid "Usage"
+msgstr "الرسالة"
+
+#, fuzzy
+#| msgid "Fiscal Period"
+msgid "Validity Period"
+msgstr "الفترة المالية"
+
+#, fuzzy
+#| msgid "Activity total"
+msgid "Activity Actions"
+msgstr "إجمالي النشاط"
+
+msgid "Always"
+msgstr ""
+
+#, fuzzy
+#| msgid "Expiry"
+msgid "No expiry"
+msgstr "تاريخ الانتهاء"
+
+msgid "Toggle"
+msgstr ""
+
+msgid "None"
+msgstr ""
+
+msgid "Not set"
+msgstr ""
+
+msgid "No discount codes found. Click above to create one."
+msgstr ""
+
+#, fuzzy
+#| msgid "Document details"
+msgid "Discount Code Details"
+msgstr "بيانات المستند"
+
+#, fuzzy
+#| msgid "Maximum Discount"
+msgid "Max Discount Cap"
+msgstr "أقصى خصم"
+
+msgid "Usage Count / Limit"
+msgstr ""
+
+#, fuzzy
+#| msgid "Save account"
+msgid "Save Discount Code"
+msgstr "حفظ الحساب"
 
 msgid "Point of sale"
 msgstr "نقطة البيع"
@@ -2815,12 +3163,14 @@ msgstr "اختر الأصناف، وراجع الطلب، ثم أكمل عملي
 #, python-format
 msgid ""
 "\n"
-"            <span class=\"badge bg-success mb-0\" style=\"font-size: 0.7rem;\">SHIFT #%(session_num)s</span>\n"
+"            <span class=\"badge bg-success mb-0\" style=\"font-size: 0.7rem;"
+"\">SHIFT #%(session_num)s</span>\n"
 "            <div class=\"small fw-bold text-dark\"></div>\n"
 "            "
 msgstr ""
 "\n"
-"      <span class=\"badge bg-success mb-0\" style=\"font-size: 0.7rem;\">الوردية رقم %(session_num)s</span>\n"
+"      <span class=\"badge bg-success mb-0\" style=\"font-size: 0.7rem;"
+"\">الوردية رقم %(session_num)s</span>\n"
 "      <div class=\"small fw-bold text-dark\"></div>\n"
 "      "
 
@@ -2839,7 +3189,9 @@ msgstr "سجل المبيعات"
 msgid "Close & Reconcile Register (Shift #"
 msgstr "إغلاق ومطابقة الصندوق (وردية رقم "
 
-msgid "Count the physical cash in the drawer and enter the total below to close out your shift."
+msgid ""
+"Count the physical cash in the drawer and enter the total below to close out "
+"your shift."
 msgstr "عُدّ النقد الموجود فعلياً في الدرج وأدخل الإجمالي أدناه لإغلاق ورديتك."
 
 msgid "Confirm & Close Register"
@@ -2860,6 +3212,9 @@ msgstr "في المخزون"
 msgid "No active products are available."
 msgstr "لا توجد منتجات نشطة متاحة."
 
+msgid "Page"
+msgstr ""
+
 msgid "Current order"
 msgstr "الطلب الحالي"
 
@@ -2878,6 +3233,12 @@ msgstr "سلتك فارغة"
 msgid "Choose a product to start a sale."
 msgstr "اختر منتجًا لبدء عملية البيع."
 
+msgid "PROMO20"
+msgstr ""
+
+msgid "Apply"
+msgstr "تطبيق"
+
 msgid "Payment method"
 msgstr "طريقة الدفع"
 
@@ -2886,6 +3247,9 @@ msgstr "حوالة بنكية"
 
 msgid "Customer credit"
 msgstr "آجل على العميل"
+
+msgid "Discount"
+msgstr "الخصم"
 
 msgid "Tax"
 msgstr "الضريبة"
@@ -2926,6 +3290,19 @@ msgstr "جارٍ تحميل الطلبات المعلّقة..."
 msgid "Cannot exceed available stock in selected warehouse."
 msgstr "لا يمكن تجاوز الكمية المتوفرة في المستودع المحدد."
 
+#, fuzzy
+#| msgid "Waste quantity must be greater than zero."
+msgid "Cart subtotal must be greater than zero."
+msgstr "يجب أن تكون كمية الهالك أكبر من صفر."
+
+#, fuzzy
+#| msgid "Unit updated successfully."
+msgid "Discount applied successfully!"
+msgstr "تم تحديث الوحدة بنجاح."
+
+msgid "Error validating discount code."
+msgstr ""
+
 msgid "Please select a warehouse first."
 msgstr "يرجى اختيار المستودع أولاً."
 
@@ -2953,8 +3330,16 @@ msgstr "تعذّر حفظ الحركة النقدية."
 msgid "No orders on hold."
 msgstr "لا توجد طلبات معلّقة."
 
+msgid "Click to view items"
+msgstr ""
+
 msgid "Recall"
 msgstr "استرجاع"
+
+#, fuzzy
+#| msgid "Ordered Items"
+msgid "Order Items:"
+msgstr "الأصناف المطلوبة"
 
 msgid "Order placed on hold."
 msgstr "عُلّق الطلب."
@@ -2965,7 +3350,8 @@ msgstr "تعذّر تعليق الطلب."
 msgid "Could not connect to server."
 msgstr "تعذّر الاتصال بالخادم."
 
-msgid "Your current cart will be cleared and replaced with the held order. Continue?"
+msgid ""
+"Your current cart will be cleared and replaced with the held order. Continue?"
 msgstr "ستُفرغ السلة الحالية ويحل محلها الطلب المعلّق. هل تريد المتابعة؟"
 
 msgid "Held order restored to cart."
@@ -3035,7 +3421,8 @@ msgid "Register Sessions & Cash Drawer"
 msgstr "جلسات نقطة البيع ودرج النقود"
 
 msgid "Manage cashier shifts, track daily floats, and reconcile cash."
-msgstr "إدارة ورديات أمناء الصندوق، وتتبع العهد النقدية اليومية، وتسوية النقدية."
+msgstr ""
+"إدارة ورديات أمناء الصندوق، وتتبع العهد النقدية اليومية، وتسوية النقدية."
 
 msgid "Open Terminal"
 msgstr "فتح شاشة البيع"
@@ -3109,9 +3496,6 @@ msgstr "فاتورة شراء"
 msgid "Payment type"
 msgstr "نوع الدفع"
 
-msgid "Discount"
-msgstr "الخصم"
-
 msgid "This invoice has no items."
 msgstr "لا توجد أصناف في هذه الفاتورة."
 
@@ -3121,11 +3505,19 @@ msgstr "مصاريف إضافية"
 msgid "Paid amount"
 msgstr "المبلغ المدفوع"
 
-msgid "Confirming adds the stock and posts the journal entry. This cannot be undone. Continue?"
-msgstr "التأكيد يزيد المخزون ويرحّل القيد المحاسبي، ولا يمكن التراجع عنه. هل تريد المتابعة؟"
+msgid ""
+"Confirming adds the stock and posts the journal entry. This cannot be "
+"undone. Continue?"
+msgstr ""
+"التأكيد يزيد المخزون ويرحّل القيد المحاسبي، ولا يمكن التراجع عنه. هل تريد "
+"المتابعة؟"
 
-msgid "A cash invoice must be paid in full, and a credit invoice must be confirmed with nothing paid. Use Edit to correct the paid amount."
-msgstr "الفاتورة النقدية يجب أن تُدفع بالكامل، والفاتورة الآجلة تُؤكَّد بدون مبلغ مدفوع. استخدم تعديل لتصحيح المبلغ المدفوع."
+msgid ""
+"A cash invoice must be paid in full, and a credit invoice must be confirmed "
+"with nothing paid. Use Edit to correct the paid amount."
+msgstr ""
+"الفاتورة النقدية يجب أن تُدفع بالكامل، والفاتورة الآجلة تُؤكَّد بدون مبلغ مدفوع. "
+"استخدم تعديل لتصحيح المبلغ المدفوع."
 
 msgid "This invoice has been confirmed"
 msgstr "تم تأكيد هذه الفاتورة"
@@ -3145,8 +3537,12 @@ msgstr "لم يتم حفظ الفاتورة"
 msgid "Invoice details"
 msgstr "بيانات الفاتورة"
 
-msgid "Discount and tax are not entered here: both are totalled from the item lines, and tax comes from each item's tax rate."
-msgstr "الخصم والضريبة لا تُدخل هنا، بل تُجمع من بنود الأصناف، والضريبة تُحتسب من نسبة ضريبة كل صنف."
+msgid ""
+"Discount and tax are not entered here: both are totalled from the item "
+"lines, and tax comes from each item's tax rate."
+msgstr ""
+"الخصم والضريبة لا تُدخل هنا، بل تُجمع من بنود الأصناف، والضريبة تُحتسب من نسبة "
+"ضريبة كل صنف."
 
 msgid "Unit cost"
 msgstr "تكلفة الوحدة"
@@ -3163,7 +3559,8 @@ msgstr "المتبقي للمورد"
 msgid "You can still save this as a draft, but it will not confirm."
 msgstr "يمكنك حفظها كمسودة، لكنها لن تُؤكَّد."
 
-msgid "Saving creates a draft. Stock increases only once you confirm the invoice."
+msgid ""
+"Saving creates a draft. Stock increases only once you confirm the invoice."
 msgstr "الحفظ ينشئ مسودة. لا يزيد المخزون إلا بعد تأكيد الفاتورة."
 
 msgid "A cash invoice must be paid in full."
@@ -3214,8 +3611,12 @@ msgstr "أعمالك مترابطة"
 msgid "Clarity across every transaction."
 msgstr "وضوح في كل معاملة."
 
-msgid "Finance, inventory, sales, and purchasing—all working together in one secure workspace."
-msgstr "المالية والمخزون والمبيعات والمشتريات، جميعها تعمل معًا ضمن مساحة عمل آمنة واحدة."
+msgid ""
+"Finance, inventory, sales, and purchasing—all working together in one secure "
+"workspace."
+msgstr ""
+"المالية والمخزون والمبيعات والمشتريات، جميعها تعمل معًا ضمن مساحة عمل آمنة "
+"واحدة."
 
 msgid "Welcome back"
 msgstr "مرحبًا بعودتك"
@@ -3250,7 +3651,8 @@ msgstr "التقارير المالية"
 msgid "Report filters"
 msgstr "مرشحات التقرير"
 
-msgid "Choose a reporting date and optionally narrow the results to one account."
+msgid ""
+"Choose a reporting date and optionally narrow the results to one account."
 msgstr "اختر تاريخ التقرير، ويمكنك حصر النتائج في حساب واحد."
 
 msgid "Run report"
@@ -3295,9 +3697,6 @@ msgstr "مستندات مفتوحة"
 msgid "Assets, liabilities, and equity as of the selected date."
 msgstr "الأصول والالتزامات وحقوق الملكية كما في التاريخ المحدد."
 
-msgid "Apply"
-msgstr "تطبيق"
-
 msgid "No asset balances."
 msgstr "لا توجد أرصدة أصول."
 
@@ -3322,8 +3721,12 @@ msgstr "قائمة المركز المالي غير متوازنة."
 msgid "Difference"
 msgstr "الفرق"
 
-msgid "Direct-method cash inflows and outflows from operating, investing and financing activities."
-msgstr "التدفقات النقدية الداخلة والخارجة بالطريقة المباشرة من الأنشطة التشغيلية والاستثمارية والتمويلية."
+msgid ""
+"Direct-method cash inflows and outflows from operating, investing and "
+"financing activities."
+msgstr ""
+"التدفقات النقدية الداخلة والخارجة بالطريقة المباشرة من الأنشطة التشغيلية "
+"والاستثمارية والتمويلية."
 
 msgid "Reporting period"
 msgstr "فترة التقرير"
@@ -3417,3 +3820,20 @@ msgstr "غير متوازن"
 
 msgid "No suppliers found."
 msgstr "لم يتم العثور على موردين."
+
+#~ msgid "Adjustment confirmed. Stock now matches the count."
+#~ msgstr "تم تأكيد التسوية، وأصبح المخزون مطابقاً للجرد."
+
+#~ msgid "Confirming changes the stock on hand and cannot be undone. Continue?"
+#~ msgstr "التأكيد يغيّر الرصيد الفعلي ولا يمكن التراجع عنه. هل تريد المتابعة؟"
+
+#~ msgid "Confirm adjustment"
+#~ msgstr "تأكيد التسوية"
+
+#~ msgid ""
+#~ "The system re-reads the current quantity when you confirm, so a shortage "
+#~ "records ADJUSTMENT_OUT and a surplus records ADJUSTMENT_IN against "
+#~ "today's real balance."
+#~ msgstr ""
+#~ "يقرأ النظام الرصيد الحالي من جديد عند التأكيد، فيسجل حركة إخراج عند النقص "
+#~ "وحركة إدخال عند الزيادة مقابل الرصيد الفعلي اليوم."
