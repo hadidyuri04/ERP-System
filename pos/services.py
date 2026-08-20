@@ -121,7 +121,9 @@ def complete_sale(warehouse, cashier, items_data, payments_data, customer=None, 
     if change_amount > cash_tendered:
         raise ValidationError(_("Sale change exceeds the available cash payment."))
     
-    sale_number = f"POS-{timezone.now().strftime('%Y%m%d%H%M%S')}"
+    # Microseconds, not seconds: two sales in the same second are normal on a
+    # busy till and would collide on the unique constraint.
+    sale_number = f"POS-{timezone.now().strftime('%Y%m%d%H%M%S%f')}"
     sale = POSSale.objects.create(
         session=session,
         sale_number=sale_number,
@@ -264,7 +266,7 @@ def hold_sale(warehouse, cashier, items_data, customer=None, notes="", session=N
         })
 
     grand_total = subtotal - total_discount + total_tax
-    sale_number = f"HOLD-{timezone.now().strftime('%Y%m%d%H%M%S')}"
+    sale_number = f"HOLD-{timezone.now().strftime('%Y%m%d%H%M%S%f')}"
 
     sale = POSSale.objects.create(
         session=session,

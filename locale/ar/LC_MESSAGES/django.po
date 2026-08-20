@@ -15,8 +15,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
-"&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
 
 msgid "Administrator"
 msgstr "مدير النظام"
@@ -118,7 +117,8 @@ msgid ""
 "PDF export is unavailable. Install the Playwright Chromium runtime and try "
 "again."
 msgstr ""
-"تصدير PDF غير متاح. ثبّت بيئة Chromium الخاصة بـ Playwright ثم حاول مرة أخرى."
+"تصدير PDF غير متاح. ثبّت بيئة Chromium الخاصة بـ Playwright ثم حاول مرة "
+"أخرى."
 
 msgid "Start date"
 msgstr "تاريخ البداية"
@@ -780,7 +780,8 @@ msgstr "الحساب المحدد غير مصنّف ضمن النقد وما ف�
 msgid "An automatic cash journal requires a valid cash-flow activity."
 msgstr "يتطلب القيد النقدي التلقائي تصنيفًا صحيحًا لنشاط التدفقات النقدية."
 
-msgid "Select a cash-flow activity before posting a journal that changes cash."
+msgid ""
+"Select a cash-flow activity before posting a journal that changes cash."
 msgstr "اختر نشاط التدفق النقدي قبل ترحيل قيد يؤثر في النقد."
 
 msgid "Only draft journal entries can be posted."
@@ -859,11 +860,11 @@ msgstr ""
 "%(total)s."
 
 msgid ""
-"A credit invoice cannot carry a paid amount. Confirm it with zero paid, then "
-"settle it using a payment voucher."
+"A credit invoice cannot carry a paid amount. Confirm it with zero paid, then"
+" settle it using a payment voucher."
 msgstr ""
-"لا يمكن أن تحمل الفاتورة الآجلة مبلغاً مدفوعاً. أكّدها بمبلغ صفر ثم سدّدها بسند "
-"صرف."
+"لا يمكن أن تحمل الفاتورة الآجلة مبلغاً مدفوعاً. أكّدها بمبلغ صفر ثم سدّدها "
+"بسند صرف."
 
 #, python-format
 msgid "Purchase invoice %(invoice_number)s paid"
@@ -1437,7 +1438,8 @@ msgstr "بنود تسوية المخزون"
 msgid ""
 "Insufficient unexpired stock for product %(product)s. Short by %(short)s."
 msgstr ""
-"المخزون غير منتهي الصلاحية غير كافٍ للصنف %(product)s. مقدار العجز: %(short)s."
+"المخزون غير منتهي الصلاحية غير كافٍ للصنف %(product)s. مقدار العجز: "
+"%(short)s."
 
 msgid "Stock addition quantity must be greater than zero."
 msgstr "يجب أن تكون كمية الإضافة للمخزون أكبر من الصفر."
@@ -1612,8 +1614,8 @@ msgstr "مخزون منخفض: %(product)s"
 msgid ""
 "%(product)s is down to %(on_hand)s, at or below its minimum of %(minimum)s."
 msgstr ""
-"وصل رصيد %(product)s إلى %(on_hand)s، وهو عند الحد الأدنى %(minimum)s أو أقل "
-"منه."
+"وصل رصيد %(product)s إلى %(on_hand)s، وهو عند الحد الأدنى %(minimum)s أو أقل"
+" منه."
 
 #, python-format
 msgid "Expired: %(product)s"
@@ -1621,8 +1623,8 @@ msgstr "منتهي الصلاحية: %(product)s"
 
 #, python-format
 msgid ""
-"Batch %(batch)s of %(product)s in %(warehouse)s expired on %(date)s. %(qty)s "
-"remain and cannot be sold. Write it off with a waste document."
+"Batch %(batch)s of %(product)s in %(warehouse)s expired on %(date)s. %(qty)s"
+" remain and cannot be sold. Write it off with a waste document."
 msgstr ""
 "الدفعة %(batch)s من %(product)s في %(warehouse)s انتهت صلاحيتها بتاريخ "
 "%(date)s. المتبقي %(qty)s ولا يمكن بيعه. سجّل مستند هدر لإخراجه."
@@ -1633,8 +1635,8 @@ msgstr "قاربت على الانتهاء: %(product)s"
 
 #, python-format
 msgid ""
-"Batch %(batch)s of %(product)s in %(warehouse)s expires on %(date)s. %(qty)s "
-"remain."
+"Batch %(batch)s of %(product)s in %(warehouse)s expires on %(date)s. %(qty)s"
+" remain."
 msgstr ""
 "الدفعة %(batch)s من %(product)s في %(warehouse)s تنتهي صلاحيتها بتاريخ "
 "%(date)s. المتبقي %(qty)s."
@@ -1644,80 +1646,68 @@ msgid "%(count)s notification(s) marked as read."
 msgstr "تم وضع علامة على %(count)s تنبيه كمقروء."
 
 msgid "Percentage (%)"
-msgstr ""
+msgstr "نسبة مئوية (٪)"
 
-#, fuzzy
 #| msgid "Paid Amount"
 msgid "Fixed Amount"
-msgstr "المبلغ المدفوع"
+msgstr "مبلغ ثابت"
 
-#, fuzzy
 #| msgid "Account Type"
 msgid "Discount Type"
-msgstr "نوع الحساب"
+msgstr "نوع الخصم"
 
-#, fuzzy
 #| msgid "Discount"
 msgid "Discount Value"
-msgstr "الخصم"
-
-#, fuzzy
-#| msgid "Discount Amount"
-msgid "Max Discount Amount"
 msgstr "قيمة الخصم"
 
-msgid "Minimum Order Amount"
-msgstr ""
+#| msgid "Discount Amount"
+msgid "Max Discount Amount"
+msgstr "أقصى مبلغ خصم"
 
-#, fuzzy
+msgid "Minimum Order Amount"
+msgstr "أقل قيمة للطلب"
+
 #| msgid "Credit Limit"
 msgid "Usage Limit"
-msgstr "حد الائتمان"
+msgstr "حد الاستخدام"
 
 msgid "Times Used"
-msgstr ""
+msgstr "عدد مرات الاستخدام"
 
-#, fuzzy
 #| msgid "Received From"
 msgid "Valid From"
-msgstr "مستلم من"
+msgstr "صالح من"
 
-#, fuzzy
 #| msgid "Paid To"
 msgid "Valid To"
-msgstr "مدفوع إلى"
+msgstr "صالح حتى"
 
-#, fuzzy
 #| msgid "Discount"
 msgid "Discount Code"
-msgstr "الخصم"
+msgstr "كود الخصم"
 
-#, fuzzy
 #| msgid "Discount"
 msgid "Discount Codes"
-msgstr "الخصم"
+msgstr "أكواد الخصم"
 
-#, fuzzy
 #| msgid "This account is inactive."
 msgid "This discount code is inactive."
-msgstr "هذا الحساب غير نشط."
+msgstr "كود الخصم هذا غير مفعّل."
 
-#, fuzzy
 #| msgid "This account is inactive."
 msgid "This discount code is not yet active."
-msgstr "هذا الحساب غير نشط."
+msgstr "كود الخصم هذا لم يبدأ سريانه بعد."
 
-#, fuzzy
 #| msgid "This document has been confirmed"
 msgid "This discount code has expired."
-msgstr "تم تأكيد هذا المستند"
+msgstr "انتهت صلاحية كود الخصم هذا."
 
 msgid "This discount code has reached its maximum usage limit."
-msgstr ""
+msgstr "وصل كود الخصم إلى الحد الأقصى لعدد الاستخدامات."
 
 #, python-format
 msgid "Subtotal must be at least %(min_amt)s to use this code."
-msgstr ""
+msgstr "يجب ألا يقل مجموع السلة عن %(min_amt)s لاستخدام هذا الكود."
 
 msgid "Session Number"
 msgstr "رقم الوردية"
@@ -1866,28 +1856,26 @@ msgid "Cannot hold an empty cart."
 msgstr "لا يمكن تعليق سلة فارغة."
 
 msgid "You do not have permission to access discount code management."
-msgstr ""
+msgstr "لا تملك صلاحية الوصول إلى إدارة أكواد الخصم."
 
-#, fuzzy, python-format
+#, python-format
 #| msgid "Account %(account)s created successfully."
 msgid "Discount code '%(code)s' created successfully."
-msgstr "تم إنشاء الحساب %(account)s بنجاح."
+msgstr "تم إنشاء كود الخصم '%(code)s' بنجاح."
 
 msgid "Please correct the errors below."
-msgstr ""
+msgstr "الرجاء تصحيح الأخطاء أدناه."
 
 msgid "Unauthorized"
-msgstr ""
+msgstr "غير مصرّح"
 
-#, fuzzy
 #| msgid "Please try again."
 msgid "Please enter a discount code."
-msgstr "يرجى المحاولة مرة أخرى."
+msgstr "الرجاء إدخال كود الخصم."
 
-#, fuzzy
 #| msgid "Invalid transaction amount or type."
 msgid "Invalid discount code."
-msgstr "قيمة الحركة أو نوعها غير صالح."
+msgstr "كود الخصم غير صالح."
 
 msgid "Search query and warehouse ID are required."
 msgstr "مطلوب إدخال كلمة البحث وتحديد المستودع."
@@ -2460,11 +2448,11 @@ msgid "Account hierarchy"
 msgstr "التسلسل الهرمي للحسابات"
 
 msgid ""
-"Summary accounts organize the chart. Posting accounts receive journal debits "
-"and credits."
+"Summary accounts organize the chart. Posting accounts receive journal debits"
+" and credits."
 msgstr ""
-"تُنظّم الحسابات التجميعية دليل الحسابات، بينما تستقبل حسابات الترحيل الحركات "
-"المدينة والدائنة."
+"تُنظّم الحسابات التجميعية دليل الحسابات، بينما تستقبل حسابات الترحيل الحركات"
+" المدينة والدائنة."
 
 msgid "Leave Parent account blank for a top-level account."
 msgstr "اترك الحساب الأب فارغًا لإنشاء حساب رئيسي."
@@ -2546,7 +2534,8 @@ msgstr "مثال: اكتملت مراجعة نهاية السنة"
 msgid ""
 "Closing the year closes all twelve months and prevents posting. Continue?"
 msgstr ""
-"سيؤدي إغلاق السنة إلى إغلاق الأشهر الاثني عشر ومنع الترحيل. هل تريد المتابعة؟"
+"سيؤدي إغلاق السنة إلى إغلاق الأشهر الاثني عشر ومنع الترحيل. هل تريد "
+"المتابعة؟"
 
 msgid "Close year"
 msgstr "إغلاق السنة"
@@ -2815,8 +2804,8 @@ msgid "Adjustment details"
 msgstr "بيانات التسوية"
 
 msgid ""
-"Enter the quantity you actually counted. The system works out the difference "
-"by itself."
+"Enter the quantity you actually counted. The system works out the difference"
+" by itself."
 msgstr "أدخل الكمية التي جردتها فعلياً، والنظام بيحسب الفرق لحاله."
 
 msgid ""
@@ -2963,10 +2952,11 @@ msgstr "تأكيد التحويل"
 
 msgid ""
 "On confirmation the system records a TRANSFER_OUT from the source and a "
-"matching TRANSFER_IN at the destination. Total company stock does not change."
+"matching TRANSFER_IN at the destination. Total company stock does not "
+"change."
 msgstr ""
-"عند التأكيد يسجل النظام حركة إخراج من المستودع المصدر وحركة إدخال مقابلة لها "
-"في المستودع الوجهة. إجمالي مخزون الشركة لا يتغير."
+"عند التأكيد يسجل النظام حركة إخراج من المستودع المصدر وحركة إدخال مقابلة لها"
+" في المستودع الوجهة. إجمالي مخزون الشركة لا يتغير."
 
 msgid "This transfer has been completed"
 msgstr "تم تنفيذ هذا التحويل"
@@ -2989,7 +2979,8 @@ msgid ""
 msgstr ""
 "اترك الدفعة فارغة ليختار النظام الدفعة الأقرب لانتهاء الصلاحية تلقائياً."
 
-msgid "Saving creates a draft. Stock only moves once you confirm the transfer."
+msgid ""
+"Saving creates a draft. Stock only moves once you confirm the transfer."
 msgstr "الحفظ ينشئ مسودة. لا ينتقل المخزون إلا بعد تأكيد التحويل."
 
 msgid "No transfers yet."
@@ -3032,11 +3023,11 @@ msgstr ""
 "التأكيد يخصم المخزون ويقيّد الخسارة، ولا يمكن التراجع عنه. هل تريد المتابعة؟"
 
 msgid ""
-"On confirmation the system records a WASTE stock movement, reduces the batch "
-"and balance, and posts the loss against the inventory account."
+"On confirmation the system records a WASTE stock movement, reduces the batch"
+" and balance, and posts the loss against the inventory account."
 msgstr ""
-"عند التأكيد يسجل النظام حركة هدر، وينقص الدفعة والرصيد، ويقيّد الخسارة مقابل "
-"حساب المخزون."
+"عند التأكيد يسجل النظام حركة هدر، وينقص الدفعة والرصيد، ويقيّد الخسارة مقابل"
+" حساب المخزون."
 
 msgid "This document has been confirmed"
 msgstr "تم تأكيد هذا المستند"
@@ -3081,78 +3072,68 @@ msgid ""
 msgstr "تختفي التنبيهات تلقائياً بعد تعبئة المخزون أو إخراج الدفعة المنتهية."
 
 msgid "Create and manage promotional discounts for POS checkout"
-msgstr ""
+msgstr "إنشاء وإدارة أكواد الخصم المستخدمة عند الدفع في نقاط البيع"
 
-#, fuzzy
 #| msgid "Create account"
 msgid "Create Discount Code"
-msgstr "إنشاء حساب"
+msgstr "إنشاء كود خصم"
 
 msgid "Value"
-msgstr ""
+msgstr "القيمة"
 
-#, fuzzy
 #| msgid "Held Orders"
 msgid "Min Order"
-msgstr "الطلبات المعلّقة"
+msgstr "أقل قيمة طلب"
 
-#, fuzzy
 #| msgid "Maximum Discount"
 msgid "Max Discount"
 msgstr "أقصى خصم"
 
-#, fuzzy
 #| msgid "Message"
 msgid "Usage"
-msgstr "الرسالة"
+msgstr "الاستخدام"
 
-#, fuzzy
 #| msgid "Fiscal Period"
 msgid "Validity Period"
-msgstr "الفترة المالية"
+msgstr "فترة الصلاحية"
 
-#, fuzzy
 #| msgid "Activity total"
 msgid "Activity Actions"
-msgstr "إجمالي النشاط"
+msgstr "إجراءات التفعيل"
 
 msgid "Always"
-msgstr ""
+msgstr "دائماً"
 
-#, fuzzy
 #| msgid "Expiry"
 msgid "No expiry"
-msgstr "تاريخ الانتهاء"
+msgstr "بدون تاريخ انتهاء"
 
 msgid "Toggle"
-msgstr ""
+msgstr "تفعيل / تعطيل"
 
 msgid "None"
-msgstr ""
+msgstr "لا يوجد"
 
 msgid "Not set"
-msgstr ""
+msgstr "غير محدد"
 
 msgid "No discount codes found. Click above to create one."
-msgstr ""
+msgstr "لا توجد أكواد خصم. اضغط بالأعلى لإنشاء واحد."
 
-#, fuzzy
 #| msgid "Document details"
 msgid "Discount Code Details"
-msgstr "بيانات المستند"
+msgstr "تفاصيل كود الخصم"
 
-#, fuzzy
 #| msgid "Maximum Discount"
 msgid "Max Discount Cap"
-msgstr "أقصى خصم"
+msgstr "الحد الأعلى للخصم"
 
 msgid "Usage Count / Limit"
-msgstr ""
+msgstr "عدد الاستخدامات / الحد"
 
-#, fuzzy
 #| msgid "Save account"
 msgid "Save Discount Code"
-msgstr "حفظ الحساب"
+msgstr "حفظ كود الخصم"
 
 msgid "Point of sale"
 msgstr "نقطة البيع"
@@ -3163,14 +3144,12 @@ msgstr "اختر الأصناف، وراجع الطلب، ثم أكمل عملي
 #, python-format
 msgid ""
 "\n"
-"            <span class=\"badge bg-success mb-0\" style=\"font-size: 0.7rem;"
-"\">SHIFT #%(session_num)s</span>\n"
+"            <span class=\"badge bg-success mb-0\" style=\"font-size: 0.7rem;\">SHIFT #%(session_num)s</span>\n"
 "            <div class=\"small fw-bold text-dark\"></div>\n"
 "            "
 msgstr ""
 "\n"
-"      <span class=\"badge bg-success mb-0\" style=\"font-size: 0.7rem;"
-"\">الوردية رقم %(session_num)s</span>\n"
+"      <span class=\"badge bg-success mb-0\" style=\"font-size: 0.7rem;\">الوردية رقم %(session_num)s</span>\n"
 "      <div class=\"small fw-bold text-dark\"></div>\n"
 "      "
 
@@ -3190,9 +3169,10 @@ msgid "Close & Reconcile Register (Shift #"
 msgstr "إغلاق ومطابقة الصندوق (وردية رقم "
 
 msgid ""
-"Count the physical cash in the drawer and enter the total below to close out "
-"your shift."
-msgstr "عُدّ النقد الموجود فعلياً في الدرج وأدخل الإجمالي أدناه لإغلاق ورديتك."
+"Count the physical cash in the drawer and enter the total below to close out"
+" your shift."
+msgstr ""
+"عُدّ النقد الموجود فعلياً في الدرج وأدخل الإجمالي أدناه لإغلاق ورديتك."
 
 msgid "Confirm & Close Register"
 msgstr "تأكيد وإغلاق الصندوق"
@@ -3213,7 +3193,7 @@ msgid "No active products are available."
 msgstr "لا توجد منتجات نشطة متاحة."
 
 msgid "Page"
-msgstr ""
+msgstr "صفحة"
 
 msgid "Current order"
 msgstr "الطلب الحالي"
@@ -3234,7 +3214,7 @@ msgid "Choose a product to start a sale."
 msgstr "اختر منتجًا لبدء عملية البيع."
 
 msgid "PROMO20"
-msgstr ""
+msgstr "PROMO20"
 
 msgid "Apply"
 msgstr "تطبيق"
@@ -3263,7 +3243,8 @@ msgstr "إتمام البيع"
 msgid "Register Cash In / Out"
 msgstr "إدخال / إخراج نقدية من الصندوق"
 
-msgid "Record cash added to or removed from the cash drawer during your shift."
+msgid ""
+"Record cash added to or removed from the cash drawer during your shift."
 msgstr "سجّل المبالغ المضافة إلى درج النقد أو المسحوبة منه خلال ورديتك."
 
 msgid "Cash In (Add money)"
@@ -3290,18 +3271,16 @@ msgstr "جارٍ تحميل الطلبات المعلّقة..."
 msgid "Cannot exceed available stock in selected warehouse."
 msgstr "لا يمكن تجاوز الكمية المتوفرة في المستودع المحدد."
 
-#, fuzzy
 #| msgid "Waste quantity must be greater than zero."
 msgid "Cart subtotal must be greater than zero."
-msgstr "يجب أن تكون كمية الهالك أكبر من صفر."
+msgstr "يجب أن يكون مجموع السلة أكبر من صفر."
 
-#, fuzzy
 #| msgid "Unit updated successfully."
 msgid "Discount applied successfully!"
-msgstr "تم تحديث الوحدة بنجاح."
+msgstr "تم تطبيق الخصم بنجاح."
 
 msgid "Error validating discount code."
-msgstr ""
+msgstr "تعذّر التحقق من كود الخصم."
 
 msgid "Please select a warehouse first."
 msgstr "يرجى اختيار المستودع أولاً."
@@ -3331,15 +3310,14 @@ msgid "No orders on hold."
 msgstr "لا توجد طلبات معلّقة."
 
 msgid "Click to view items"
-msgstr ""
+msgstr "اضغط لعرض الأصناف"
 
 msgid "Recall"
 msgstr "استرجاع"
 
-#, fuzzy
 #| msgid "Ordered Items"
 msgid "Order Items:"
-msgstr "الأصناف المطلوبة"
+msgstr "أصناف الطلب:"
 
 msgid "Order placed on hold."
 msgstr "عُلّق الطلب."
@@ -3351,7 +3329,8 @@ msgid "Could not connect to server."
 msgstr "تعذّر الاتصال بالخادم."
 
 msgid ""
-"Your current cart will be cleared and replaced with the held order. Continue?"
+"Your current cart will be cleared and replaced with the held order. "
+"Continue?"
 msgstr "ستُفرغ السلة الحالية ويحل محلها الطلب المعلّق. هل تريد المتابعة؟"
 
 msgid "Held order restored to cart."
@@ -3516,8 +3495,8 @@ msgid ""
 "A cash invoice must be paid in full, and a credit invoice must be confirmed "
 "with nothing paid. Use Edit to correct the paid amount."
 msgstr ""
-"الفاتورة النقدية يجب أن تُدفع بالكامل، والفاتورة الآجلة تُؤكَّد بدون مبلغ مدفوع. "
-"استخدم تعديل لتصحيح المبلغ المدفوع."
+"الفاتورة النقدية يجب أن تُدفع بالكامل، والفاتورة الآجلة تُؤكَّد بدون مبلغ "
+"مدفوع. استخدم تعديل لتصحيح المبلغ المدفوع."
 
 msgid "This invoice has been confirmed"
 msgstr "تم تأكيد هذه الفاتورة"
@@ -3541,8 +3520,8 @@ msgid ""
 "Discount and tax are not entered here: both are totalled from the item "
 "lines, and tax comes from each item's tax rate."
 msgstr ""
-"الخصم والضريبة لا تُدخل هنا، بل تُجمع من بنود الأصناف، والضريبة تُحتسب من نسبة "
-"ضريبة كل صنف."
+"الخصم والضريبة لا تُدخل هنا، بل تُجمع من بنود الأصناف، والضريبة تُحتسب من "
+"نسبة ضريبة كل صنف."
 
 msgid "Unit cost"
 msgstr "تكلفة الوحدة"
@@ -3612,8 +3591,8 @@ msgid "Clarity across every transaction."
 msgstr "وضوح في كل معاملة."
 
 msgid ""
-"Finance, inventory, sales, and purchasing—all working together in one secure "
-"workspace."
+"Finance, inventory, sales, and purchasing—all working together in one secure"
+" workspace."
 msgstr ""
 "المالية والمخزون والمبيعات والمشتريات، جميعها تعمل معًا ضمن مساحة عمل آمنة "
 "واحدة."
@@ -3821,14 +3800,13 @@ msgstr "غير متوازن"
 msgid "No suppliers found."
 msgstr "لم يتم العثور على موردين."
 
-<<<<<<< HEAD
 #: templates/pos/ templates/core/
 msgid "34% more than last month"
 msgstr "٣٤٪ أكثر من الشهر الماضي"
 
 #: templates/pos/ templates/core/
 msgid "Activity Actions"
-msgstr "إجراءات النشاط"
+msgstr "إجراءات التفعيل"
 
 #: templates/pos/ templates/core/
 msgid "Always"
@@ -3949,7 +3927,52 @@ msgstr "فترة الصلاحية"
 #: templates/pos/ templates/core/
 msgid "Value"
 msgstr "القيمة"
-=======
+
+#: quotations/services.py
+msgid "The discount is larger than the quotation value."
+msgstr "الخصم أكبر من قيمة عرض السعر."
+
+msgid "This quotation has already been converted into a sale."
+msgstr "تم تحويل عرض السعر هذا إلى فاتورة بيع مسبقاً."
+
+msgid "A rejected quotation cannot be converted."
+msgstr "لا يمكن تحويل عرض سعر مرفوض."
+
+msgid "An expired quotation cannot be converted."
+msgstr "لا يمكن تحويل عرض سعر منتهي الصلاحية."
+
+msgid "This quotation has already been converted into a sale"
+msgstr "تم تحويل عرض السعر هذا إلى فاتورة بيع مسبقاً"
+
+msgid ""
+"Stock and accounting were updated at that point. Create a new quotation for "
+"another order."
+msgstr ""
+"تم تحديث المخزون والقيود المحاسبية عند التحويل. أنشئ عرض سعر جديداً لطلب "
+"آخر."
+
+msgid "This quotation can no longer be converted"
+msgstr "لم يعد بالإمكان تحويل عرض السعر هذا"
+
+msgid ""
+"Rejected and expired quotations are closed. Create a new one with current "
+"prices."
+msgstr ""
+"عروض الأسعار المرفوضة والمنتهية مغلقة. أنشئ عرضاً جديداً بالأسعار الحالية."
+
+msgid "This quotation has no items."
+msgstr "لا توجد أصناف في عرض السعر هذا."
+
+msgid "Converting reduces stock and records a sale. Continue?"
+msgstr "التحويل يخصم المخزون ويسجل عملية بيع. هل تريد المتابعة؟"
+
+msgid ""
+"You need an open register session. Converting creates a POS sale, reduces "
+"stock and posts the accounting."
+msgstr ""
+"تحتاج إلى جلسة صندوق مفتوحة. التحويل ينشئ فاتورة بيع ويخصم المخزون ويرحّل "
+"القيود."
+
 #~ msgid "Adjustment confirmed. Stock now matches the count."
 #~ msgstr "تم تأكيد التسوية، وأصبح المخزون مطابقاً للجرد."
 
@@ -3961,9 +3984,8 @@ msgstr "القيمة"
 
 #~ msgid ""
 #~ "The system re-reads the current quantity when you confirm, so a shortage "
-#~ "records ADJUSTMENT_OUT and a surplus records ADJUSTMENT_IN against "
-#~ "today's real balance."
+#~ "records ADJUSTMENT_OUT and a surplus records ADJUSTMENT_IN against today's "
+#~ "real balance."
 #~ msgstr ""
 #~ "يقرأ النظام الرصيد الحالي من جديد عند التأكيد، فيسجل حركة إخراج عند النقص "
 #~ "وحركة إدخال عند الزيادة مقابل الرصيد الفعلي اليوم."
->>>>>>> 389dd6922b2f10e3641004fcb679dc38daad4126

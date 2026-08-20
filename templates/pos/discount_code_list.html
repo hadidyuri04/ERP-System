@@ -42,11 +42,11 @@
                 {% if code.discount_type == 'PERCENTAGE' %}
                   {{ code.value }}%
                 {% else %}
-                  ${{ code.value }}
+                  {{ code.value }} {{ currency }}
                 {% endif %}
               </td>
-              <td>${{ code.min_order_amount }}</td>
-              <td>{% if code.max_discount_amount %}${{ code.max_discount_amount }}{% else %}&mdash;{% endif %}</td>
+              <td>{{ code.min_order_amount }} {{ currency }}</td>
+              <td>{% if code.max_discount_amount %}{{ code.max_discount_amount }} {{ currency }}{% else %}&mdash;{% endif %}</td>
               <td>
                 {{ code.used_count }} / {% if code.usage_limit %}{{ code.usage_limit }}{% else %}&infin;{% endif %}
               </td>
@@ -76,9 +76,9 @@
                         data-bs-target="#viewDiscountModal"
                         data-code="{{ code.code }}"
                         data-type="{{ code.get_discount_type_display }}"
-                        data-value="{% if code.discount_type == 'PERCENTAGE' %}{{ code.value }}%{% else %}${{ code.value }}{% endif %}"
-                        data-min-order="${{ code.min_order_amount }}"
-                        data-max-discount="{% if code.max_discount_amount %}${{ code.max_discount_amount }}{% else %}{% trans 'None' %}{% endif %}"
+                        data-value="{% if code.discount_type == 'PERCENTAGE' %}{{ code.value }}%{% else %}{{ code.value }} {{ currency }}{% endif %}"
+                        data-min-order="{{ code.min_order_amount }} {{ currency }}"
+                        data-max-discount="{% if code.max_discount_amount %}{{ code.max_discount_amount }} {{ currency }}{% else %}{% trans 'None' %}{% endif %}"
                         data-usage="{{ code.used_count }} / {% if code.usage_limit %}{{ code.usage_limit }}{% else %}&infin;{% endif %}"
                         data-valid-from="{% if code.valid_from %}{{ code.valid_from|date:'Y-m-d H:i' }}{% else %}{% trans 'Not set' %}{% endif %}"
                         data-valid-to="{% if code.valid_to %}{{ code.valid_to|date:'Y-m-d H:i' }}{% else %}{% trans 'Not set' %}{% endif %}"

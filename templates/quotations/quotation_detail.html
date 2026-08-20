@@ -1,5 +1,188 @@
-{% extends "core/base.html" %}{% load i18n %}
-{% block title %}{{ quotation.quotation_number }}{% endblock %}{% block page_header %}<h1>{{ quotation.quotation_number }}</h1><p>{{ quotation.customer }} · {{ quotation.get_status_display }}</p>{% endblock %}
-{% block content %}<div class="card-soft mb-3"><div class="table-wrap"><table class="table-erp"><thead><tr><th>{% trans "Product" %}</th><th>{% trans "Quantity" %}</th><th>{% trans "Unit price" %}</th><th>{% trans "Discount" %}</th><th>{% trans "Tax" %}</th><th>{% trans "Total" %}</th></tr></thead><tbody>{% for item in quotation.items.all %}<tr><td>{{ item.product }}</td><td>{{ item.quantity }}</td><td>{{ item.unit_price }}</td><td>{{ item.discount_amount }}</td><td>{{ item.tax_amount }}</td><td>{{ item.line_total }}</td></tr>{% endfor %}</tbody></table></div><div class="card-pad"><strong>{% trans "Total" %}: {{ quotation.total|floatformat:3 }}</strong></div></div>
-{% if quotation.status != 'REJECTED' and quotation.status != 'EXPIRED' %}<form method="post" action="{% url 'quotations:convert' quotation.pk %}" class="card-soft card-pad">{% csrf_token %}<h3>{% trans "Convert to sale" %}</h3><label>{% trans "Warehouse" %}</label><select name="warehouse" class="form-select" required><option value="">---</option>{% for warehouse in warehouses %}<option value="{{ warehouse.pk }}">{{ warehouse }}</option>{% endfor %}</select><label>{% trans "Payment method" %}</label><select name="payment_method" class="form-select">{% for value,label in payment_methods %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select><label>{% trans "Reference" %}</label><input name="reference_number" class="form-control"><button class="btn btn-primary mt-3" type="submit">{% trans "Convert" %}</button></form>{% endif %}
+{% extends "core/base.html" %}
+{% load i18n %}
+
+{% block title %}{{ quotation.quotation_number }}{% endblock %}
+
+{% block page_header %}
+  <h1>{{ quotation.quotation_number }}</h1>
+  <p>{{ quotation.customer }}</p>
+{% endblock %}
+
+{% block topbar_actions %}
+  <button class="btn btn-ghost no-print" onclick="window.print()">
+    <i class="bi bi-printer me-1"></i>{% trans "Print" %}
+  </button>
+  <a href="{% url 'quotations:list' %}" class="btn btn-ghost" data-smooth>{% trans "Back" %}</a>
+{% endblock %}
+
+{% block content %}
+{# nav_active = 'quotations' — signed requirements module 8 #}
+
+<div class="card-soft mb-3">
+  <div class="card-head">
+    <div class="stat-icon" style="background:var(--purple-50);color:var(--purple-600)">
+      <i class="bi bi-file-earmark-text"></i>
+    </div>
+    <div>
+      <h3 class="mb-0">{{ quotation.customer }}</h3>
+      <span class="stat-label">{{ quotation.date|date:"Y-m-d" }}</span>
+    </div>
+    <div class="spacer"></div>
+    {% if quotation.status == 'ACCEPTED' %}
+      <span class="badge-soft badge-success">{{ quotation.get_status_display }}</span>
+    {% elif quotation.status == 'REJECTED' or quotation.status == 'EXPIRED' %}
+      <span class="badge-soft badge-danger">{{ quotation.get_status_display }}</span>
+    {% else %}
+      <span class="badge-soft badge-neutral">{{ quotation.get_status_display }}</span>
+    {% endif %}
+  </div>
+
+  <div class="card-pad">
+    <div class="row g-3">
+      <div class="col-6 col-md-3">
+        <div class="stat-label">{% trans "Date" %}</div>
+        <div class="fw-bold">{{ quotation.date|date:"Y-m-d" }}</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-label">{% trans "Expiry Date" %}</div>
+        <div class="fw-bold">{{ quotation.expiry_date|date:"Y-m-d" }}</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="stat-label">{% trans "Created By" %}</div>
+        <div class="fw-bold">{{ quotation.created_by }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card-soft mb-3">
+  <div class="card-head"><h3 class="mb-0">{% trans "Items" %}</h3></div>
+  <div class="table-wrap">
+    <table class="table-erp">
+      <thead>
+        <tr>
+          <th>{% trans "Product" %}</th>
+          <th class="num" style="width:11%">{% trans "Quantity" %}</th>
+          <th class="num" style="width:12%">{% trans "Unit price" %}</th>
+          <th class="num" style="width:11%">{% trans "Discount" %}</th>
+          <th class="num" style="width:11%">{% trans "Tax" %}</th>
+          <th class="num" style="width:13%">{% trans "Total" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in quotation.items.all %}
+          <tr data-row>
+            <td class="cell-strong">{{ item.product.name }}</td>
+            <td class="num">{{ item.quantity|floatformat:3 }}</td>
+            <td class="num">{{ item.unit_price|floatformat:3 }}</td>
+            <td class="num">{{ item.discount_amount|floatformat:3 }}</td>
+            <td class="num">{{ item.tax_amount|floatformat:3 }}</td>
+            <td class="num cell-strong">{{ item.line_total|floatformat:3 }}</td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6">
+              <div class="empty-state"><p>{% trans "This quotation has no items." %}</p></div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card-pad">
+    <div class="total-line">
+      <span>{% trans "Subtotal" %}</span>
+      <span class="v tnum">{{ quotation.subtotal|floatformat:3 }}</span>
+    </div>
+    <div class="total-line">
+      <span>{% trans "Discount" %}</span>
+      <span class="v tnum">{{ quotation.discount_amount|floatformat:3 }}</span>
+    </div>
+    <div class="total-line">
+      <span>{% trans "Tax" %}</span>
+      <span class="v tnum">{{ quotation.tax_amount|floatformat:3 }}</span>
+    </div>
+    <div class="total-line grand">
+      <span>{% trans "Total" %}</span>
+      <span class="v"><span class="tnum">{{ quotation.total|floatformat:3 }}</span>
+        <small class="text-muted fs-6 fw-normal">{{ currency }}</small></span>
+    </div>
+  </div>
+</div>
+
+{# ACCEPTED means it is already a sale. Showing the form again let the same
+   order be sold twice and the stock taken out twice. #}
+{% if quotation.status == 'ACCEPTED' %}
+  <div class="card-soft card-pad">
+    <div class="d-flex align-items-center gap-3 p-3 rounded-3" style="background:var(--success-bg)">
+      <i class="bi bi-shield-check fs-4" style="color:var(--success)"></i>
+      <div>
+        <div class="fw-bold" style="color:var(--success)">
+          {% trans "This quotation has already been converted into a sale" %}
+        </div>
+        <div class="small text-muted">
+          {% trans "Stock and accounting were updated at that point. Create a new quotation for another order." %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% elif quotation.status == 'REJECTED' or quotation.status == 'EXPIRED' %}
+  <div class="card-soft card-pad">
+    <div class="d-flex align-items-center gap-3 p-3 rounded-3" style="background:var(--danger-bg)">
+      <i class="bi bi-x-circle fs-4" style="color:var(--danger)"></i>
+      <div>
+        <div class="fw-bold" style="color:var(--danger)">
+          {% trans "This quotation can no longer be converted" %}
+        </div>
+        <div class="small text-muted">
+          {% trans "Rejected and expired quotations are closed. Create a new one with current prices." %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% else %}
+  <form method="post" action="{% url 'quotations:convert' quotation.pk %}" class="card-soft card-pad">
+    {% csrf_token %}
+    <div class="form-section-title">{% trans "Convert to sale" %}</div>
+
+    <div class="mb-3">
+      <label class="form-label" for="id_convert_warehouse">
+        {% trans "Warehouse" %}<span class="req">*</span>
+      </label>
+      <select name="warehouse" id="id_convert_warehouse" class="form-select" required>
+        <option value="">{% trans "Select a warehouse" %}</option>
+        {% for warehouse in warehouses %}
+          <option value="{{ warehouse.pk }}">{{ warehouse }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label" for="id_convert_payment">{% trans "Payment method" %}</label>
+      <select name="payment_method" id="id_convert_payment" class="form-select">
+        {% for value, label in payment_methods %}
+          <option value="{{ value }}">{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label" for="id_convert_reference">{% trans "Reference" %}</label>
+      <input name="reference_number" id="id_convert_reference" class="form-control">
+    </div>
+
+    <button class="btn btn-primary" type="submit"
+            data-confirm="{% trans "Converting reduces stock and records a sale. Continue?" %}">
+      <i class="bi bi-arrow-right-circle me-1"></i>{% trans "Convert" %}
+    </button>
+
+    <p class="field-hint mt-3 mb-0">
+      <i class="bi bi-info-circle me-1"></i>
+      {% trans "You need an open register session. Converting creates a POS sale, reduces stock and posts the accounting." %}
+    </p>
+  </form>
+{% endif %}
 {% endblock %}

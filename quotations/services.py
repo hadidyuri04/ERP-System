@@ -14,9 +14,14 @@ def create_quotation(customer, date, expiry_date, items_data, user, discount_amo
     if not items_data:
         raise ValidationError(_("Cannot create a quotation with no items."))
 
-    quotation_number = f"QT-{timezone.now().strftime('%Y%m%d%H%M%S')}"
+    quotation_number = f"QT-{timezone.now().strftime('%Y%m%d%H%M%S%f')}"
     
+    # subtotal is the goods value only. It used to accumulate line_total, which
+    # already had tax and discount folded in, and then tax was added a second
+    # time below. A header discount could then drag the total below zero.
     subtotal = Decimal('0.000')
+    line_discount = Decimal('0.000')
+    line_tax = Decimal('0.000')
     prepared_items = []
 
     for item in items_data:
@@ -25,7 +30,10 @@ def create_quotation(customer, date, expiry_date, items_data, user, discount_amo
         disc = Decimal(str(item.get('discount_amount', '0.000')))
         tax = Decimal(str(item.get('tax_amount', '0.000')))
         line_total = (qty * price) - disc + tax
-        subtotal += line_total
+
+        subtotal += qty * price
+        line_discount += disc
+        line_tax += tax
 
         prepared_items.append({
             'product': item['product'],
@@ -36,7 +44,19 @@ def create_quotation(customer, date, expiry_date, items_data, user, discount_amo
             'line_total': line_total
         })
 
-    total = subtotal - Decimal(str(discount_amount)) + Decimal(str(tax_amount))
+    # Tax always comes from the lines, never from the caller, so it cannot be
+    # counted twice. `tax_amount` is kept in the signature for compatibility.
+    total_discount = line_discount + Decimal(str(discount_amount))
+    total_tax = line_tax
+    total = subtotal - total_discount + total_tax
+
+    if total < 0:
+        raise ValidationError(
+            _("The discount is larger than the quotation value.")
+        )
+
+    discount_amount = total_discount
+    tax_amount = total_tax
 
     quotation = Quotation.objects.create(
         quotation_number=quotation_number,
@@ -66,21 +86,42 @@ def create_quotation(customer, date, expiry_date, items_data, user, discount_amo
     return quotation
 
 
-@transaction.atomic
-def convert_quotation_to_pos_sale(quotation_id, warehouse, cashier, payments_data):
+def convert_quotation_to_pos_sale(quotation_id, warehouse, cashier, payments_data, session=None):
     """
-    Converts an ACCEPTED quotation into a completed POS Sale.
-    Deducts stock and creates financial transactions at this exact stage.
-    """
-    quotation = Quotation.objects.select_for_update().prefetch_related('items').get(pk=quotation_id)
+    Convert a quotation into a completed POS sale.
 
-    if quotation.status in [Quotation.Status.REJECTED, Quotation.Status.EXPIRED]:
-        raise ValidationError(_("Cannot convert a rejected or expired quotation."))
+    The eligibility checks run outside the transaction on purpose. Marking a
+    quotation expired and then raising inside an atomic block would roll the
+    marking back with the exception, so the quotation stayed DRAFT forever and
+    the same failure repeated on every attempt.
+    """
+    quotation = Quotation.objects.get(pk=quotation_id)
+
+    # ACCEPTED means it has already become a sale. Without this check the same
+    # quotation could be converted repeatedly, selling the same order twice and
+    # taking the stock out twice.
+    if quotation.status == Quotation.Status.ACCEPTED:
+        raise ValidationError(
+            _("This quotation has already been converted into a sale.")
+        )
+
+    if quotation.status == Quotation.Status.REJECTED:
+        raise ValidationError(_("A rejected quotation cannot be converted."))
+
+    if quotation.status == Quotation.Status.EXPIRED:
+        raise ValidationError(_("An expired quotation cannot be converted."))
 
     if quotation.expiry_date < timezone.now().date():
         quotation.status = Quotation.Status.EXPIRED
         quotation.save(update_fields=['status'])
         raise ValidationError(_("This quotation has expired and cannot be converted."))
+
+    return _convert_quotation(quotation_id, warehouse, cashier, payments_data, session)
+
+
+@transaction.atomic
+def _convert_quotation(quotation_id, warehouse, cashier, payments_data, session):
+    quotation = Quotation.objects.select_for_update().prefetch_related('items').get(pk=quotation_id)
 
     # Prepare item payload for POS service
     pos_items_data = []
@@ -94,9 +135,13 @@ def convert_quotation_to_pos_sale(quotation_id, warehouse, cashier, payments_dat
         })
 
     # Complete POS sale (validates stock, updates FEFO batches, posts accounting)[cite: 1]
+    # complete_sale requires the cashier's open register session. Without
+    # passing it through, every conversion failed with "A sale requires an
+    # open register session".
     sale = complete_sale(
         warehouse=warehouse,
         cashier=cashier,
+        session=session,
         items_data=pos_items_data,
         payments_data=payments_data,
         customer=quotation.customer,

@@ -7,7 +7,7 @@ from django.views.decorators.http import require_POST
 
 from core.permissions import cashier_required
 from inventory.models import Warehouse
-from pos.models import POSPayment
+from pos.models import POSPayment, POSSession
 
 from .forms import QuotationForm, QuotationItemFormSet
 from .models import Quotation
@@ -62,9 +62,8 @@ def quotation_create(request):
                 expiry_date=form.cleaned_data["expiry_date"],
                 items_data=items_data,
                 user=request.user,
+                # Whole-quotation discount, on top of any per-line discount.
                 discount_amount=form.cleaned_data.get("discount_amount") or 0,
-                # Header tax removed: totals come from the line rates only.
-                tax_amount=sum(i["tax_amount"] for i in items_data),
                 notes=form.cleaned_data.get("notes") or "",
             )
             messages.success(request, _("Quotation created successfully."))
@@ -81,10 +80,22 @@ def convert_to_sale_view(request, pk):
     quotation = get_object_or_404(Quotation, pk=pk)
     try:
         warehouse = Warehouse.objects.get(pk=request.POST.get("warehouse"), is_active=True)
+
+        # A conversion is a real POS sale, so it needs the cashier's open till.
+        session = POSSession.objects.filter(
+            cashier=request.user,
+            status=POSSession.SessionStatus.OPEN,
+        ).first()
+        if session is None:
+            raise ValidationError(
+                _("Open a register session before converting a quotation.")
+            )
+
         sale = convert_quotation_to_pos_sale(
             quotation_id=quotation.id,
             warehouse=warehouse,
             cashier=request.user,
+            session=session,
             payments_data=[{
                 "payment_method": request.POST.get("payment_method", POSPayment.PaymentMethod.CASH),
                 "amount": quotation.total,

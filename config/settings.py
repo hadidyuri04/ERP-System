@@ -62,6 +62,9 @@ TEMPLATES = [
                 # Supplies unread_count and recent_notifications to the bell
                 # in the header on every page.
                 "notifications.context_processors.notifications",
+                # Supplies company settings, notably the configured currency,
+                # so templates stop hardcoding a symbol.
+                "core.context_processors.company",
             ],
         },
     },

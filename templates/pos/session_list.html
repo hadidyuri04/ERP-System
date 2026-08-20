@@ -50,7 +50,7 @@
                 </div>
                 <div class="col-md-3">
                     <small class="text-muted d-block">{% translate "Opening Float" %}</small>
-                    <strong class="text-dark fs-5">${{ active_session.opening_balance }}</strong>
+                    <strong class="text-dark fs-5">{{ active_session.opening_balance }} {{ currency }}</strong>
                 </div>
             </div>
         </div>
@@ -76,7 +76,7 @@
                         <div class="col-md-4 mb-3">
                             <label for="id_amount" class="form-label fw-bold">{% translate "Amount" %}</label>
                             <div class="input-group">
-                                <span class="input-group-text">$</span>
+                                <span class="input-group-text">{{ currency }}</span>
                                 <input type="number" step="0.001" name="amount" id="id_amount" class="form-control" placeholder="0.000" required>
                             </div>
                         </div>
@@ -108,7 +108,7 @@
                         <div class="col-md-6 mb-3">
                             <label for="id_closing_balance_actual" class="form-label fw-bold">{% translate "Actual Counted Cash" %}</label>
                             <div class="input-group input-group-lg">
-                                <span class="input-group-text">$</span>
+                                <span class="input-group-text">{{ currency }}</span>
                                 <input type="number" step="0.001" name="closing_balance_actual" id="id_closing_balance_actual" class="form-control" placeholder="0.000" required>
                             </div>
                         </div>
@@ -145,7 +145,7 @@
                         <div class="col-md-4 mb-3">
                             <label for="id_opening_balance" class="form-label fw-bold">{% translate "Opening Cash Float" %}</label>
                             <div class="input-group">
-                                <span class="input-group-text">$</span>
+                                <span class="input-group-text">{{ currency }}</span>
                                 <input type="number" step="0.001" name="opening_balance" id="id_opening_balance" class="form-control" placeholder="0.000" required>
                             </div>
                         </div>
@@ -209,10 +209,10 @@
                         </td>
                         <td>{{ session.opened_at|date:"M d, Y H:i" }}</td>
                         <td>{{ session.closed_at|date:"M d, Y H:i"|default:"-" }}</td>
-                        <td class="text-end">${{ session.opening_balance }}</td>
+                        <td class="text-end">{{ session.opening_balance }} {{ currency }}</td>
                         <td class="text-end">
                             {% if session.status == 'CLOSED' %}
-                                ${{ session.closing_balance_actual }}
+                                {{ session.closing_balance_actual }} {{ currency }}
                             {% else %}
                                 <span class="text-muted">-</span>
                             {% endif %}
@@ -220,11 +220,11 @@
                         <td class="text-end">
                             {% if session.status == 'CLOSED' %}
                                 {% if session.difference < 0 %}
-                                    <span class="text-danger fw-bold">${{ session.difference }}</span>
+                                    <span class="text-danger fw-bold">{{ session.difference }} {{ currency }}</span>
                                 {% elif session.difference > 0 %}
-                                    <span class="text-success fw-bold">+${{ session.difference }}</span>
+                                    <span class="text-success fw-bold">+{{ session.difference }} {{ currency }}</span>
                                 {% else %}
-                                    <span class="text-muted">$0.000</span>
+                                    <span class="text-muted">0.000 {{ currency }}</span>
                                 {% endif %}
                             {% else %}
                                 <span class="text-muted">-</span>
