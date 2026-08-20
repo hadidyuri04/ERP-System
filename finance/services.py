@@ -3,6 +3,7 @@ import uuid
 from datetime import date
 from decimal import Decimal
 
+from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import Sum
@@ -24,6 +25,23 @@ from .models import (
     ReceiptVoucher,
     PaymentVoucher,
 )
+
+
+DEFAULT_POSTING_ACCOUNT_CODES = {
+    "cash": "1100",
+    "bank": "1200",
+    "card_clearing": "1210",
+    "accounts_receivable": "1300",
+    "inventory": "1400",
+    "purchase_tax": "1500",
+    "accounts_payable": "2100",
+    "sales_tax_payable": "2200",
+    "sales_revenue": "4100",
+    "inventory_adjustment_gain": "4300",
+    "cost_of_goods_sold": "5100",
+    "waste_loss": "6300",
+    "inventory_adjustment_loss": "6310",
+}
 
 
 def _allocate_open_items(*, item_type, party, settlement_line, allocation_date, user):
@@ -78,7 +96,14 @@ def ensure_not_posted(source_type, source_id):
         )
 
 
-def get_posting_account(code, expected_type):
+def get_posting_account(account_key, expected_type):
+    """Resolve a semantic posting key to its configured chart account."""
+    configured_codes = {
+        **DEFAULT_POSTING_ACCOUNT_CODES,
+        **getattr(settings, "FINANCE_POSTING_ACCOUNTS", {}),
+    }
+    # Accept a literal code for backwards compatibility with existing callers.
+    code = configured_codes.get(account_key, account_key)
     try:
         account = Account.objects.get(code=code)
 
@@ -140,7 +165,42 @@ def validate_cash_bank_account(account):
         )
 
 
-def validate_journal_entry_for_posting(entry, *, lock_period=True):
+def classify_cash_flow_activity(
+    lines,
+    *,
+    selected_activity=JournalEntry.CashFlowActivity.NONE,
+    automatic_activity=None,
+):
+    """Return the activity based on cash lines and the business workflow."""
+    affects_cash = any(line.account.is_cash_equivalent for line in lines)
+    if not affects_cash:
+        return JournalEntry.CashFlowActivity.NONE
+
+    classified_activities = {
+        JournalEntry.CashFlowActivity.OPERATING,
+        JournalEntry.CashFlowActivity.INVESTING,
+        JournalEntry.CashFlowActivity.FINANCING,
+    }
+    if automatic_activity is not None:
+        if automatic_activity not in classified_activities:
+            raise ValidationError(
+                _("An automatic cash journal requires a valid cash-flow activity.")
+            )
+        return automatic_activity
+
+    if selected_activity not in classified_activities:
+        raise ValidationError(
+            _("Select a cash-flow activity before posting a journal that changes cash.")
+        )
+    return selected_activity
+
+
+def validate_journal_entry_for_posting(
+    entry,
+    *,
+    lock_period=True,
+    automatic_activity=None,
+):
     """Validate a journal without changing it and return its posting totals."""
     # 1. Only draft entries can be posted
     if entry.status != JournalEntry.Status.DRAFT:
@@ -183,13 +243,11 @@ def validate_journal_entry_for_posting(entry, *, lock_period=True):
         total_debit += line.debit
         total_credit += line.credit
 
-    if (
-        any(line.account.is_cash_equivalent for line in lines)
-        and entry.cash_flow_activity == JournalEntry.CashFlowActivity.NONE
-    ):
-        raise ValidationError(
-            _("Select a cash-flow activity before posting a journal that changes cash.")
-        )
+    entry.cash_flow_activity = classify_cash_flow_activity(
+        lines,
+        selected_activity=entry.cash_flow_activity,
+        automatic_activity=automatic_activity,
+    )
 
     # 4. Debit must equal credit
     if total_debit != total_credit:
@@ -211,10 +269,13 @@ def validate_journal_entry_for_posting(entry, *, lock_period=True):
 
 
 @transaction.atomic
-def post_journal_entry(entry_id, user):
+def post_journal_entry(entry_id, user, *, automatic_activity=None):
     # Lock the journal entry while we are posting it.
     entry = JournalEntry.objects.select_for_update().get(pk=entry_id)
-    lines, total_debit, total_credit = validate_journal_entry_for_posting(entry)
+    lines, total_debit, total_credit = validate_journal_entry_for_posting(
+        entry,
+        automatic_activity=automatic_activity,
+    )
 
     entry.status = JournalEntry.Status.POSTED
     entry.approved_by = user
@@ -223,6 +284,7 @@ def post_journal_entry(entry_id, user):
         update_fields=[
             "status",
             "approved_by",
+            "cash_flow_activity",
             "updated_at",
         ]
     )
@@ -270,7 +332,7 @@ def post_receipt_voucher(voucher_id, user):
 
     # 4. Find Accounts Receivable
     receivable_account = get_posting_account(
-        "1300",
+        "accounts_receivable",
         Account.AccountType.ASSET,
     )
 
@@ -281,7 +343,7 @@ def post_receipt_voucher(voucher_id, user):
         description=f"Receipt Voucher {voucher.voucher_number}",
         source_type=JournalEntry.SourceType.RECEIPT,
         source_id=voucher.id,
-        cash_flow_activity=JournalEntry.CashFlowActivity.OPERATING,
+        cash_flow_activity=JournalEntry.CashFlowActivity.NONE,
         status=JournalEntry.Status.DRAFT,
         created_by=user,
     )
@@ -306,7 +368,11 @@ def post_receipt_voucher(voucher_id, user):
     )
 
     # 6. Post the journal using your existing validation
-    post_journal_entry(journal.id, user)
+    post_journal_entry(
+        journal.id,
+        user,
+        automatic_activity=JournalEntry.CashFlowActivity.OPERATING,
+    )
     _allocate_open_items(
         item_type=OpenItem.ItemType.RECEIVABLE,
         party=voucher.customer,
@@ -368,7 +434,7 @@ def post_payment_voucher(voucher_id, user):
 
     # 4. Find Accounts Payable
     payable_account = get_posting_account(
-        "2100",
+        "accounts_payable",
         Account.AccountType.LIABILITY,
     )
 
@@ -379,7 +445,7 @@ def post_payment_voucher(voucher_id, user):
         description=f"Payment Voucher {voucher.voucher_number}",
         source_type=JournalEntry.SourceType.PAYMENT,
         source_id=voucher.id,
-        cash_flow_activity=JournalEntry.CashFlowActivity.OPERATING,
+        cash_flow_activity=JournalEntry.CashFlowActivity.NONE,
         status=JournalEntry.Status.DRAFT,
         created_by=user,
     )
@@ -404,7 +470,11 @@ def post_payment_voucher(voucher_id, user):
     )
 
     # 6. Post the journal using existing validation
-    post_journal_entry(journal.id, user)
+    post_journal_entry(
+        journal.id,
+        user,
+        automatic_activity=JournalEntry.CashFlowActivity.OPERATING,
+    )
     _allocate_open_items(
         item_type=OpenItem.ItemType.PAYABLE,
         party=voucher.supplier,
@@ -474,7 +544,7 @@ def post_purchase_invoice(invoice_id, user):
 
     # 4. Get posting accounts
     inventory_account = get_posting_account(
-        "1400",
+        "inventory",
         Account.AccountType.ASSET,
     )
 
@@ -486,7 +556,7 @@ def post_purchase_invoice(invoice_id, user):
 
     if invoice.tax_amount > 0:
         purchase_tax_account = get_posting_account(
-            "1500",
+            "purchase_tax",
             Account.AccountType.ASSET,
         )
 
@@ -525,7 +595,7 @@ def post_purchase_invoice(invoice_id, user):
         },
         source_type=JournalEntry.SourceType.PURCHASE,
         source_id=invoice.id,
-        cash_flow_activity=JournalEntry.CashFlowActivity.OPERATING,
+        cash_flow_activity=JournalEntry.CashFlowActivity.NONE,
         status=JournalEntry.Status.DRAFT,
         created_by=user,
     )
@@ -590,8 +660,8 @@ def post_purchase_invoice(invoice_id, user):
     # paid_amount used to be ignored entirely: the full total was credited to
     # Cash on a cash invoice, so a part payment left the outstanding balance
     # invisible. Now the settlement is split between Cash and Payables.
-    cash_account = get_posting_account("1100", Account.AccountType.ASSET)
-    payable_account = get_posting_account("2100", Account.AccountType.LIABILITY)
+    cash_account = get_posting_account("cash", Account.AccountType.ASSET)
+    payable_account = get_posting_account("accounts_payable", Account.AccountType.LIABILITY)
 
     paid = invoice.paid_amount or Decimal("0.000")
 
@@ -666,6 +736,7 @@ def post_purchase_invoice(invoice_id, user):
     posted_journal = post_journal_entry(
         journal.id,
         user,
+        automatic_activity=JournalEntry.CashFlowActivity.OPERATING,
     )
     record_finance_audit(
         actor=user,
@@ -677,6 +748,197 @@ def post_purchase_invoice(invoice_id, user):
         },
     )
     return posted_journal
+
+
+@transaction.atomic
+def post_pos_session(session_id, user):
+    """Post one consolidated journal for all unposted sales in a closed register."""
+    from pos.models import POSPayment, POSSale, POSSession
+
+    session = POSSession.objects.select_for_update().get(pk=session_id)
+    if session.status != POSSession.SessionStatus.CLOSED:
+        raise ValidationError(_("Only closed POS register sessions can be posted."))
+
+    ensure_not_posted(JournalEntry.SourceType.POS_SESSION, session.id)
+
+    # Sales posted by the old per-sale workflow must never be posted twice.
+    legacy_posted_ids = JournalEntry.objects.filter(
+        source_type=JournalEntry.SourceType.POS_SALE,
+        source_id__isnull=False,
+    ).values_list("source_id", flat=True)
+    sales = list(
+        POSSale.objects.select_for_update()
+        .filter(session=session, status=POSSale.SaleStatus.COMPLETED)
+        .exclude(pk__in=legacy_posted_ids)
+        .prefetch_related("items", "payments")
+        .order_by("id")
+    )
+    if not sales:
+        return None
+
+    revenue_account = get_posting_account("sales_revenue", Account.AccountType.REVENUE)
+
+    payment_totals = {
+        POSPayment.PaymentMethod.CASH: Decimal("0.000"),
+        POSPayment.PaymentMethod.CARD: Decimal("0.000"),
+        POSPayment.PaymentMethod.BANK: Decimal("0.000"),
+    }
+    credit_sales = []
+    total_revenue = Decimal("0.000")
+    total_tax = Decimal("0.000")
+    total_cogs = Decimal("0.000")
+
+    for sale in sales:
+        payments = list(sale.payments.all())
+        if not payments:
+            raise ValidationError(_("A completed POS sale must contain at least one payment."))
+
+        sale_tax = sum((item.tax_amount for item in sale.items.all()), Decimal("0.000"))
+        sale_revenue = sale.total - sale_tax
+        if sale_revenue < 0:
+            raise ValidationError(_("POS sale tax cannot exceed the sale total."))
+
+        remaining_change = sale.change_amount
+        posted_total = Decimal("0.000")
+        credit_total = Decimal("0.000")
+        for payment in payments:
+            amount = payment.amount
+            if amount <= 0:
+                raise ValidationError(_("POS payment amounts must be greater than zero."))
+            if payment.payment_method == POSPayment.PaymentMethod.CASH and remaining_change > 0:
+                cash_change = min(amount, remaining_change)
+                amount -= cash_change
+                remaining_change -= cash_change
+
+            if payment.payment_method in payment_totals:
+                payment_totals[payment.payment_method] += amount
+            elif payment.payment_method == POSPayment.PaymentMethod.CREDIT:
+                if sale.customer is None:
+                    raise ValidationError(_("Credit sales require a customer."))
+                credit_total += amount
+            else:
+                raise ValidationError(_("Unsupported payment method: %(method)s") % {
+                    "method": payment.payment_method,
+                })
+            posted_total += amount
+
+        if remaining_change > 0:
+            raise ValidationError(_("Sale change exceeds the available cash payment."))
+        if posted_total != sale.total:
+            raise ValidationError(
+                _("POS payment total does not match sale total. Payments: %(payments)s, Sale total: %(total)s")
+                % {"payments": posted_total, "total": sale.total}
+            )
+        if credit_total:
+            credit_sales.append((sale, credit_total))
+        total_revenue += sale_revenue
+        total_tax += sale_tax
+        total_cogs += sum(
+            (item.quantity * item.unit_cost for item in sale.items.all()),
+            Decimal("0.000"),
+        )
+
+    journal = JournalEntry.objects.create(
+        entry_number=f"POS-CLOSE-{session.id}",
+        date=timezone.localtime(session.closed_at).date(),
+        description=_("POS register session %(session)s") % {"session": session.session_number},
+        source_type=JournalEntry.SourceType.POS_SESSION,
+        source_id=session.id,
+        cash_flow_activity=JournalEntry.CashFlowActivity.NONE,
+        status=JournalEntry.Status.DRAFT,
+        created_by=user,
+    )
+
+    method_labels = {
+        POSPayment.PaymentMethod.CASH: _("Cash"),
+        POSPayment.PaymentMethod.CARD: _("Card"),
+        POSPayment.PaymentMethod.BANK: _("Bank Transfer"),
+    }
+    method_account_codes = {
+        POSPayment.PaymentMethod.CASH: "cash",
+        POSPayment.PaymentMethod.CARD: "card_clearing",
+        POSPayment.PaymentMethod.BANK: "bank",
+    }
+    for method, amount in payment_totals.items():
+        if amount:
+            JournalEntryLine.objects.create(
+                journal_entry=journal,
+                account=get_posting_account(method_account_codes[method], Account.AccountType.ASSET),
+                description=_("%(method)s payments for register %(session)s") % {
+                    "method": method_labels[method], "session": session.session_number,
+                },
+                debit=amount,
+                credit=Decimal("0.000"),
+            )
+
+    for sale, amount in credit_sales:
+        line = JournalEntryLine.objects.create(
+            journal_entry=journal,
+            account=get_posting_account("accounts_receivable", Account.AccountType.ASSET),
+            customer=sale.customer,
+            description=_("Credit sale %(sale)s") % {"sale": sale.sale_number},
+            debit=amount,
+            credit=Decimal("0.000"),
+        )
+        OpenItem.objects.create(
+            item_type=OpenItem.ItemType.RECEIVABLE,
+            customer=sale.customer,
+            journal_line=line,
+            document_number=sale.sale_number,
+            document_date=sale.date.date(),
+            due_date=sale.date.date(),
+            original_amount=amount,
+        )
+
+    JournalEntryLine.objects.create(
+        journal_entry=journal,
+        account=revenue_account,
+        description=_("Sales revenue for register %(session)s") % {"session": session.session_number},
+        debit=Decimal("0.000"),
+        credit=total_revenue,
+    )
+    if total_tax:
+        JournalEntryLine.objects.create(
+            journal_entry=journal,
+            account=get_posting_account("sales_tax_payable", Account.AccountType.LIABILITY),
+            description=_("Sales tax for register %(session)s") % {"session": session.session_number},
+            debit=Decimal("0.000"),
+            credit=total_tax,
+        )
+    if total_cogs:
+        JournalEntryLine.objects.create(
+            journal_entry=journal,
+            account=get_posting_account("cost_of_goods_sold", Account.AccountType.EXPENSE),
+            description=_("COGS for register %(session)s") % {"session": session.session_number},
+            debit=total_cogs,
+            credit=Decimal("0.000"),
+        )
+        JournalEntryLine.objects.create(
+            journal_entry=journal,
+            account=get_posting_account("inventory", Account.AccountType.ASSET),
+            description=_("Inventory reduction for register %(session)s") % {"session": session.session_number},
+            debit=Decimal("0.000"),
+            credit=total_cogs,
+        )
+
+    posted_journal = post_journal_entry(
+        journal.id,
+        user,
+        automatic_activity=JournalEntry.CashFlowActivity.OPERATING,
+    )
+    record_finance_audit(
+        actor=user,
+        action=FinanceAuditLog.Action.POSTED,
+        instance=session,
+        changes={
+            "journal_entry": {"before": None, "after": journal.entry_number},
+            "sale_count": {"before": None, "after": len(sales)},
+            "total": {"before": None, "after": str(sum((sale.total for sale in sales), Decimal("0.000")))},
+        },
+    )
+    return posted_journal
+
+
 @transaction.atomic
 def post_pos_sale(sale_id, user):
     from pos.models import POSSale, POSPayment
@@ -698,15 +960,15 @@ def post_pos_sale(sale_id, user):
     ensure_not_posted(JournalEntry.SourceType.POS_SALE, sale.id)
 
     sales_revenue_account = get_posting_account(
-        "4100",
+        "sales_revenue",
         Account.AccountType.REVENUE,
     )
     cogs_account = get_posting_account(
-        "5100",
+        "cost_of_goods_sold",
         Account.AccountType.EXPENSE,
     )
     inventory_account = get_posting_account(
-        "1400",
+        "inventory",
         Account.AccountType.ASSET,
     )
 
@@ -746,7 +1008,7 @@ def post_pos_sale(sale_id, user):
         },
         source_type=JournalEntry.SourceType.POS_SALE,
         source_id=sale.id,
-        cash_flow_activity=JournalEntry.CashFlowActivity.OPERATING,
+        cash_flow_activity=JournalEntry.CashFlowActivity.NONE,
         status=JournalEntry.Status.DRAFT,
         created_by=user,
     )
@@ -779,19 +1041,19 @@ def post_pos_sale(sale_id, user):
 
         if payment.payment_method == POSPayment.PaymentMethod.CASH:
             debit_account = get_posting_account(
-                "1100",
+                "cash",
                 Account.AccountType.ASSET,
             )
 
         elif payment.payment_method == POSPayment.PaymentMethod.CARD:
             debit_account = get_posting_account(
-                "1210",
+                "card_clearing",
                 Account.AccountType.ASSET,
             )
 
         elif payment.payment_method == POSPayment.PaymentMethod.BANK:
             debit_account = get_posting_account(
-                "1200",
+                "bank",
                 Account.AccountType.ASSET,
             )
 
@@ -804,7 +1066,7 @@ def post_pos_sale(sale_id, user):
                 )
 
             debit_account = get_posting_account(
-                "1300",
+                "accounts_receivable",
                 Account.AccountType.ASSET,
             )
 
@@ -882,7 +1144,7 @@ def post_pos_sale(sale_id, user):
 
     if total_tax > 0:
         tax_payable_account = get_posting_account(
-            "2200",
+            "sales_tax_payable",
             Account.AccountType.LIABILITY,
         )
         JournalEntryLine.objects.create(
@@ -922,7 +1184,11 @@ def post_pos_sale(sale_id, user):
             credit=total_cogs,
         )
 
-    post_journal_entry(journal.id, user)
+    post_journal_entry(
+        journal.id,
+        user,
+        automatic_activity=JournalEntry.CashFlowActivity.OPERATING,
+    )
     record_finance_audit(
         actor=user,
         action=FinanceAuditLog.Action.POSTED,
@@ -956,11 +1222,11 @@ def post_waste_loss(waste_id, user):
     ensure_not_posted(JournalEntry.SourceType.WASTE, waste.id)
 
     waste_account = get_posting_account(
-        "6300",
+        "waste_loss",
         Account.AccountType.EXPENSE,
     )
     inventory_account = get_posting_account(
-        "1400",
+        "inventory",
         Account.AccountType.ASSET,
     )
 
@@ -1045,14 +1311,14 @@ def post_stock_adjustment(adjustment_id, user):
     if shortage_value == 0 and surplus_value == 0:
         return None
 
-    inventory_account = get_posting_account("1400", Account.AccountType.ASSET)
+    inventory_account = get_posting_account("inventory", Account.AccountType.ASSET)
     loss_account = (
-        get_posting_account("6310", Account.AccountType.EXPENSE)
+        get_posting_account("inventory_adjustment_loss", Account.AccountType.EXPENSE)
         if shortage_value > 0
         else None
     )
     gain_account = (
-        get_posting_account("4300", Account.AccountType.REVENUE)
+        get_posting_account("inventory_adjustment_gain", Account.AccountType.REVENUE)
         if surplus_value > 0
         else None
     )

@@ -289,6 +289,7 @@ class JournalEntry(models.Model):
         MANUAL = "manual", _("Manual")
         PURCHASE = "purchase", _("Purchase")
         POS_SALE = "pos_sale", _("POS Sale")
+        POS_SESSION = "pos_session", _("POS Register Session")
         RECEIPT = "receipt", _("Receipt Voucher")
         PAYMENT = "payment", _("Payment Voucher")
         WASTE = "waste", _("Waste & Loss")

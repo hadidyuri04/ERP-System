@@ -123,3 +123,20 @@ AUTH_USER_MODEL = "accounts.User"
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "core:dashboard"
 LOGOUT_REDIRECT_URL = "login"
+# Finance control accounts are configurable so the chart codes can differ
+# between deployments without changing posting service code.
+FINANCE_POSTING_ACCOUNTS = {
+    "cash": "1100",
+    "bank": "1200",
+    "card_clearing": "1210",
+    "accounts_receivable": "1300",
+    "inventory": "1400",
+    "purchase_tax": "1500",
+    "accounts_payable": "2100",
+    "sales_tax_payable": "2200",
+    "sales_revenue": "4100",
+    "inventory_adjustment_gain": "4300",
+    "cost_of_goods_sold": "5100",
+    "waste_loss": "6300",
+    "inventory_adjustment_loss": "6310",
+}

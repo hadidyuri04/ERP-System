@@ -10,6 +10,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
 from django.test import TestCase, TransactionTestCase
 from django.urls import reverse
+from django.utils import timezone
 from openpyxl import load_workbook
 from playwright.sync_api import Error as PlaywrightError
 
@@ -28,8 +29,8 @@ from inventory.models import (
     WasteLossItem,
 )
 from inventory.services import confirm_stock_adjustment, confirm_waste_loss
-from pos.models import POSPayment, POSSale, POSSaleItem
-from pos.services import complete_sale
+from pos.models import POSPayment, POSSale, POSSaleItem, POSSession
+from pos.services import close_pos_session, complete_sale
 from purchasing.models import PurchaseInvoice, PurchaseInvoiceItem
 from purchasing.services import confirm_purchase
 from suppliers.models import Supplier
@@ -65,7 +66,7 @@ from .services import (
     get_posting_account,
     post_journal_entry,
     post_payment_voucher,
-    post_pos_sale,
+    post_pos_session,
     post_purchase_invoice,
     post_receipt_voucher,
     reverse_journal_entry,
@@ -937,6 +938,10 @@ class FinancePostingTests(TestCase):
                 cash_flow_activity=JournalEntry.CashFlowActivity.NONE,
             ).exists()
         )
+        self.assertEqual(
+            set(JournalEntry.objects.values_list("cash_flow_activity", flat=True)),
+            {JournalEntry.CashFlowActivity.OPERATING},
+        )
 
     def test_source_can_only_be_posted_once(self):
         JournalEntry.objects.create(
@@ -972,8 +977,15 @@ class FinancePostingTests(TestCase):
             purchase_price=Decimal("60.000"),
             selling_price=Decimal("100.000"),
         )
+        session = POSSession.objects.create(
+            session_number="SESSION-001",
+            cashier=self.user,
+            warehouse=warehouse,
+            opening_balance=Decimal("0.000"),
+        )
         sale = POSSale.objects.create(
             sale_number="SALE-001",
+            session=session,
             warehouse=warehouse,
             cashier=self.user,
             status=POSSale.SaleStatus.COMPLETED,
@@ -997,7 +1009,14 @@ class FinancePostingTests(TestCase):
             created_by=self.user,
         )
 
-        journal = post_pos_sale(sale.id, self.user)
+        session.status = POSSession.SessionStatus.CLOSED
+        session.closed_at = timezone.now()
+        session.save(update_fields=["status", "closed_at"])
+        journal = post_pos_session(session.id, self.user)
+        self.assertEqual(
+            journal.cash_flow_activity,
+            JournalEntry.CashFlowActivity.OPERATING,
+        )
 
         amounts = {
             line.account.code: (line.debit, line.credit)
@@ -1010,7 +1029,144 @@ class FinancePostingTests(TestCase):
         self.assertEqual(amounts["1400"], (Decimal("0.000"), Decimal("60.000")))
 
         with self.assertRaises(ValidationError):
-            post_pos_sale(sale.id, self.user)
+            post_pos_session(session.id, self.user)
+
+    def test_register_close_posts_multiple_sales_in_one_journal(self):
+        category = Category.objects.create(
+            code="MCAT", name_en="Multi Category", name_ar="Multi Category"
+        )
+        unit = Unit.objects.create(name_en="Each", name_ar="Each", symbol="ea")
+        warehouse = Warehouse.objects.create(code="MWH", name="Multi Warehouse")
+        product = Product.objects.create(
+            code="MP01",
+            name_en="Multi product",
+            name_ar="Multi product",
+            category=category,
+            unit=unit,
+            purchase_price=Decimal("15.000"),
+            selling_price=Decimal("50.000"),
+        )
+        session = POSSession.objects.create(
+            session_number="SESSION-MULTI-001",
+            cashier=self.user,
+            warehouse=warehouse,
+        )
+        for number, method, customer in (
+            ("MULTI-001", POSPayment.PaymentMethod.CASH, None),
+            ("MULTI-002", POSPayment.PaymentMethod.CREDIT, self.customer),
+        ):
+            sale = POSSale.objects.create(
+                session=session,
+                sale_number=number,
+                customer=customer,
+                warehouse=warehouse,
+                cashier=self.user,
+                status=POSSale.SaleStatus.COMPLETED,
+                subtotal=Decimal("50.000"),
+                total=Decimal("50.000"),
+                paid_amount=Decimal("50.000"),
+            )
+            POSSaleItem.objects.create(
+                sale=sale,
+                product=product,
+                quantity=Decimal("1.000"),
+                unit_price=Decimal("50.000"),
+                unit_cost=Decimal("15.000"),
+                line_total=Decimal("50.000"),
+            )
+            POSPayment.objects.create(
+                sale=sale,
+                payment_method=method,
+                amount=Decimal("50.000"),
+                created_by=self.user,
+            )
+
+        _, journal = close_pos_session(session.id, self.user, Decimal("50.000"))
+
+        self.assertEqual(
+            JournalEntry.objects.filter(
+                source_type=JournalEntry.SourceType.POS_SESSION,
+                source_id=session.id,
+            ).count(),
+            1,
+        )
+        self.assertEqual(journal.lines.filter(account=self.accounts["1100"]).get().debit, Decimal("50.000"))
+        self.assertEqual(journal.lines.filter(account=self.accounts["1300"]).get().debit, Decimal("50.000"))
+        self.assertEqual(journal.lines.filter(account=self.accounts["4100"]).get().credit, Decimal("100.000"))
+        self.assertEqual(OpenItem.objects.get(document_number="MULTI-002").original_amount, Decimal("50.000"))
+
+    def test_pos_activity_depends_on_configured_cash_equivalent_accounts(self):
+        category = Category.objects.create(
+            code="CFCAT", name_en="Cash flow", name_ar="Cash flow"
+        )
+        unit = Unit.objects.create(name_en="Item", name_ar="Item", symbol="it")
+        warehouse = Warehouse.objects.create(code="CFWH", name="Cash-flow warehouse")
+        product = Product.objects.create(
+            code="CFP01",
+            name_en="Cash-flow product",
+            name_ar="Cash-flow product",
+            category=category,
+            unit=unit,
+            purchase_price=Decimal("0.000"),
+            selling_price=Decimal("25.000"),
+        )
+
+        def post_session(number, method, customer=None):
+            session = POSSession.objects.create(
+                session_number=f"CF-{number}",
+                cashier=self.user,
+                warehouse=warehouse,
+            )
+            sale = POSSale.objects.create(
+                session=session,
+                sale_number=f"CF-SALE-{number}",
+                customer=customer,
+                warehouse=warehouse,
+                cashier=self.user,
+                status=POSSale.SaleStatus.COMPLETED,
+                subtotal=Decimal("25.000"),
+                total=Decimal("25.000"),
+                paid_amount=Decimal("25.000"),
+            )
+            POSSaleItem.objects.create(
+                sale=sale,
+                product=product,
+                quantity=Decimal("1.000"),
+                unit_price=Decimal("25.000"),
+                unit_cost=Decimal("0.000"),
+                line_total=Decimal("25.000"),
+            )
+            POSPayment.objects.create(
+                sale=sale,
+                payment_method=method,
+                amount=Decimal("25.000"),
+                created_by=self.user,
+            )
+            return close_pos_session(session.id, self.user, Decimal("0.000"))[1]
+
+        card_journal = post_session("CARD-CASH", POSPayment.PaymentMethod.CARD)
+        self.assertEqual(
+            card_journal.cash_flow_activity,
+            JournalEntry.CashFlowActivity.OPERATING,
+        )
+
+        self.accounts["1210"].is_cash_equivalent = False
+        self.accounts["1210"].save(update_fields=["is_cash_equivalent"])
+        clearing_journal = post_session("CARD-CLEARING", POSPayment.PaymentMethod.CARD)
+        self.assertEqual(
+            clearing_journal.cash_flow_activity,
+            JournalEntry.CashFlowActivity.NONE,
+        )
+
+        credit_journal = post_session(
+            "CREDIT",
+            POSPayment.PaymentMethod.CREDIT,
+            self.customer,
+        )
+        self.assertEqual(
+            credit_journal.cash_flow_activity,
+            JournalEntry.CashFlowActivity.NONE,
+        )
 
     def test_purchase_uses_one_balanced_finance_journal(self):
         category = Category.objects.create(
@@ -1049,10 +1205,39 @@ class FinancePostingTests(TestCase):
         journal = post_purchase_invoice(invoice.id, self.user)
 
         self.assertEqual(journal.status, JournalEntry.Status.POSTED)
+        self.assertEqual(
+            journal.cash_flow_activity,
+            JournalEntry.CashFlowActivity.NONE,
+        )
         self.assertEqual(journal.lines.count(), 2)
         self.assertEqual(
             sum((line.debit for line in journal.lines.all()), Decimal("0.000")),
             sum((line.credit for line in journal.lines.all()), Decimal("0.000")),
+        )
+
+        cash_invoice = PurchaseInvoice.objects.create(
+            invoice_number="PI-CASH-001",
+            supplier=self.supplier,
+            warehouse=warehouse,
+            invoice_date=date.today(),
+            payment_type=PurchaseInvoice.PaymentType.CASH,
+            status=PurchaseInvoice.Status.CONFIRMED,
+            subtotal=Decimal("100.000"),
+            total=Decimal("100.000"),
+            paid_amount=Decimal("100.000"),
+            created_by=self.user,
+        )
+        PurchaseInvoiceItem.objects.create(
+            purchase_invoice=cash_invoice,
+            product=product,
+            quantity=Decimal("2.000"),
+            unit_cost=Decimal("50.000"),
+            line_total=Decimal("100.000"),
+        )
+        cash_journal = post_purchase_invoice(cash_invoice.id, self.user)
+        self.assertEqual(
+            cash_journal.cash_flow_activity,
+            JournalEntry.CashFlowActivity.OPERATING,
         )
 
     def test_complete_sale_posts_finance_with_actual_batch_cost(self):
@@ -1085,9 +1270,16 @@ class FinancePostingTests(TestCase):
             quantity=Decimal("5.000"),
         )
 
+        session = POSSession.objects.create(
+            session_number="SESSION-COST-001",
+            cashier=self.user,
+            warehouse=warehouse,
+            opening_balance=Decimal("0.000"),
+        )
         sale = complete_sale(
             warehouse=warehouse,
             cashier=self.user,
+            session=session,
             items_data=[{
                 "product": product,
                 "quantity": "2.000",
@@ -1100,15 +1292,27 @@ class FinancePostingTests(TestCase):
         )
 
         sale_item = sale.items.get()
-        journal = JournalEntry.objects.get(
-            source_type=JournalEntry.SourceType.POS_SALE,
-            source_id=sale.id,
-        )
         self.assertEqual(sale_item.unit_cost, Decimal("45.000"))
+        self.assertFalse(
+            JournalEntry.objects.filter(
+                source_type__in=[
+                    JournalEntry.SourceType.POS_SALE,
+                    JournalEntry.SourceType.POS_SESSION,
+                ]
+            ).exists()
+        )
+
+        _, journal = close_pos_session(session.id, self.user, Decimal("160.000"))
         self.assertEqual(journal.status, JournalEntry.Status.POSTED)
+        self.assertEqual(journal.source_type, JournalEntry.SourceType.POS_SESSION)
+        self.assertEqual(journal.source_id, session.id)
         self.assertEqual(
             journal.lines.get(account=self.accounts["5100"]).debit,
             Decimal("90.000"),
+        )
+        self.assertEqual(
+            journal.cash_flow_activity,
+            JournalEntry.CashFlowActivity.OPERATING,
         )
 
     def test_confirm_waste_loss_posts_finance_journal(self):
@@ -1161,6 +1365,10 @@ class FinancePostingTests(TestCase):
 
         self.assertEqual(confirmed_waste.status, WasteLoss.Status.CONFIRMED)
         self.assertEqual(journal.status, JournalEntry.Status.POSTED)
+        self.assertEqual(
+            journal.cash_flow_activity,
+            JournalEntry.CashFlowActivity.NONE,
+        )
         self.assertEqual(
             journal.lines.get(account=self.accounts["6300"]).debit,
             Decimal("24.000"),
@@ -1243,6 +1451,10 @@ class FinancePostingTests(TestCase):
         )
         self.assertEqual(confirmed.status, StockAdjustment.Status.CONFIRMED)
         self.assertEqual(journal.status, JournalEntry.Status.POSTED)
+        self.assertEqual(
+            journal.cash_flow_activity,
+            JournalEntry.CashFlowActivity.NONE,
+        )
         self.assertEqual(
             journal.lines.get(account=self.accounts["6310"]).debit,
             Decimal("24.000"),
@@ -1570,30 +1782,42 @@ class FinancePostingTests(TestCase):
             quantity=Decimal("5.000"),
         )
 
+        session = POSSession.objects.create(
+            session_number="CLOSED-PERIOD-SESSION",
+            cashier=self.user,
+            warehouse=warehouse,
+            opening_balance=Decimal("0.000"),
+        )
+        sale = complete_sale(
+            warehouse=warehouse,
+            cashier=self.user,
+            session=session,
+            items_data=[{
+                "product": product,
+                "quantity": "2.000",
+                "unit_price": "35.000",
+            }],
+            payments_data=[{
+                "payment_method": POSPayment.PaymentMethod.CASH,
+                "amount": "70.000",
+            }],
+        )
+
         with self.assertRaisesMessage(ValidationError, "period"):
-            complete_sale(
-                warehouse=warehouse,
-                cashier=self.user,
-                items_data=[{
-                    "product": product,
-                    "quantity": "2.000",
-                    "unit_price": "35.000",
-                }],
-                payments_data=[{
-                    "payment_method": POSPayment.PaymentMethod.CASH,
-                    "amount": "70.000",
-                }],
-            )
+            close_pos_session(session.id, self.user, Decimal("70.000"))
 
         batch.refresh_from_db()
         balance.refresh_from_db()
-        self.assertEqual(batch.quantity_remaining, Decimal("5.000"))
-        self.assertEqual(balance.quantity, Decimal("5.000"))
-        self.assertFalse(POSSale.objects.filter(warehouse=warehouse).exists())
-        self.assertFalse(StockMovement.objects.filter(product=product).exists())
+        session.refresh_from_db()
+        self.assertEqual(batch.quantity_remaining, Decimal("3.000"))
+        self.assertEqual(balance.quantity, Decimal("3.000"))
+        self.assertTrue(POSSale.objects.filter(pk=sale.pk).exists())
+        self.assertTrue(StockMovement.objects.filter(product=product).exists())
+        self.assertEqual(session.status, POSSession.SessionStatus.OPEN)
         self.assertFalse(
             JournalEntry.objects.filter(
-                source_type=JournalEntry.SourceType.POS_SALE,
+                source_type=JournalEntry.SourceType.POS_SESSION,
+                source_id=session.id,
             ).exists()
         )
 
@@ -3035,6 +3259,70 @@ class CashFlowStatementTests(TestCase):
         post_journal_entry(journal.pk, self.accountant)
         journal.refresh_from_db()
         self.assertEqual(journal.status, JournalEntry.Status.POSTED)
+
+    def test_non_cash_manual_journal_is_forced_to_no_cash_flow_effect(self):
+        non_cash_asset = Account.objects.create(
+            code="CF1300",
+            name="Non-cash receivable",
+            account_type=Account.AccountType.ASSET,
+            is_cash_equivalent=False,
+        )
+        journal = JournalEntry.objects.create(
+            entry_number="CF-NON-CASH",
+            date=date.today(),
+            cash_flow_activity=JournalEntry.CashFlowActivity.INVESTING,
+            created_by=self.accountant,
+        )
+        JournalEntryLine.objects.create(
+            journal_entry=journal,
+            account=non_cash_asset,
+            debit=Decimal("45.000"),
+        )
+        JournalEntryLine.objects.create(
+            journal_entry=journal,
+            account=self.counterpart,
+            credit=Decimal("45.000"),
+        )
+
+        post_journal_entry(journal.pk, self.accountant)
+        journal.refresh_from_db()
+        statement = generate_cash_flow_statement(
+            start_date=date.today(),
+            end_date=date.today(),
+        )
+
+        self.assertEqual(
+            journal.cash_flow_activity,
+            JournalEntry.CashFlowActivity.NONE,
+        )
+        self.assertEqual(statement["net_change"], Decimal("0.000"))
+        self.assertEqual(statement["unclassified_rows"], [])
+
+    def test_automatic_investing_and_financing_classification(self):
+        workflows = (
+            ("CF-EQUIPMENT-PURCHASE", False, JournalEntry.CashFlowActivity.INVESTING),
+            ("CF-EQUIPMENT-SALE", True, JournalEntry.CashFlowActivity.INVESTING),
+            ("CF-LOAN-RECEIVED", True, JournalEntry.CashFlowActivity.FINANCING),
+            ("CF-LOAN-REPAYMENT", False, JournalEntry.CashFlowActivity.FINANCING),
+            ("CF-CAPITAL-CONTRIBUTION", True, JournalEntry.CashFlowActivity.FINANCING),
+        )
+        for number, inflow, expected_activity in workflows:
+            with self.subTest(workflow=number):
+                journal = self.create_cash_journal(
+                    number,
+                    date.today(),
+                    Decimal("80.000"),
+                    JournalEntry.CashFlowActivity.NONE,
+                    inflow=inflow,
+                    status=JournalEntry.Status.DRAFT,
+                )
+                post_journal_entry(
+                    journal.pk,
+                    self.accountant,
+                    automatic_activity=expected_activity,
+                )
+                journal.refresh_from_db()
+                self.assertEqual(journal.cash_flow_activity, expected_activity)
 
     def test_reversal_cancels_cash_flow_and_keeps_classification(self):
         original = self.create_cash_journal(

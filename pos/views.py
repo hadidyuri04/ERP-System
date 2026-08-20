@@ -1,6 +1,6 @@
 import json
 from .forms import DiscountCodeForm
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db.models import Q, Sum
@@ -16,7 +16,7 @@ from core.permissions import cashier_required
 from customers.models import Customer
 from inventory.models import Product, Warehouse, StockBalance
 from .models import POSSession, POSCashTransaction, POSSale, POSPayment, DiscountCode
-from .services import complete_sale, hold_sale
+from .services import close_pos_session, complete_sale, hold_sale
 
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
@@ -485,40 +485,23 @@ def open_session(request):
 @login_required
 @cashier_required
 def close_session(request, pk):
-    """Close and reconcile a register session with accurate database aggregation."""
+    """Close, reconcile, and post one Finance journal for the register."""
     session = get_object_or_404(POSSession, pk=pk, cashier=request.user, status=POSSession.SessionStatus.OPEN)
     
     if request.method == 'POST':
-        actual_cash = Decimal(request.POST.get('closing_balance_actual', '0.000') or '0.000')
-        
-        # Calculate cash sales total via database aggregation
-        cash_sales = POSPayment.objects.filter(
-            sale__session=session,
-            sale__status=POSSale.SaleStatus.COMPLETED,
-            payment_method=POSPayment.PaymentMethod.CASH
-        ).aggregate(total=Sum('amount'))['total'] or Decimal('0.000')
-
-        # Calculate manual cash transactions
-        cash_in = session.cash_transactions.filter(
-            transaction_type=POSCashTransaction.TransactionType.CASH_IN
-        ).aggregate(total=Sum('amount'))['total'] or Decimal('0.000')
-
-        cash_out = session.cash_transactions.filter(
-            transaction_type=POSCashTransaction.TransactionType.CASH_OUT
-        ).aggregate(total=Sum('amount'))['total'] or Decimal('0.000')
-        
-        expected_cash = session.opening_balance + cash_sales + cash_in - cash_out
-        difference = actual_cash - expected_cash
-
-        session.closing_balance_expected = expected_cash
-        session.closing_balance_actual = actual_cash
-        session.difference = difference
-        session.status = POSSession.SessionStatus.CLOSED
-        session.closed_at = timezone.now()
-        session.save()
+        try:
+            actual_cash = Decimal(request.POST.get('closing_balance_actual', '0.000') or '0.000')
+            close_pos_session(session.pk, request.user, actual_cash)
+        except (ValidationError, InvalidOperation, ValueError) as exc:
+            error = "; ".join(exc.messages) if hasattr(exc, "messages") else str(exc)
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'ok': False, 'error': error}, status=400)
+            messages.error(request, error)
+            return redirect('pos:session_list')
 
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return JsonResponse({'ok': True, 'redirect_url': reverse('pos:session_list')})
+        messages.success(request, _("Register closed successfully."))
         return redirect('pos:session_list')
 
     return redirect('pos:session_list')
