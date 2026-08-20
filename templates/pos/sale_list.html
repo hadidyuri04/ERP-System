@@ -1,12 +1,12 @@
 {% extends "core/base.html" %}{% load i18n %}
-{% block title %}{% trans "Sales History" %}{% endblock %}
+{% block title %}{% trans "POS sales history" %}{% endblock %}
 
 {% block page_header %}
 <div class="d-flex justify-content-between align-items-center">
     <div>
-        <span class="eyebrow">{% trans "Sales" %}</span>
-        <h1>{% trans "Sales History" %}</h1>
-        <p>{% trans "Review past transactions, receipts, and order statuses." %}</p>
+        <span class="eyebrow">{% trans "Point of Sale" %}</span>
+        <h1>{% trans "POS sales history" %}</h1>
+        <p>{% trans "Review checkout transactions, receipts, and POS sale statuses." %}</p>
     </div>
     <div>
         <a class="btn btn-primary" href="{% url 'pos:terminal' %}">

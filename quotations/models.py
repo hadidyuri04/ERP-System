@@ -11,6 +11,7 @@ class Quotation(models.Model):
         ACCEPTED = 'ACCEPTED', _('Accepted')
         REJECTED = 'REJECTED', _('Rejected')
         EXPIRED = 'EXPIRED', _('Expired')
+        CONVERTED = 'CONVERTED', _('Converted')
 
     quotation_number = models.CharField(_("Quotation Number"), max_length=50, unique=True)
     customer = models.ForeignKey(Customer, verbose_name=_("Customer"), on_delete=models.PROTECT)

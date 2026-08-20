@@ -44,7 +44,10 @@ DEFAULT_POSTING_ACCOUNT_CODES = {
 }
 
 
-def _allocate_open_items(*, item_type, party, settlement_line, allocation_date, user):
+def _allocate_open_items(
+    *, item_type, party, settlement_line, allocation_date, user,
+    target_open_item_id=None,
+):
     """Allocate a settlement to the party's oldest open documents first."""
     party_filter = (
         {"customer": party}
@@ -55,11 +58,16 @@ def _allocate_open_items(*, item_type, party, settlement_line, allocation_date, 
     if item_type == OpenItem.ItemType.PAYABLE:
         amount_left = settlement_line.debit
 
-    open_items = list(
-        OpenItem.objects.select_for_update()
-        .filter(item_type=item_type, document_date__lte=allocation_date, **party_filter)
-        .order_by("due_date", "document_date", "id")
+    open_items_query = OpenItem.objects.select_for_update().filter(
+        item_type=item_type,
+        document_date__lte=allocation_date,
+        **party_filter,
     )
+    if target_open_item_id is not None:
+        open_items_query = open_items_query.filter(pk=target_open_item_id)
+    open_items = list(open_items_query.order_by("due_date", "document_date", "id"))
+    if target_open_item_id is not None and not open_items:
+        raise ValidationError(_("The selected invoice is not an open item for this customer."))
     allocation_totals = {
         row["open_item_id"]: row["total"]
         for row in OpenItemAllocation.objects.filter(open_item__in=open_items)
@@ -82,6 +90,9 @@ def _allocate_open_items(*, item_type, party, settlement_line, allocation_date, 
             created_by=user,
         )
         amount_left -= amount
+
+    if target_open_item_id is not None and amount_left > 0:
+        raise ValidationError(_("Payment cannot exceed the selected invoice outstanding balance."))
 
     return amount_left
 
@@ -303,7 +314,7 @@ def post_journal_entry(entry_id, user, *, automatic_activity=None):
 
 
 @transaction.atomic
-def post_receipt_voucher(voucher_id, user):
+def post_receipt_voucher(voucher_id, user, *, target_open_item_id=None):
     voucher = (
         ReceiptVoucher.objects
         .select_for_update()
@@ -379,6 +390,7 @@ def post_receipt_voucher(voucher_id, user):
         settlement_line=receivable_line,
         allocation_date=voucher.date,
         user=user,
+        target_open_item_id=target_open_item_id,
     )
 
     # 7. Confirm the voucher
@@ -748,6 +760,157 @@ def post_purchase_invoice(invoice_id, user):
         },
     )
     return posted_journal
+
+
+@transaction.atomic
+def post_sales_invoice(invoice_id, user):
+    from sales.models import SalesInvoice
+
+    invoice = (
+        SalesInvoice.objects.select_for_update()
+        .select_related("customer")
+        .prefetch_related("items")
+        .get(pk=invoice_id)
+    )
+    if invoice.status != SalesInvoice.Status.POSTED:
+        raise ValidationError(_("Only posted sales invoices can be sent to accounting."))
+    ensure_not_posted(JournalEntry.SourceType.SALES_INVOICE, invoice.id)
+
+    receivable = get_posting_account("accounts_receivable", Account.AccountType.ASSET)
+    revenue = get_posting_account("sales_revenue", Account.AccountType.REVENUE)
+    cogs = get_posting_account("cost_of_goods_sold", Account.AccountType.EXPENSE)
+    inventory = get_posting_account("inventory", Account.AccountType.ASSET)
+    net_revenue = invoice.subtotal - invoice.discount_amount
+    total_cogs = sum(
+        (item.quantity * item.unit_cost for item in invoice.items.all()),
+        Decimal("0.000"),
+    )
+    if net_revenue < 0 or net_revenue + invoice.tax_amount != invoice.total:
+        raise ValidationError(_("Sales invoice accounting totals do not match the invoice total."))
+
+    journal = JournalEntry.objects.create(
+        entry_number=f"SI-{invoice.id}",
+        date=invoice.invoice_date,
+        description=_("Sales invoice %(number)s") % {"number": invoice.invoice_number},
+        source_type=JournalEntry.SourceType.SALES_INVOICE,
+        source_id=invoice.id,
+        status=JournalEntry.Status.DRAFT,
+        created_by=user,
+    )
+    receivable_line = JournalEntryLine.objects.create(
+        journal_entry=journal,
+        account=receivable,
+        customer=invoice.customer,
+        description=_("Customer invoice %(number)s") % {"number": invoice.invoice_number},
+        debit=invoice.total,
+    )
+    JournalEntryLine.objects.create(
+        journal_entry=journal,
+        account=revenue,
+        description=_("Sales revenue for invoice %(number)s") % {"number": invoice.invoice_number},
+        credit=net_revenue,
+    )
+    if invoice.tax_amount:
+        JournalEntryLine.objects.create(
+            journal_entry=journal,
+            account=get_posting_account("sales_tax_payable", Account.AccountType.LIABILITY),
+            description=_("Sales tax for invoice %(number)s") % {"number": invoice.invoice_number},
+            credit=invoice.tax_amount,
+        )
+    if total_cogs:
+        JournalEntryLine.objects.create(
+            journal_entry=journal,
+            account=cogs,
+            description=_("COGS for invoice %(number)s") % {"number": invoice.invoice_number},
+            debit=total_cogs,
+        )
+        JournalEntryLine.objects.create(
+            journal_entry=journal,
+            account=inventory,
+            description=_("Inventory issued for invoice %(number)s") % {"number": invoice.invoice_number},
+            credit=total_cogs,
+        )
+    OpenItem.objects.create(
+        item_type=OpenItem.ItemType.RECEIVABLE,
+        customer=invoice.customer,
+        journal_line=receivable_line,
+        document_number=invoice.invoice_number,
+        document_date=invoice.invoice_date,
+        due_date=invoice.due_date,
+        original_amount=invoice.total,
+    )
+    posted = post_journal_entry(journal.id, user)
+    record_finance_audit(
+        actor=user, action=FinanceAuditLog.Action.POSTED, instance=invoice,
+        changes={
+            "journal_entry": {"before": None, "after": posted.entry_number},
+            "total": {"before": None, "after": str(invoice.total)},
+        },
+    )
+    return posted
+
+
+@transaction.atomic
+def post_sales_credit_note(credit_note_id, user):
+    from sales.models import SalesCreditNote
+
+    note = SalesCreditNote.objects.select_for_update().select_related(
+        "invoice", "invoice__customer"
+    ).get(pk=credit_note_id)
+    if note.status != SalesCreditNote.Status.POSTED:
+        raise ValidationError(_("Only posted sales credit notes can be sent to accounting."))
+    ensure_not_posted(JournalEntry.SourceType.SALES_CREDIT_NOTE, note.id)
+    original = JournalEntry.objects.select_for_update().prefetch_related(
+        "lines__account"
+    ).get(
+        source_type=JournalEntry.SourceType.SALES_INVOICE,
+        source_id=note.invoice_id,
+    )
+    journal = JournalEntry.objects.create(
+        entry_number=f"SCN-{note.id}",
+        date=note.date,
+        description=_("Credit note %(number)s for invoice %(invoice)s") % {
+            "number": note.credit_note_number,
+            "invoice": note.invoice.invoice_number,
+        },
+        source_type=JournalEntry.SourceType.SALES_CREDIT_NOTE,
+        source_id=note.id,
+        status=JournalEntry.Status.DRAFT,
+        created_by=user,
+    )
+    receivable_credit_line = None
+    for original_line in original.lines.all():
+        line = JournalEntryLine.objects.create(
+            journal_entry=journal,
+            account=original_line.account,
+            customer=original_line.customer,
+            supplier=original_line.supplier,
+            description=_("Credit note reversal of %(invoice)s") % {
+                "invoice": note.invoice.invoice_number,
+            },
+            debit=original_line.credit,
+            credit=original_line.debit,
+        )
+        if original_line.customer_id and line.credit:
+            receivable_credit_line = line
+
+    posted = post_journal_entry(journal.id, user)
+    open_item = note.invoice.open_item
+    if open_item is None or receivable_credit_line is None:
+        raise ValidationError(_("The invoice receivable could not be found for this credit note."))
+    _allocate_open_items(
+        item_type=OpenItem.ItemType.RECEIVABLE,
+        party=note.invoice.customer,
+        settlement_line=receivable_credit_line,
+        allocation_date=note.date,
+        user=user,
+        target_open_item_id=open_item.id,
+    )
+    record_finance_audit(
+        actor=user, action=FinanceAuditLog.Action.POSTED, instance=note,
+        changes={"journal_entry": {"before": None, "after": posted.entry_number}},
+    )
+    return posted
 
 
 @transaction.atomic
@@ -1528,6 +1691,7 @@ def get_unfinished_document_counts(start_date, end_date):
     """Return draft financial source documents in an inclusive date range."""
     from pos.models import POSSale
     from purchasing.models import PurchaseInvoice
+    from sales.models import SalesInvoice
 
     date_range = (start_date, end_date)
     return {
@@ -1550,6 +1714,10 @@ def get_unfinished_document_counts(start_date, end_date):
         "sales": POSSale.objects.filter(
             date__date__range=date_range,
             status=POSSale.SaleStatus.DRAFT,
+        ).count(),
+        "sales_invoices": SalesInvoice.objects.filter(
+            invoice_date__range=date_range,
+            status=SalesInvoice.Status.DRAFT,
         ).count(),
     }
 
@@ -1585,6 +1753,7 @@ def ensure_date_range_can_close(start_date, end_date):
         "payments": _("draft payments"),
         "purchases": _("draft purchases"),
         "sales": _("draft POS sales"),
+        "sales_invoices": _("draft sales invoices"),
     }
     blockers = [
         _("%(count)s %(label)s") % {"count": count, "label": labels[key]}

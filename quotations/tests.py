@@ -14,9 +14,10 @@ from core.test_utils import (
     stock_of,
 )
 from customers.models import Customer
+from sales.services import create_invoice_from_quotation
 
 from .models import Quotation
-from .services import convert_quotation_to_pos_sale, create_quotation
+from .services import create_quotation
 
 User = get_user_model()
 
@@ -26,7 +27,7 @@ class QuotationTestBase(TestCase):
         self.user = User.objects.create_superuser(
             username="seller", email="s@example.com", password="x"
         )
-        self.today = timezone.now().date()
+        self.today = timezone.localdate()
 
         seed_finance(self.user, self.today)
         self.tax_rate = seed_tax_rate("16.000")
@@ -36,11 +37,12 @@ class QuotationTestBase(TestCase):
 
         self.customer = Customer.objects.create(code="C1", name="Abu Ahmad")
 
-    def make_quotation(self, quantity="10", expiry_in_days=7, discount="0.000"):
+    def make_quotation(self, quantity="10", expiry_in_days=7,
+                       line_discount="0.000", header_discount="0.000"):
         quantity = Decimal(quantity)
-        discount = Decimal(discount)
+        line_discount = Decimal(line_discount)
         gross = quantity * self.product.selling_price
-        tax = self.product.tax_for(gross - discount)
+        tax = self.product.tax_for(gross - line_discount)
 
         return create_quotation(
             customer=self.customer,
@@ -50,12 +52,11 @@ class QuotationTestBase(TestCase):
                 "product": self.product,
                 "quantity": quantity,
                 "unit_price": self.product.selling_price,
-                "discount_amount": discount,
+                "discount_amount": line_discount,
                 "tax_amount": tax,
             }],
             user=self.user,
-            discount_amount=Decimal("0.000"),
-            tax_amount=tax,
+            discount_amount=Decimal(header_discount),
             notes="",
         )
 
@@ -70,7 +71,7 @@ class QuotationCreationTests(QuotationTestBase):
         self.assertEqual(quotation.total, Decimal("4.060"))
 
     def test_subtotal_is_goods_only_and_excludes_tax(self):
-        """subtotal used to include tax, which was then added again."""
+        """subtotal used to include tax, which was then added a second time."""
         quotation = self.make_quotation(quantity="5")
 
         self.assertEqual(quotation.subtotal, Decimal("1.750"))
@@ -81,26 +82,7 @@ class QuotationCreationTests(QuotationTestBase):
 
     def test_a_header_discount_cannot_push_the_total_negative(self):
         with self.assertRaises(ValidationError):
-            create_quotation(
-                customer=self.customer,
-                date=self.today,
-                expiry_date=self.today + timedelta(days=7),
-                items_data=[{
-                    "product": self.product,
-                    "quantity": Decimal("5"),
-                    "unit_price": Decimal("0.400"),
-                    "discount_amount": Decimal("0.100"),
-                    "tax_amount": Decimal("0.304"),
-                }],
-                user=self.user,
-                discount_amount=Decimal("4.000"),
-                notes="",
-            )
-
-    def test_a_total_is_never_negative(self):
-        quotation = self.make_quotation(quantity="10", discount="0.500")
-
-        self.assertGreater(quotation.total, Decimal("0"))
+            self.make_quotation(quantity="5", header_discount="400.000")
 
     def test_a_quotation_does_not_touch_stock(self):
         """Spec 8: a quotation affects neither stock nor accounting."""
@@ -119,49 +101,44 @@ class QuotationCreationTests(QuotationTestBase):
 
 
 class QuotationConversionTests(QuotationTestBase):
+    """Quotations now convert into a draft SalesInvoice, not a POS sale."""
+
     def setUp(self):
         super().setUp()
         give_stock(self.product, self.warehouse, "100.000")
-        self.session = self._open_session()
 
-    def _open_session(self):
-        from pos.models import POSSession
-
-        return POSSession.objects.create(
-            session_number="SESS-Q1",
-            cashier=self.user,
-            warehouse=self.warehouse,
-            opening_balance=Decimal("0.000"),
-        )
-
-    def _convert(self, quotation):
-        return convert_quotation_to_pos_sale(
+    def _convert(self, quotation, due_in_days=30):
+        return create_invoice_from_quotation(
             quotation_id=quotation.id,
             warehouse=self.warehouse,
-            cashier=self.user,
-            session=self.session,
-            payments_data=[{
-                "payment_method": "cash",
-                "amount": quotation.total,
-            }],
+            invoice_date=self.today,
+            due_date=self.today + timedelta(days=due_in_days),
+            payment_type="credit",
+            user=self.user,
         )
 
-    def test_converting_reduces_stock(self):
+    def test_converting_creates_an_invoice_carrying_the_totals(self):
+        quotation = self.make_quotation(quantity="10")
+        invoice = self._convert(quotation)
+
+        self.assertEqual(invoice.total, quotation.total)
+        self.assertEqual(invoice.customer, self.customer)
+
+    def test_converting_does_not_move_stock_yet(self):
+        """The invoice starts as a draft; stock moves when it is confirmed."""
         quotation = self.make_quotation(quantity="10")
         before = stock_of(self.product, self.warehouse)
 
         self._convert(quotation)
 
-        self.assertEqual(
-            stock_of(self.product, self.warehouse), before - Decimal("10")
-        )
+        self.assertEqual(stock_of(self.product, self.warehouse), before)
 
-    def test_converting_marks_the_quotation_accepted(self):
+    def test_a_quotation_cannot_be_converted_twice(self):
         quotation = self.make_quotation(quantity="5")
         self._convert(quotation)
-        quotation.refresh_from_db()
 
-        self.assertEqual(quotation.status, Quotation.Status.ACCEPTED)
+        with self.assertRaises(ValidationError):
+            self._convert(quotation)
 
     def test_an_expired_quotation_cannot_be_converted(self):
         quotation = self.make_quotation(quantity="5", expiry_in_days=-1)
@@ -170,6 +147,7 @@ class QuotationConversionTests(QuotationTestBase):
             self._convert(quotation)
 
     def test_an_expired_quotation_is_marked_expired(self):
+        """The marking must survive the exception, not roll back with it."""
         quotation = self.make_quotation(quantity="5", expiry_in_days=-1)
 
         with self.assertRaises(ValidationError):
@@ -177,17 +155,6 @@ class QuotationConversionTests(QuotationTestBase):
 
         quotation.refresh_from_db()
         self.assertEqual(quotation.status, Quotation.Status.EXPIRED)
-
-    def test_a_quotation_cannot_be_converted_twice(self):
-        """Converting again would sell the same order and take stock twice."""
-        quotation = self.make_quotation(quantity="5")
-        self._convert(quotation)
-        after_first = stock_of(self.product, self.warehouse)
-
-        with self.assertRaises(ValidationError):
-            self._convert(quotation)
-
-        self.assertEqual(stock_of(self.product, self.warehouse), after_first)
 
     def test_a_rejected_quotation_cannot_be_converted(self):
         quotation = self.make_quotation(quantity="5")
@@ -197,14 +164,11 @@ class QuotationConversionTests(QuotationTestBase):
         with self.assertRaises(ValidationError):
             self._convert(quotation)
 
-    def test_a_failed_conversion_leaves_stock_untouched(self):
-        quotation = self.make_quotation(quantity="5", expiry_in_days=-1)
-        before = stock_of(self.product, self.warehouse)
+    def test_a_due_date_before_the_invoice_date_is_refused(self):
+        quotation = self.make_quotation(quantity="5")
 
         with self.assertRaises(ValidationError):
-            self._convert(quotation)
-
-        self.assertEqual(stock_of(self.product, self.warehouse), before)
+            self._convert(quotation, due_in_days=-5)
 
 
 class QuotationViewTests(QuotationTestBase):
@@ -222,3 +186,15 @@ class QuotationViewTests(QuotationTestBase):
         self.assertEqual(
             self.client.get(f"/quotations/{quotation.pk}/").status_code, 200
         )
+
+    def test_convert_view_reports_a_bad_date_instead_of_crashing(self):
+        """The view parses dates with timezone.datetime, which must be imported."""
+        quotation = self.make_quotation()
+
+        response = self.client.post(
+            f"/quotations/{quotation.pk}/convert/",
+            {"warehouse": self.warehouse.pk, "invoice_date": "", "due_date": ""},
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)

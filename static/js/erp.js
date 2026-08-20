@@ -587,6 +587,7 @@
   ERP.bindSidebar = function () {
     const sidebar = document.querySelector('.sidebar');
     const toggle = document.querySelector('[data-sidebar-toggle]');
+    const closeButton = document.querySelector('[data-sidebar-close]');
     if (!sidebar || !toggle) return;
 
     let backdrop = document.querySelector('.sidebar-backdrop');
@@ -595,11 +596,20 @@
       backdrop.className = 'sidebar-backdrop';
       document.body.appendChild(backdrop);
     }
-    const close = () => { sidebar.classList.remove('open'); backdrop.classList.remove('show'); };
+    const close = () => {
+      sidebar.classList.remove('open');
+      backdrop.classList.remove('show');
+      toggle.setAttribute('aria-expanded', 'false');
+    };
     toggle.addEventListener('click', () => {
       sidebar.classList.toggle('open');
       backdrop.classList.toggle('show', sidebar.classList.contains('open'));
+      toggle.setAttribute('aria-expanded', sidebar.classList.contains('open') ? 'true' : 'false');
     });
+    if (closeButton) closeButton.addEventListener('click', close);
+    sidebar.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => {
+      if (window.innerWidth < 992) close();
+    }));
     backdrop.addEventListener('click', close);
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
   };
@@ -711,6 +721,11 @@
       if (!group.open) return;
       groups.forEach((other) => { if (other !== group) other.open = false; });
     }));
+
+    const activeLink = document.querySelector('.sidebar-nav .nav-icon.active');
+    if (activeLink) {
+      requestAnimationFrame(() => activeLink.scrollIntoView({ block: 'nearest' }));
+    }
   };
 
   ERP.init = function () {
