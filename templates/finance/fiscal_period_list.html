@@ -101,6 +101,7 @@
                   <div>{% trans "Payments" %}: {{ period.summary.unfinished.payments }}</div>
                   <div>{% trans "Purchases" %}: {{ period.summary.unfinished.purchases }}</div>
                   <div>{% trans "POS sales" %}: {{ period.summary.unfinished.sales }}</div>
+                  <div>{% trans "Sales invoices" %}: {{ period.summary.unfinished.sales_invoices }}</div>
                 </td>
                 <td>{{ period.closed_by|default:"-" }}{% if period.closed_at %}<div class="small text-muted">{{ period.closed_at }}</div>{% endif %}</td>
                 <td>

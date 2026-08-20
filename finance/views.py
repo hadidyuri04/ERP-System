@@ -72,6 +72,13 @@ from .services import (
 )
 
 
+@login_required
+@accountant_required
+def report_center_view(request):
+    """A concise, grouped entry point for all financial reports."""
+    return render(request, "reports/report_center.html")
+
+
 def _message_validation_error(request, exc):
     messages.error(request, "; ".join(exc.messages) if hasattr(exc, "messages") else str(exc))
 

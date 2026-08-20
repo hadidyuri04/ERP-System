@@ -1,0 +1,33 @@
+{% extends "core/base.html" %}{% load i18n %}
+{% block title %}{% trans "Reports" %}{% endblock %}
+{% block page_header %}<span class="eyebrow">{% trans "Finance" %}</span><h1>{% trans "Reports" %}</h1><p>{% trans "Choose a report to review financial performance and outstanding balances." %}</p>{% endblock %}
+{% block content %}
+<div class="report-center-grid">
+  <section class="report-group-card">
+    <div class="report-group-head"><span class="report-group-icon receivable"><i class="bi bi-people"></i></span><div><h2>{% trans "Receivables" %}</h2><p>{% trans "Customer balances and collection status" %}</p></div></div>
+    <div class="report-link-list">
+      <a href="{% url 'finance:customer_statement' %}"><span><i class="bi bi-person-lines-fill"></i><strong>{% trans "Customer statements" %}</strong><small>{% trans "Invoices, payments and running balances" %}</small></span><i class="bi bi-arrow-right"></i></a>
+      <a href="{% url 'finance:receivables_aging' %}"><span><i class="bi bi-hourglass-top"></i><strong>{% trans "Receivables aging" %}</strong><small>{% trans "Outstanding customer balances by age" %}</small></span><i class="bi bi-arrow-right"></i></a>
+    </div>
+  </section>
+
+  <section class="report-group-card">
+    <div class="report-group-head"><span class="report-group-icon payable"><i class="bi bi-truck"></i></span><div><h2>{% trans "Payables" %}</h2><p>{% trans "Supplier balances and payment status" %}</p></div></div>
+    <div class="report-link-list">
+      <a href="{% url 'finance:supplier_statement' %}"><span><i class="bi bi-file-earmark-text"></i><strong>{% trans "Supplier statements" %}</strong><small>{% trans "Purchases, payments and running balances" %}</small></span><i class="bi bi-arrow-right"></i></a>
+      <a href="{% url 'finance:payables_aging' %}"><span><i class="bi bi-hourglass-bottom"></i><strong>{% trans "Payables aging" %}</strong><small>{% trans "Outstanding supplier balances by age" %}</small></span><i class="bi bi-arrow-right"></i></a>
+    </div>
+  </section>
+
+  <section class="report-group-card report-group-wide">
+    <div class="report-group-head"><span class="report-group-icon statements"><i class="bi bi-bar-chart"></i></span><div><h2>{% trans "Financial statements" %}</h2><p>{% trans "Ledger activity, performance, position and cash movement" %}</p></div></div>
+    <div class="report-link-list report-link-grid">
+      <a href="{% url 'finance:general_ledger' %}"><span><i class="bi bi-book"></i><strong>{% trans "General ledger" %}</strong><small>{% trans "Account activity and running balance" %}</small></span><i class="bi bi-arrow-right"></i></a>
+      <a href="{% url 'finance:trial_balance' %}"><span><i class="bi bi-list-check"></i><strong>{% trans "Trial balance" %}</strong><small>{% trans "Debit and credit balances" %}</small></span><i class="bi bi-arrow-right"></i></a>
+      <a href="{% url 'finance:income_statement' %}"><span><i class="bi bi-graph-up-arrow"></i><strong>{% trans "Income statement" %}</strong><small>{% trans "Revenue, expenses and profit" %}</small></span><i class="bi bi-arrow-right"></i></a>
+      <a href="{% url 'finance:balance_sheet' %}"><span><i class="bi bi-layout-text-sidebar-reverse"></i><strong>{% trans "Balance sheet" %}</strong><small>{% trans "Assets, liabilities and equity" %}</small></span><i class="bi bi-arrow-right"></i></a>
+      <a href="{% url 'finance:cash_flow_statement' %}"><span><i class="bi bi-water"></i><strong>{% trans "Cash flow" %}</strong><small>{% trans "Operating, investing and financing cash" %}</small></span><i class="bi bi-arrow-right"></i></a>
+    </div>
+  </section>
+</div>
+{% endblock %}

@@ -6,12 +6,14 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 
 from core.permissions import cashier_required
+from finance.models import Account
 from inventory.models import Warehouse
-from pos.models import POSPayment
+from sales.models import SalesInvoice
+from sales.services import create_invoice_from_quotation
 
 from .forms import QuotationForm, QuotationItemFormSet
 from .models import Quotation
-from .services import create_quotation, convert_quotation_to_pos_sale
+from .services import create_quotation
 
 
 @login_required
@@ -28,7 +30,10 @@ def quotation_detail(request, pk):
     return render(request, "quotations/quotation_detail.html", {
         "quotation": quotation,
         "warehouses": Warehouse.objects.filter(is_active=True).order_by("name"),
-        "payment_methods": POSPayment.PaymentMethod.choices,
+        "payment_types": SalesInvoice.PaymentType.choices,
+        "payment_accounts": Account.objects.filter(
+            is_active=True, allow_posting=True, is_cash_equivalent=True,
+        ).order_by("code"),
     })
 
 
@@ -81,19 +86,34 @@ def convert_to_sale_view(request, pk):
     quotation = get_object_or_404(Quotation, pk=pk)
     try:
         warehouse = Warehouse.objects.get(pk=request.POST.get("warehouse"), is_active=True)
-        sale = convert_quotation_to_pos_sale(
+        invoice_date = timezone.datetime.strptime(
+            request.POST.get("invoice_date", ""), "%Y-%m-%d"
+        ).date()
+        due_date = timezone.datetime.strptime(
+            request.POST.get("due_date", ""), "%Y-%m-%d"
+        ).date()
+        payment_type = request.POST.get("payment_type", SalesInvoice.PaymentType.CREDIT)
+        if payment_type not in SalesInvoice.PaymentType.values:
+            raise ValidationError(_("Invalid payment type."))
+        account_id = request.POST.get("payment_account")
+        payment_account = None
+        if account_id:
+            payment_account = Account.objects.get(
+                pk=account_id, is_active=True, allow_posting=True,
+                is_cash_equivalent=True,
+            )
+        invoice = create_invoice_from_quotation(
             quotation_id=quotation.id,
             warehouse=warehouse,
-            cashier=request.user,
-            payments_data=[{
-                "payment_method": request.POST.get("payment_method", POSPayment.PaymentMethod.CASH),
-                "amount": quotation.total,
-                "reference_number": request.POST.get("reference_number", ""),
-            }],
+            invoice_date=invoice_date,
+            due_date=due_date,
+            payment_type=payment_type,
+            payment_account=payment_account,
+            user=request.user,
         )
-        messages.success(request, _("Quotation converted to sale successfully."))
-        return redirect("pos:sale_detail", pk=sale.pk)
-    except (ValidationError, Warehouse.DoesNotExist) as exc:
+        messages.success(request, _("Quotation converted to a draft sales invoice."))
+        return redirect("sales:invoice_detail", pk=invoice.pk)
+    except (ValidationError, ValueError, Warehouse.DoesNotExist, Account.DoesNotExist) as exc:
         message = "; ".join(exc.messages) if hasattr(exc, "messages") else str(exc)
         messages.error(request, message)
         return redirect("quotations:detail", pk=pk)

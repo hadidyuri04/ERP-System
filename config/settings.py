@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "finance",
     "pos",
     "quotations",
+    "sales",
     "notifications",
     "core",
 ]

@@ -151,6 +151,39 @@ def remove_stock(product, warehouse, quantity, reference_type, reference_id, use
 
 
 @transaction.atomic
+def restore_stock_to_batch(batch_id, quantity, reference_type, reference_id, user):
+    """Restore a sales return to its original batch and warehouse."""
+    if quantity <= 0:
+        raise ValidationError(_("Stock return quantity must be greater than zero."))
+    batch = StockBatch.objects.select_for_update().select_related(
+        "product", "warehouse"
+    ).get(pk=batch_id)
+    batch.quantity_remaining += quantity
+    batch.status = StockBatch.BatchStatus.ACTIVE
+    batch.save(update_fields=["quantity_remaining", "status"])
+
+    balance, _created = StockBalance.objects.select_for_update().get_or_create(
+        product=batch.product,
+        warehouse=batch.warehouse,
+        defaults={"quantity": Decimal("0.000"), "reserved_quantity": Decimal("0.000")},
+    )
+    balance.quantity += quantity
+    balance.save(update_fields=["quantity", "updated_at"])
+    StockMovement.objects.create(
+        product=batch.product,
+        warehouse=batch.warehouse,
+        batch=batch,
+        movement_type=StockMovement.MovementType.SALE_RETURN,
+        quantity=quantity,
+        unit_cost=batch.unit_cost,
+        reference_type=reference_type,
+        reference_id=reference_id,
+        created_by=user,
+    )
+    return batch
+
+
+@transaction.atomic
 def confirm_stock_adjustment(adjustment_id, user):
     """
     Confirm a physical stock count and correct the books to match reality.

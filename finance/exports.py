@@ -335,6 +335,40 @@ def cash_flow_document(data):
     }
 
 
+def sales_invoice_document(invoice):
+    return {
+        "title": _("Sales invoice %(number)s") % {"number": invoice.invoice_number},
+        "metadata": [
+            (_("Customer"), invoice.customer),
+            (_("Warehouse"), invoice.warehouse),
+            (_("Invoice date"), invoice.invoice_date),
+            (_("Due date"), invoice.due_date),
+            (_("Payment status"), invoice.payment_status),
+        ],
+        "sections": [{
+            "headers": [
+                _("Product"), _("Quantity"), _("Unit price"),
+                _("Discount"), _("Tax"), _("Total"),
+            ],
+            "rows": [
+                [
+                    item.product, item.quantity, item.unit_price,
+                    item.discount_amount, item.tax_amount, item.line_total,
+                ]
+                for item in invoice.items.all()
+            ],
+            "footer_rows": [
+                ["", "", "", "", _("Subtotal"), invoice.subtotal],
+                ["", "", "", "", _("Discount"), invoice.discount_amount],
+                ["", "", "", "", _("Tax"), invoice.tax_amount],
+                ["", "", "", "", _("Paid"), invoice.paid_amount],
+                ["", "", "", "", _("Outstanding"), invoice.outstanding_amount],
+                ["", "", "", "", _("Invoice total"), invoice.total],
+            ],
+        }],
+    }
+
+
 def party_statement_document(data, kind, start_date=None, end_date=None):
     title = _("Customer statement") if kind == "customer" else _("Supplier statement")
     return {

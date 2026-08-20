@@ -1,5 +1,23 @@
 {% extends "core/base.html" %}{% load i18n %}
-{% block title %}{{ quotation.quotation_number }}{% endblock %}{% block page_header %}<h1>{{ quotation.quotation_number }}</h1><p>{{ quotation.customer }} · {{ quotation.get_status_display }}</p>{% endblock %}
-{% block content %}<div class="card-soft mb-3"><div class="table-wrap"><table class="table-erp"><thead><tr><th>{% trans "Product" %}</th><th>{% trans "Quantity" %}</th><th>{% trans "Unit price" %}</th><th>{% trans "Discount" %}</th><th>{% trans "Tax" %}</th><th>{% trans "Total" %}</th></tr></thead><tbody>{% for item in quotation.items.all %}<tr><td>{{ item.product }}</td><td>{{ item.quantity }}</td><td>{{ item.unit_price }}</td><td>{{ item.discount_amount }}</td><td>{{ item.tax_amount }}</td><td>{{ item.line_total }}</td></tr>{% endfor %}</tbody></table></div><div class="card-pad"><strong>{% trans "Total" %}: {{ quotation.total|floatformat:3 }}</strong></div></div>
-{% if quotation.status != 'REJECTED' and quotation.status != 'EXPIRED' %}<form method="post" action="{% url 'quotations:convert' quotation.pk %}" class="card-soft card-pad">{% csrf_token %}<h3>{% trans "Convert to sale" %}</h3><label>{% trans "Warehouse" %}</label><select name="warehouse" class="form-select" required><option value="">---</option>{% for warehouse in warehouses %}<option value="{{ warehouse.pk }}">{{ warehouse }}</option>{% endfor %}</select><label>{% trans "Payment method" %}</label><select name="payment_method" class="form-select">{% for value,label in payment_methods %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select><label>{% trans "Reference" %}</label><input name="reference_number" class="form-control"><button class="btn btn-primary mt-3" type="submit">{% trans "Convert" %}</button></form>{% endif %}
+{% block title %}{{ quotation.quotation_number }}{% endblock %}
+{% block page_header %}<h1>{{ quotation.quotation_number }}</h1><p>{{ quotation.customer }} · {{ quotation.get_status_display }}</p>{% endblock %}
+{% block content %}
+<div class="card-soft mb-3"><div class="table-wrap"><table class="table-erp"><thead><tr><th>{% trans "Product" %}</th><th>{% trans "Quantity" %}</th><th>{% trans "Unit price" %}</th><th>{% trans "Discount" %}</th><th>{% trans "Tax" %}</th><th>{% trans "Total" %}</th></tr></thead><tbody>{% for item in quotation.items.all %}<tr><td>{{ item.product }}</td><td>{{ item.quantity }}</td><td>{{ item.unit_price }}</td><td>{{ item.discount_amount }}</td><td>{{ item.tax_amount }}</td><td>{{ item.line_total }}</td></tr>{% endfor %}</tbody></table></div><div class="card-pad"><strong>{% trans "Total" %}: {{ quotation.total|floatformat:3 }}</strong></div></div>
+{% if quotation.status != 'REJECTED' and quotation.status != 'EXPIRED' and quotation.status != 'CONVERTED' %}
+<form method="post" action="{% url 'quotations:convert' quotation.pk %}" class="card-soft card-pad">
+  {% csrf_token %}<h3>{% trans "Convert to sales invoice" %}</h3>
+  <p class="text-muted">{% trans "This creates an editable draft invoice. Stock and Finance are updated only when you confirm it." %}</p>
+  <div class="row g-3">
+    <div class="col-md-4"><label class="form-label">{% trans "Warehouse" %}</label><select name="warehouse" class="form-select" required><option value="">---</option>{% for warehouse in warehouses %}<option value="{{ warehouse.pk }}">{{ warehouse }}</option>{% endfor %}</select></div>
+    <div class="col-md-4"><label class="form-label">{% trans "Invoice date" %}</label><input type="date" name="invoice_date" value="{% now 'Y-m-d' %}" class="form-control" required></div>
+    <div class="col-md-4"><label class="form-label">{% trans "Due date" %}</label><input type="date" name="due_date" value="{% now 'Y-m-d' %}" class="form-control" required></div>
+    <div class="col-md-4"><label class="form-label">{% trans "Payment type" %}</label><select name="payment_type" class="form-select" data-payment-type>{% for value,label in payment_types %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></div>
+    <div class="col-md-8" data-payment-account><label class="form-label">{% trans "Cash / Bank Account" %}</label><select name="payment_account" class="form-select"><option value="">---</option>{% for account in payment_accounts %}<option value="{{ account.pk }}">{{ account.code }} - {{ account.name }}</option>{% endfor %}</select></div>
+  </div>
+  <button class="btn btn-primary mt-3" type="submit"><i class="bi bi-receipt me-1"></i>{% trans "Create draft invoice" %}</button>
+</form>
+{% elif quotation.status == 'CONVERTED' and quotation.sales_invoice %}
+<a class="btn btn-primary" href="{% url 'sales:invoice_detail' quotation.sales_invoice.pk %}">{% trans "Open sales invoice" %}</a>
+{% endif %}
 {% endblock %}
+{% block extra_js %}<script>(function(){var type=document.querySelector('[data-payment-type]'), box=document.querySelector('[data-payment-account]'); if(!type||!box)return; function sync(){box.hidden=type.value!=='cash';} type.addEventListener('change',sync);sync();})();</script>{% endblock %}
