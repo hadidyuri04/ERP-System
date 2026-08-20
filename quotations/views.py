@@ -1,3 +1,5 @@
+import json
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
@@ -8,7 +10,7 @@ from django.views.decorators.http import require_POST
 
 from core.permissions import cashier_required
 from finance.models import Account
-from inventory.models import Warehouse
+from inventory.models import Product, Warehouse
 from sales.models import SalesInvoice
 from sales.services import create_invoice_from_quotation
 
@@ -76,7 +78,19 @@ def quotation_create(request):
             return redirect("quotations:detail", pk=quotation.pk)
         except ValidationError as exc:
             form.add_error(None, exc)
-    return render(request, "quotations/quotation_form.html", {"form": form, "formset": formset})
+
+    # product id -> tax percentage, so the form can preview tax as you type.
+    tax_rates = {
+        str(p.pk): float(p.tax_rate.rate)
+        if p.tax_rate and p.tax_rate.subject_to_tax else 0.0
+        for p in Product.objects.select_related("tax_rate").filter(is_active=True)
+    }
+
+    return render(request, "quotations/quotation_form.html", {
+        "form": form,
+        "formset": formset,
+        "tax_rates_json": json.dumps(tax_rates),
+    })
 
 
 @login_required
